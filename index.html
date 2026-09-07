@@ -246,6 +246,8 @@
     .caption-op { font-weight: 600; }
     .caption-op.mul { color: #f0883e; }
     .caption-op.add { color: #3fb950; }
+    .caption-op.exp { color: #f85149; }
+    .caption-op.div { color: #a371f7; }
 
     .card {
       background: #161b22;
@@ -458,6 +460,27 @@
 
       <div class="stage-caption" id="caption">Two vectors of 4</div>
     </div>
+
+    <div class="dot-card" id="softmax-card">
+      <div class="dot-header">
+        <span>Softmax</span>
+        <span id="softmax-header-dim">Vector of 4</span>
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-labels">
+          <span>dimension (power of 2)</span>
+          <span class="slider-val" id="softmax-slider-label">4</span>
+        </div>
+        <input type="range" id="softmax-dim-slider" min="0" max="12" value="0" step="1" />
+      </div>
+
+      <div class="canvas-stage" id="softmax-canvas-stage" title="Click to replay">
+        <canvas id="softmax-canvas"></canvas>
+      </div>
+
+      <div class="stage-caption" id="softmax-caption">Vector of 4</div>
+    </div>
   </div>
 
   <script>
@@ -645,12 +668,28 @@
           updateDim(parseInt(e.target.value, 10));
         });
 
+        const DOT_DATA = {
+          4: {
+            a: ['1.0', '2.0', '3.0', '1.0'],
+            b: ['2.0', '1.0', '0.5', '2.0'],
+            mul: ['2.0', '2.0', '1.5', '2.0'],
+            sum: '7.5'
+          },
+          8: {
+            a: ['1', '2', '1', '3', '2', '1', '2', '1'],
+            b: ['2', '1', '2', '1', '1', '2', '1', '2'],
+            mul: ['2', '2', '2', '3', '2', '2', '2', '2'],
+            sum: '17'
+          }
+        };
+
         function getParticlesLayout(count, availableW, availableH) {
           if (count <= 128) {
             const cols = count;
             const rows = 1;
             const spacing = availableW / cols;
-            const radius = Math.max(1.2, Math.min(8, (spacing * 0.65) / 2));
+            const maxRadius = count <= 4 ? 14 : (count <= 8 ? 11 : 8);
+            const radius = Math.max(1.2, Math.min(maxRadius, (spacing * 0.65) / 2));
             const startX = -availableW / 2 + spacing / 2;
 
             const positions = [];
@@ -703,6 +742,7 @@
           const availW = Math.min(width - 50, 310);
           const availH = 34;
           const layout = getParticlesLayout(N, availW, availH);
+          const data = DOT_DATA[N] || null;
 
           const Y_TOP = -42;
           const Y_BOTTOM = 42;
@@ -737,7 +777,7 @@
             ctx.restore();
           }
 
-          function drawDotBatch(positions, yBase, easeY, easeX, scale, stroke, fill, glow = 0, glowColor = null, alpha = 1) {
+          function drawDotBatch(positions, yBase, easeY, easeX, scale, stroke, fill, glow = 0, glowColor = null, alpha = 1, labels = null, textColor = '#ffffff') {
             if (alpha <= 0) return;
             ctx.save();
             ctx.translate(centerX, centerY);
@@ -778,6 +818,24 @@
                 ctx.stroke();
               }
             }
+
+            // Real numbers inside circles if N <= 64 and radius is large enough
+            if (N <= 64 && r >= 9.5 && labels && labels.length > 0) {
+              ctx.shadowBlur = 0;
+              const maxChars = Math.max(...labels.map(l => String(l).length), 2);
+              const fontSize = Math.min(10.5, Math.max(7.0, Math.floor((r * 1.8) / (maxChars * 0.65))));
+              ctx.font = `600 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillStyle = textColor;
+              for (let i = 0; i < Math.min(N, labels.length); i++) {
+                const p = positions[i];
+                const px = p.x * easeX;
+                const py = yBase + p.y * easeY;
+                ctx.fillText(labels[i], px, py);
+              }
+            }
+
             ctx.restore();
           }
 
@@ -791,8 +849,8 @@
             drawBracket(bracketL, Y_BOTTOM, bracketH, true);
             drawBracket(bracketR, Y_BOTTOM, bracketH, false);
 
-            drawDotBatch(layout.positions, Y_TOP, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.15)');
-            drawDotBatch(layout.positions, Y_BOTTOM, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.15)');
+            drawDotBatch(layout.positions, Y_TOP, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.15)', 0, null, 1, data ? data.a : null, '#c9d1d9');
+            drawDotBatch(layout.positions, Y_BOTTOM, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.15)', 0, null, 1, data ? data.b : null, '#c9d1d9');
             return;
           }
 
@@ -824,11 +882,11 @@
               // At collision point: ORANGE CIRCLES match up where the two numbers collided!
               const scale = 1 + 0.35 * flash;
               const orangeBg = `rgba(240, 136, 62, ${0.35 + 0.65 * flash})`;
-              drawDotBatch(layout.positions, Y_MID, 1, 1, scale, '#f0883e', orangeBg, flash * 20, '#f0883e');
+              drawDotBatch(layout.positions, Y_MID, 1, 1, scale, '#f0883e', orangeBg, flash * 20, '#f0883e', 1, data ? data.mul : null, '#ffffff');
             } else {
               // Blue numbers approach each other
-              drawDotBatch(layout.positions, curYTop, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.15)');
-              drawDotBatch(layout.positions, curYBottom, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.15)');
+              drawDotBatch(layout.positions, curYTop, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.15)', 0, null, 1, data ? data.a : null, '#c9d1d9');
+              drawDotBatch(layout.positions, curYBottom, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.15)', 0, null, 1, data ? data.b : null, '#c9d1d9');
             }
             return;
           }
@@ -841,7 +899,7 @@
             drawBracket(bracketR, Y_MID, bracketH, false);
 
             // Distinct orange circles representing the products
-            drawDotBatch(layout.positions, Y_MID, 1, 1, 1, '#f0883e', 'rgba(240, 136, 62, 0.25)');
+            drawDotBatch(layout.positions, Y_MID, 1, 1, 1, '#f0883e', 'rgba(240, 136, 62, 0.25)', 0, null, 1, data ? data.mul : null, '#ffffff');
             return;
           }
 
@@ -868,7 +926,7 @@
               // Coalesced into 1 number -> Green flash!
               ctx.save();
               ctx.translate(centerX, centerY);
-              const rFinal = 8 * (1 + 0.45 * flash);
+              const rFinal = Math.max(12, layout.radius) * (1 + 0.35 * flash);
               ctx.shadowColor = '#3fb950';
               ctx.shadowBlur = flash * 28;
               ctx.beginPath();
@@ -878,11 +936,23 @@
               ctx.lineWidth = 1.5;
               ctx.strokeStyle = '#3fb950';
               ctx.stroke();
+
+              if (N <= 64 && rFinal >= 9.5 && data) {
+                ctx.shadowBlur = 0;
+                const maxChars = String(data.sum).length;
+                const fontSize = Math.min(11, Math.max(7.5, Math.floor((rFinal * 1.8) / (maxChars * 0.65))));
+                ctx.font = `600 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText(data.sum, 0, Y_MID);
+              }
               ctx.restore();
             } else {
               // All orange numbers visibly coalescing into one center number
               const coalesceFactor = 1 - ease;
-              drawDotBatch(layout.positions, Y_MID, coalesceFactor, coalesceFactor, 1, '#f0883e', 'rgba(240, 136, 62, 0.25)');
+              const coalLabels = (coalesceFactor > 0.65 && data) ? data.mul : null;
+              drawDotBatch(layout.positions, Y_MID, coalesceFactor, coalesceFactor, 1, '#f0883e', 'rgba(240, 136, 62, 0.25)', 0, null, 1, coalLabels, '#ffffff');
             }
             return;
           }
@@ -895,13 +965,25 @@
             ctx.translate(centerX, centerY);
             ctx.shadowColor = 'rgba(88,166,255,0.5)';
             ctx.shadowBlur = 14;
+            const rFinal = Math.max(12, layout.radius);
             ctx.beginPath();
-            ctx.arc(0, Y_MID, 8, 0, Math.PI * 2);
+            ctx.arc(0, Y_MID, rFinal, 0, Math.PI * 2);
             ctx.fillStyle = 'rgba(88,166,255,0.2)';
             ctx.fill();
             ctx.lineWidth = 1.5;
             ctx.strokeStyle = '#58a6ff';
             ctx.stroke();
+
+            if (N <= 64 && rFinal >= 9.5 && data) {
+              ctx.shadowBlur = 0;
+              const maxChars = String(data.sum).length;
+              const fontSize = Math.min(11, Math.max(7.5, Math.floor((rFinal * 1.8) / (maxChars * 0.65))));
+              ctx.font = `600 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillStyle = '#ffffff';
+              ctx.fillText(data.sum, 0, Y_MID);
+            }
             ctx.restore();
             return;
           }
@@ -915,14 +997,482 @@
             ctx.globalAlpha = fade;
             ctx.shadowColor = 'rgba(88,166,255,0.5)';
             ctx.shadowBlur = 14;
+            const rFinal = Math.max(12, layout.radius);
             ctx.beginPath();
-            ctx.arc(0, Y_MID, 8, 0, Math.PI * 2);
+            ctx.arc(0, Y_MID, rFinal, 0, Math.PI * 2);
             ctx.fillStyle = 'rgba(88,166,255,0.2)';
             ctx.fill();
             ctx.lineWidth = 1.5;
             ctx.strokeStyle = '#58a6ff';
             ctx.stroke();
+
+            if (N <= 64 && rFinal >= 9.5 && data) {
+              ctx.shadowBlur = 0;
+              const maxChars = String(data.sum).length;
+              const fontSize = Math.min(11, Math.max(7.5, Math.floor((rFinal * 1.8) / (maxChars * 0.65))));
+              ctx.font = `600 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillStyle = '#ffffff';
+              ctx.fillText(data.sum, 0, Y_MID);
+            }
             ctx.restore();
+          }
+        }
+
+        function animLoop(now) {
+          const elapsed = (now - startTime) % TOTAL_DURATION;
+          render(elapsed);
+          requestAnimationFrame(animLoop);
+        }
+        requestAnimationFrame(animLoop);
+
+        canvasStage.addEventListener('click', () => {
+          startTime = performance.now();
+        });
+      })();
+
+      // Softmax animation (Canvas based, scales from 4 to 16,384)
+      (function initSoftmaxCanvasAnimation() {
+        const POWERS = [4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384];
+        let currentPowerIdx = 0;
+        let N = POWERS[currentPowerIdx];
+
+        const slider = document.getElementById('softmax-dim-slider');
+        const sliderLabel = document.getElementById('softmax-slider-label');
+        const headerDim = document.getElementById('softmax-header-dim');
+        const caption = document.getElementById('softmax-caption');
+        const canvasStage = document.getElementById('softmax-canvas-stage');
+        const canvas = document.getElementById('softmax-canvas');
+        if (!canvas || !slider) return;
+
+        const ctx = canvas.getContext('2d');
+        let width = 0;
+        let height = 0;
+        let dpr = window.devicePixelRatio || 1;
+
+        function resize() {
+          const rect = canvas.getBoundingClientRect();
+          width = rect.width;
+          height = rect.height;
+          canvas.width = width * dpr;
+          canvas.height = height * dpr;
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        function updateDim(idx) {
+          currentPowerIdx = Math.max(0, Math.min(POWERS.length - 1, idx));
+          slider.value = currentPowerIdx;
+          N = POWERS[currentPowerIdx];
+          sliderLabel.textContent = N.toLocaleString();
+          headerDim.textContent = "Vector of " + N.toLocaleString();
+          startTime = performance.now();
+        }
+
+        slider.addEventListener('input', (e) => {
+          updateDim(parseInt(e.target.value, 10));
+        });
+
+        const SOFTMAX_DATA = {
+          4: {
+            raw: ['2.0', '1.0', '0.1', '-1.0'],
+            exp: ['7.4', '2.7', '1.1', '0.4'],
+            sum: '11.6',
+            prob: ['0.64', '0.23', '0.10', '0.03']
+          },
+          8: {
+            raw: ['1.5', '0.8', '0.2', '0.0', '-.5', '-1', '0.5', '-.2'],
+            exp: ['4.5', '2.2', '1.2', '1.0', '0.6', '0.4', '1.6', '0.8'],
+            sum: '12.3',
+            prob: ['.37', '.18', '.10', '.08', '.05', '.03', '.13', '.06']
+          }
+        };
+
+        function getParticlesLayout(count, availableW, availableH) {
+          if (count <= 128) {
+            const cols = count;
+            const rows = 1;
+            const spacing = availableW / cols;
+            const maxRadius = count <= 4 ? 14 : (count <= 8 ? 11 : 8);
+            const radius = Math.max(1.2, Math.min(maxRadius, (spacing * 0.65) / 2));
+            const startX = -availableW / 2 + spacing / 2;
+
+            const positions = [];
+            for (let i = 0; i < count; i++) {
+              positions.push({
+                x: startX + i * spacing,
+                y: 0,
+                r: radius
+              });
+            }
+            return { positions, cols, rows, radius, width: availableW, height: radius * 2 };
+          }
+
+          let cols = 64;
+          if (count >= 2048) cols = 128;
+          if (count >= 8192) cols = 256;
+
+          const rows = Math.ceil(count / cols);
+          const spacingX = availableW / cols;
+          const maxGridH = Math.min(36, Math.max(12, rows * 1.5));
+          const spacingY = rows > 1 ? maxGridH / (rows - 1) : 0;
+          const radius = Math.max(0.5, Math.min(1.2, spacingX * 0.45));
+          const startX = -availableW / 2 + spacingX / 2;
+          const startY = -maxGridH / 2;
+
+          const positions = [];
+          for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+              if (positions.length < count) {
+                positions.push({
+                  x: startX + c * spacingX,
+                  y: rows > 1 ? startY + r * spacingY : 0,
+                  r: radius
+                });
+              }
+            }
+          }
+          return { positions, cols, rows, radius, width: availableW, height: maxGridH };
+        }
+
+        const TOTAL_DURATION = 8200;
+        let startTime = performance.now();
+
+        function render(ms) {
+          ctx.clearRect(0, 0, width, height);
+
+          const centerX = width / 2;
+          const centerY = height / 2;
+
+          const availW = Math.min(width - 50, 310);
+          const availH = 34;
+          const layout = getParticlesLayout(N, availW, availH);
+          const data = SOFTMAX_DATA[N] || null;
+
+          const Y_TOP = -28;
+          const Y_BOTTOM = 28;
+          const Y_MID = 0;
+
+          const bracketW = availW + Math.max(18, layout.radius * 3.5);
+          const bracketH = Math.max(28, layout.height + 14);
+          const bracketL = -bracketW / 2;
+          const bracketR = bracketW / 2;
+
+          function drawBracket(x, y, h, isLeft, alpha = 1, color = "#484f58") {
+            if (alpha <= 0) return;
+            ctx.save();
+            ctx.translate(centerX + x, centerY + y);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.5;
+            ctx.globalAlpha = alpha;
+            ctx.beginPath();
+            const wing = 6;
+            if (isLeft) {
+              ctx.moveTo(wing, -h / 2);
+              ctx.lineTo(0, -h / 2);
+              ctx.lineTo(0, h / 2);
+              ctx.lineTo(wing, h / 2);
+            } else {
+              ctx.moveTo(-wing, -h / 2);
+              ctx.lineTo(0, -h / 2);
+              ctx.lineTo(0, h / 2);
+              ctx.lineTo(-wing, h / 2);
+            }
+            ctx.stroke();
+            ctx.restore();
+          }
+
+          function drawDotBatch(positions, yBase, easeY, easeX, scale, stroke, fill, glow = 0, glowColor = null, alpha = 1, labels = null, textColor = '#ffffff') {
+            if (alpha <= 0) return;
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.globalAlpha = alpha;
+
+            if (glow > 0 && glowColor) {
+              ctx.shadowColor = glowColor;
+              ctx.shadowBlur = glow;
+            }
+
+            const r = layout.radius * scale;
+            const isTiny = r < 2.0;
+
+            if (isTiny) {
+              ctx.beginPath();
+              const d = Math.max(1.0, r * 2);
+              for (let i = 0; i < N; i++) {
+                const p = positions[i];
+                const px = p.x * easeX;
+                const py = yBase + p.y * easeY;
+                ctx.rect(px - d / 2, py - d / 2, d, d);
+              }
+              ctx.fillStyle = stroke;
+              ctx.fill();
+            } else {
+              for (let i = 0; i < N; i++) {
+                const p = positions[i];
+                const px = p.x * easeX;
+                const py = yBase + p.y * easeY;
+                ctx.beginPath();
+                ctx.arc(px, py, r, 0, Math.PI * 2);
+                if (fill) {
+                  ctx.fillStyle = fill;
+                  ctx.fill();
+                }
+                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = stroke;
+                ctx.stroke();
+              }
+            }
+
+            // Real numbers inside circles if N <= 64 and radius is large enough
+            if (N <= 64 && r >= 9.5 && labels && labels.length > 0) {
+              ctx.shadowBlur = 0;
+              const maxChars = Math.max(...labels.map(l => String(l).length), 2);
+              const fontSize = Math.min(10.5, Math.max(7.0, Math.floor((r * 1.8) / (maxChars * 0.65))));
+              ctx.font = `600 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillStyle = textColor;
+              for (let i = 0; i < Math.min(N, labels.length); i++) {
+                const p = positions[i];
+                const px = p.x * easeX;
+                const py = yBase + p.y * easeY;
+                ctx.fillText(labels[i], px, py);
+              }
+            }
+
+            ctx.restore();
+          }
+
+          // 0 -> 1200ms: Initial state (Vector of N)
+          if (ms < 1200) {
+            caption.style.opacity = '1';
+            caption.innerHTML = `Vector of ${N.toLocaleString()}`;
+
+            drawBracket(bracketL, Y_MID, bracketH, true);
+            drawBracket(bracketR, Y_MID, bracketH, false);
+
+            drawDotBatch(layout.positions, Y_MID, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.15)', 0, null, 1, data ? data.raw : null, '#c9d1d9');
+            return;
+          }
+
+          // 1200 -> 2600ms: Elementwise exponentiation (exp, red)
+          if (ms >= 1200 && ms < 2600) {
+            caption.innerHTML = '<span class="caption-op exp">exp</span> elementwise &rarr; e<sup>x</sup>';
+
+            const p = (ms - 1200) / 1400;
+            const flash = Math.sin(p * Math.PI);
+            const scale = 1 + 0.18 * flash;
+            const redBg = `rgba(248, 81, 73, ${0.18 + 0.55 * flash})`;
+
+            const bColor = flash > 0.3 ? '#f85149' : '#484f58';
+            drawBracket(bracketL, Y_MID, bracketH, true, 1, bColor);
+            drawBracket(bracketR, Y_MID, bracketH, false, 1, bColor);
+
+            const labels = (p > 0.25 && data) ? data.exp : (data ? data.raw : null);
+            drawDotBatch(layout.positions, Y_MID, 1, 1, scale, '#f85149', redBg, flash * 18, '#f85149', 1, labels, '#ffffff');
+            return;
+          }
+
+          // 2600 -> 3600ms: Move numerator up and split duplicate copy down for denominator
+          if (ms >= 2600 && ms < 3600) {
+            caption.innerHTML = `${N.toLocaleString()} values &rarr; <span class="caption-op add">+ add</span> to sum denominator`;
+
+            const p = (ms - 2600) / 1000;
+            const ease = p * p * (3 - 2 * p);
+
+            const curYTop = Y_MID + (Y_TOP - Y_MID) * ease;
+            const curYBottom = Y_MID + (Y_BOTTOM - Y_MID) * ease;
+
+            drawBracket(bracketL, curYTop, bracketH, true);
+            drawBracket(bracketR, curYTop, bracketH, false);
+            drawBracket(bracketL, curYBottom, bracketH, true, ease);
+            drawBracket(bracketR, curYBottom, bracketH, false, ease);
+
+            // Numerator stays red
+            drawDotBatch(layout.positions, curYTop, 1, 1, 1, '#f85149', 'rgba(248,81,73,0.22)', 0, null, 1, data ? data.exp : null, '#ffffff');
+            // Denominator copy moves down
+            drawDotBatch(layout.positions, curYBottom, 1, 1, 1, '#f85149', 'rgba(248,81,73,0.22)', 0, null, ease, data ? data.exp : null, '#ffffff');
+            return;
+          }
+
+          // 3600 -> 5200ms: Add denominator copy into 1 scalar sum (+ add, green)
+          if (ms >= 3600 && ms < 5200) {
+            caption.innerHTML = '<span class="caption-op add">+ add</span> all &rarr; sum denominator';
+
+            // Numerator remains steady at top
+            drawBracket(bracketL, Y_TOP, bracketH, true);
+            drawBracket(bracketR, Y_TOP, bracketH, false);
+            drawDotBatch(layout.positions, Y_TOP, 1, 1, 1, '#f85149', 'rgba(248,81,73,0.22)', 0, null, 1, data ? data.exp : null, '#ffffff');
+
+            const p = (ms - 3600) / 1600;
+            const coalesceProgress = Math.min(1, p / 0.80);
+            const ease = coalesceProgress < 1 ? coalesceProgress * coalesceProgress * (3 - 2 * coalesceProgress) : 1;
+
+            const isMerged = p >= 0.80;
+            const flashPhase = isMerged ? (p - 0.80) / 0.20 : 0;
+            const flash = Math.sin(flashPhase * Math.PI);
+
+            // Bracket contracts towards center
+            const curBracketDist = (bracketW / 2) * (1 - ease * 0.90);
+            const bAlpha = isMerged ? Math.max(0, 1 - flashPhase * 1.8) : 1;
+            const bColor = flash > 0.2 ? '#3fb950' : '#484f58';
+
+            drawBracket(-curBracketDist, Y_BOTTOM, bracketH, true, bAlpha, bColor);
+            drawBracket(curBracketDist, Y_BOTTOM, bracketH, false, bAlpha, bColor);
+
+            if (isMerged) {
+              // Merged into 1 scalar circle -> Green flash!
+              ctx.save();
+              ctx.translate(centerX, centerY);
+              const rFinal = Math.max(12, layout.radius) * (1 + 0.35 * flash);
+              ctx.shadowColor = '#3fb950';
+              ctx.shadowBlur = flash * 28;
+              ctx.beginPath();
+              ctx.arc(0, Y_BOTTOM, rFinal, 0, Math.PI * 2);
+              ctx.fillStyle = `rgba(63, 185, 80, ${0.35 + 0.65 * flash})`;
+              ctx.fill();
+              ctx.lineWidth = 1.5;
+              ctx.strokeStyle = '#3fb950';
+              ctx.stroke();
+
+              if (N <= 64 && rFinal >= 9.5 && data) {
+                ctx.shadowBlur = 0;
+                const maxChars = String(data.sum).length;
+                const fontSize = Math.min(11, Math.max(7.5, Math.floor((rFinal * 1.8) / (maxChars * 0.65))));
+                ctx.font = `600 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText(data.sum, 0, Y_BOTTOM);
+              }
+              ctx.restore();
+            } else {
+              const coalesceFactor = 1 - ease;
+              const coalLabels = (coalesceFactor > 0.65 && data) ? data.exp : null;
+              drawDotBatch(layout.positions, Y_BOTTOM, coalesceFactor, coalesceFactor, 1, '#f85149', 'rgba(248,81,73,0.22)', 0, null, 1, coalLabels, '#ffffff');
+            }
+            return;
+          }
+
+          // 5200 -> 6600ms: Divide numerator elements by the sum (divide, purple)
+          if (ms >= 5200 && ms < 6600) {
+            caption.innerHTML = '<span class="caption-op div">&divide; divide</span> each by sum';
+
+            const p = (ms - 5200) / 1400;
+            const isDivided = p >= 0.40;
+            const flash = Math.sin(p * Math.PI);
+
+            // Numerator bracket
+            const bColor = flash > 0.3 ? '#a371f7' : '#484f58';
+            drawBracket(bracketL, Y_TOP, bracketH, true, 1, bColor);
+            drawBracket(bracketR, Y_TOP, bracketH, false, 1, bColor);
+
+            // Draw purple projection rays from sum scalar to numerator
+            const rayAlpha = Math.max(0, Math.sin(p * Math.PI));
+            if (rayAlpha > 0) {
+              ctx.save();
+              ctx.translate(centerX, centerY);
+
+              // Soft radiant cone from scalar up to numerator
+              const coneGrad = ctx.createLinearGradient(0, Y_BOTTOM, 0, Y_TOP);
+              coneGrad.addColorStop(0, `rgba(163, 113, 247, ${rayAlpha * 0.28})`);
+              coneGrad.addColorStop(1, `rgba(163, 113, 247, ${rayAlpha * 0.04})`);
+              ctx.fillStyle = coneGrad;
+              ctx.beginPath();
+              ctx.moveTo(0, Y_BOTTOM);
+              ctx.lineTo(-availW / 2, Y_TOP);
+              ctx.lineTo(availW / 2, Y_TOP);
+              ctx.closePath();
+              ctx.fill();
+
+              // Radiant purple projection lines
+              ctx.strokeStyle = `rgba(163, 113, 247, ${rayAlpha * 0.65})`;
+              ctx.lineWidth = 1.2;
+              if (N <= 16) {
+                for (let i = 0; i < N; i++) {
+                  ctx.beginPath();
+                  ctx.moveTo(0, Y_BOTTOM);
+                  ctx.lineTo(layout.positions[i].x, Y_TOP);
+                  ctx.stroke();
+                }
+              } else {
+                const numRays = 48;
+                for (let i = 0; i < numRays; i++) {
+                  const targetX = -availW / 2 + (i / (numRays - 1)) * availW;
+                  ctx.beginPath();
+                  ctx.moveTo(0, Y_BOTTOM);
+                  ctx.lineTo(targetX, Y_TOP);
+                  ctx.stroke();
+                }
+              }
+              ctx.restore();
+            }
+
+            // Draw denominator scalar circle (fading as division completes)
+            const sumAlpha = Math.max(0, 1 - Math.max(0, (p - 0.5) / 0.5));
+            if (sumAlpha > 0) {
+              ctx.save();
+              ctx.translate(centerX, centerY);
+              ctx.globalAlpha = sumAlpha;
+              const rFinal = Math.max(12, layout.radius);
+              ctx.shadowColor = '#3fb950';
+              ctx.shadowBlur = 10;
+              ctx.beginPath();
+              ctx.arc(0, Y_BOTTOM, rFinal, 0, Math.PI * 2);
+              ctx.fillStyle = 'rgba(63, 185, 80, 0.3)';
+              ctx.fill();
+              ctx.lineWidth = 1.5;
+              ctx.strokeStyle = '#3fb950';
+              ctx.stroke();
+
+              if (N <= 64 && rFinal >= 9.5 && data) {
+                ctx.shadowBlur = 0;
+                const maxChars = String(data.sum).length;
+                const fontSize = Math.min(11, Math.max(7.5, Math.floor((rFinal * 1.8) / (maxChars * 0.65))));
+                ctx.font = `600 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText(data.sum, 0, Y_BOTTOM);
+              }
+              ctx.restore();
+            }
+
+            // Numerator circles transition from exp to normalized prob, flashing purple
+            const strokeColor = isDivided ? '#a371f7' : '#f85149';
+            const purpleBg = `rgba(163, 113, 247, ${0.2 + 0.6 * flash})`;
+            const labels = isDivided && data ? data.prob : (data ? data.exp : null);
+            drawDotBatch(layout.positions, Y_TOP, 1, 1, 1 + 0.15 * flash, strokeColor, purpleBg, flash * 20, '#a371f7', 1, labels, '#ffffff');
+            return;
+          }
+
+          // 6600 -> 7600ms: Output normalized probabilities vector (moving back to center)
+          if (ms >= 6600 && ms < 7600) {
+            caption.innerHTML = `= Vector of ${N.toLocaleString()} <span style="color:#58a6ff; font-weight:600;">(sums to 1.0)</span>`;
+
+            const p = Math.min(1, (ms - 6600) / 600);
+            const ease = p * p * (3 - 2 * p);
+            const curY = Y_TOP + (Y_MID - Y_TOP) * ease;
+
+            drawBracket(bracketL, curY, bracketH, true);
+            drawBracket(bracketR, curY, bracketH, false);
+
+            drawDotBatch(layout.positions, curY, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.22)', 8, '#58a6ff', 1, data ? data.prob : null, '#c9d1d9');
+            return;
+          }
+
+          // 7600 -> 8200ms: Fade out / reset
+          if (ms >= 7600) {
+            const fade = Math.max(0, 1 - (ms - 7600) / 600);
+            caption.style.opacity = `${fade}`;
+
+            drawBracket(bracketL, Y_MID, bracketH, true, fade);
+            drawBracket(bracketR, Y_MID, bracketH, false, fade);
+
+            drawDotBatch(layout.positions, Y_MID, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.22)', 8, '#58a6ff', fade, data ? data.prob : null, '#c9d1d9');
           }
         }
 

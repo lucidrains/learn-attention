@@ -100,10 +100,11 @@
       width: 16px;
       height: 16px;
       border-radius: 50%;
-      border: 1.5px solid #a371f7;
-      background: rgba(163, 113, 247, 0.12);
+      border: 1.5px solid #58a6ff;
+      background: rgba(88, 166, 255, 0.12);
       box-sizing: border-box;
       flex-shrink: 0;
+      transition: box-shadow 0.15s ease, border-color 0.15s ease;
     }
 
     .num-circle.sm {
@@ -125,20 +126,103 @@
       transform: translateY(-0.5px);
     }
 
+    .num-circle.highlight {
+      box-shadow: 0 0 8px rgba(88, 166, 255, 0.7);
+      border-color: #79c0ff;
+    }
+
     .op-add { color: #3fb950; }
-    .op-mul { color: #58a6ff; }
+    .op-mul { color: #f0883e; }
     .op-exp { color: #f85149; }
     .op-div { color: #d29922; }
 
     .op-badge.add .sym { color: #3fb950; font-weight: 600; }
-    .op-badge.mul .sym { color: #58a6ff; font-weight: 600; }
+    .op-badge.mul .sym { color: #f0883e; font-weight: 600; }
     .op-badge.exp .sym { color: #f85149; font-weight: 600; }
     .op-badge.div .sym { color: #d29922; font-weight: 600; }
 
     .filter-btn[data-op="add"].active { background: rgba(63, 185, 80, 0.15); border-color: #3fb950; color: #3fb950; }
-    .filter-btn[data-op="mul"].active { background: rgba(88, 166, 255, 0.15); border-color: #58a6ff; color: #58a6ff; }
+    .filter-btn[data-op="mul"].active { background: rgba(240, 136, 62, 0.15); border-color: #f0883e; color: #f0883e; }
     .filter-btn[data-op="exp"].active { background: rgba(248, 81, 73, 0.15); border-color: #f85149; color: #f85149; }
     .filter-btn[data-op="div"].active { background: rgba(210, 153, 34, 0.15); border-color: #d29922; color: #d29922; }
+
+    .dot-card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 1.4rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      user-select: none;
+      cursor: pointer;
+    }
+
+    .dot-header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #7d8590;
+    }
+
+    .anim-stage {
+      position: relative;
+      width: 100%;
+      height: 140px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .bracket-wing {
+      position: absolute;
+      width: 8px;
+      height: 30px;
+      border: 1.5px solid #484f58;
+      box-sizing: border-box;
+      will-change: transform, opacity, border-color;
+    }
+
+    .bracket-wing.left {
+      border-right: none;
+      border-radius: 4px 0 0 4px;
+    }
+
+    .bracket-wing.right {
+      border-left: none;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .anim-dot {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 1.5px solid #58a6ff;
+      background: rgba(88, 166, 255, 0.15);
+      box-sizing: border-box;
+      will-change: transform, opacity, background, border-color, box-shadow;
+    }
+
+    .stage-caption {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.85rem;
+      color: #7d8590;
+      height: 1.3rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .caption-op { font-weight: 600; }
+    .caption-op.mul { color: #f0883e; }
+    .caption-op.add { color: #3fb950; }
 
     .card {
       background: #161b22;
@@ -307,6 +391,34 @@
       </div>
     </header>
 
+    <div class="dot-card" id="dot-card" title="Click to replay">
+      <div class="dot-header">
+        <span>Dot Product</span>
+        <span>Vector of 4</span>
+      </div>
+
+      <div class="anim-stage" id="stage">
+        <!-- Brackets: Top Left/Right, Bottom Left/Right -->
+        <div class="bracket-wing left" id="b-tl"></div>
+        <div class="bracket-wing right" id="b-tr"></div>
+        <div class="bracket-wing left" id="b-bl"></div>
+        <div class="bracket-wing right" id="b-br"></div>
+
+        <!-- 8 Dots: T0..T3 and B0..B3 -->
+        <div class="anim-dot" id="dot-t0"></div>
+        <div class="anim-dot" id="dot-t1"></div>
+        <div class="anim-dot" id="dot-t2"></div>
+        <div class="anim-dot" id="dot-t3"></div>
+
+        <div class="anim-dot" id="dot-b0"></div>
+        <div class="anim-dot" id="dot-b1"></div>
+        <div class="anim-dot" id="dot-b2"></div>
+        <div class="anim-dot" id="dot-b3"></div>
+      </div>
+
+      <div class="stage-caption" id="caption">Two vectors of 4</div>
+    </div>
+
     <div class="card">
       <div class="filters">
         <button class="filter-btn active" data-op="all">all</button>
@@ -473,6 +585,224 @@
           else checkAnswer();
         }
       });
+
+      // Dot Product animation
+      (function initDotAnimation() {
+        const X_COORDS = [-51, -17, 17, 51];
+        const BRACKET_OFFSET = 24;
+        const X_BRACKET_L = -51 - BRACKET_OFFSET;
+        const X_BRACKET_R = 51 + BRACKET_OFFSET;
+        
+        const Y_TOP = -37;
+        const Y_BOTTOM = 37;
+        const Y_MID = 0;
+
+        const tDots = [0,1,2,3].map(i => document.getElementById('dot-t' + i));
+        const bDots = [0,1,2,3].map(i => document.getElementById('dot-b' + i));
+        const bTL = document.getElementById('b-tl');
+        const bTR = document.getElementById('b-tr');
+        const bBL = document.getElementById('b-bl');
+        const bBR = document.getElementById('b-br');
+        const caption = document.getElementById('caption');
+        const card = document.getElementById('dot-card');
+
+        if (!card || !caption || !bTL) return;
+
+        function setPos(el, x, y, scale = 1) {
+          el.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+        }
+
+        function resetStyles() {
+          caption.style.opacity = '1';
+          caption.innerHTML = 'Two vectors of 4';
+
+          setPos(bTL, X_BRACKET_L, Y_TOP);
+          setPos(bTR, X_BRACKET_R, Y_TOP);
+          setPos(bBL, X_BRACKET_L, Y_BOTTOM);
+          setPos(bBR, X_BRACKET_R, Y_BOTTOM);
+
+          [bTL, bTR, bBL, bBR].forEach(b => {
+            b.style.opacity = '1';
+            b.style.borderColor = '#484f58';
+          });
+
+          for (let i = 0; i < 4; i++) {
+            setPos(tDots[i], X_COORDS[i], Y_TOP);
+            setPos(bDots[i], X_COORDS[i], Y_BOTTOM);
+            
+            tDots[i].style.opacity = '1';
+            tDots[i].style.borderColor = '#58a6ff';
+            tDots[i].style.background = 'rgba(88, 166, 255, 0.15)';
+            tDots[i].style.boxShadow = 'none';
+
+            bDots[i].style.opacity = '1';
+            bDots[i].style.borderColor = '#58a6ff';
+            bDots[i].style.background = 'rgba(88, 166, 255, 0.15)';
+            bDots[i].style.boxShadow = 'none';
+          }
+        }
+
+        const TOTAL_DURATION = 7400;
+
+        function update(ms) {
+          if (ms < 1200) {
+            resetStyles();
+            return;
+          }
+
+          if (ms >= 1200 && ms < 2500) {
+            caption.innerHTML = '<span class="caption-op mul">&times; multiply</span> pairwise';
+
+            const p = (ms - 1200) / 1300;
+            const moveProgress = Math.min(1, p / 0.85);
+            const ease = moveProgress < 1 ? moveProgress * moveProgress * (3 - 2 * moveProgress) : 1;
+            
+            const curYTop = Y_TOP + (Y_MID - Y_TOP) * ease;
+            const curYBottom = Y_BOTTOM + (Y_MID - Y_BOTTOM) * ease;
+
+            setPos(bTL, X_BRACKET_L, curYTop);
+            setPos(bTR, X_BRACKET_R, curYTop);
+            setPos(bBL, X_BRACKET_L, curYBottom);
+            setPos(bBR, X_BRACKET_R, curYBottom);
+
+            if (p >= 0.85) {
+              const flashPhase = (p - 0.85) / 0.15;
+              const flash = Math.sin(flashPhase * Math.PI);
+              const scale = 1 + 0.35 * flash;
+
+              for (let i = 0; i < 4; i++) {
+                setPos(tDots[i], X_COORDS[i], Y_MID, scale);
+                tDots[i].style.borderColor = '#f0883e';
+                tDots[i].style.background = `rgba(240, 136, 62, ${0.2 + 0.8 * flash})`;
+                tDots[i].style.boxShadow = `0 0 ${20 * flash}px #f0883e, 0 0 ${35 * flash}px rgba(240, 136, 62, 0.85)`;
+                
+                bDots[i].style.opacity = `${Math.max(0, 1 - flashPhase * 2)}`;
+                setPos(bDots[i], X_COORDS[i], Y_MID, scale);
+              }
+
+              bBL.style.opacity = `${Math.max(0, 1 - flashPhase * 2)}`;
+              bBR.style.opacity = `${Math.max(0, 1 - flashPhase * 2)}`;
+              
+              bTL.style.borderColor = flash > 0.4 ? '#f0883e' : '#484f58';
+              bTR.style.borderColor = flash > 0.4 ? '#f0883e' : '#484f58';
+            } else {
+              for (let i = 0; i < 4; i++) {
+                setPos(tDots[i], X_COORDS[i], curYTop);
+                setPos(bDots[i], X_COORDS[i], curYBottom);
+              }
+            }
+            return;
+          }
+
+          if (ms >= 2500 && ms < 3500) {
+            caption.innerHTML = '4 products &rarr; <span class="caption-op add">+ add</span> together';
+
+            setPos(bTL, X_BRACKET_L, Y_MID);
+            setPos(bTR, X_BRACKET_R, Y_MID);
+            bTL.style.opacity = '1';
+            bTR.style.opacity = '1';
+            bTL.style.borderColor = '#484f58';
+            bTR.style.borderColor = '#484f58';
+
+            bBL.style.opacity = '0';
+            bBR.style.opacity = '0';
+
+            for (let i = 0; i < 4; i++) {
+              bDots[i].style.opacity = '0';
+              tDots[i].style.opacity = '1';
+              setPos(tDots[i], X_COORDS[i], Y_MID, 1);
+              tDots[i].style.borderColor = '#58a6ff';
+              tDots[i].style.background = 'rgba(88, 166, 255, 0.15)';
+              tDots[i].style.boxShadow = 'none';
+            }
+            return;
+          }
+
+          if (ms >= 3500 && ms < 4800) {
+            caption.innerHTML = '<span class="caption-op add">+ add</span> together';
+            const p = (ms - 3500) / 1300;
+            const moveProgress = Math.min(1, p / 0.85);
+            const ease = moveProgress < 1 ? moveProgress * moveProgress * (3 - 2 * moveProgress) : 1;
+
+            const curX0 = X_COORDS[0] * (1 - ease);
+            const curX3 = X_COORDS[3] * (1 - ease);
+
+            const curBracketL = curX0 - BRACKET_OFFSET * (1 - ease * 0.7);
+            const curBracketR = curX3 + BRACKET_OFFSET * (1 - ease * 0.7);
+
+            setPos(bTL, curBracketL, Y_MID);
+            setPos(bTR, curBracketR, Y_MID);
+
+            if (p >= 0.85) {
+              const flashPhase = (p - 0.85) / 0.15;
+              const flash = Math.sin(flashPhase * Math.PI);
+              const scale = 1 + 0.45 * flash;
+
+              setPos(tDots[0], 0, Y_MID, scale);
+              tDots[0].style.borderColor = '#3fb950';
+              tDots[0].style.background = `rgba(63, 185, 80, ${0.2 + 0.8 * flash})`;
+              tDots[0].style.boxShadow = `0 0 ${25 * flash}px #3fb950, 0 0 ${45 * flash}px rgba(63, 185, 80, 0.9)`;
+
+              for (let i = 1; i < 4; i++) {
+                tDots[i].style.opacity = `${Math.max(0, 1 - flashPhase * 2)}`;
+                setPos(tDots[i], 0, Y_MID, scale);
+              }
+
+              const bFade = Math.max(0, 1 - flashPhase * 1.5);
+              bTL.style.opacity = `${bFade}`;
+              bTR.style.opacity = `${bFade}`;
+              bTL.style.borderColor = '#3fb950';
+              bTR.style.borderColor = '#3fb950';
+            } else {
+              for (let i = 0; i < 4; i++) {
+                const curX = X_COORDS[i] * (1 - ease);
+                setPos(tDots[i], curX, Y_MID);
+                tDots[i].style.opacity = '1';
+              }
+              bTL.style.opacity = '1';
+              bTR.style.opacity = '1';
+            }
+            return;
+          }
+
+          if (ms >= 4800 && ms < 6500) {
+            caption.innerHTML = '= 1 number <span style="color:#58a6ff; font-weight:600;">(scalar)</span>';
+            bTL.style.opacity = '0';
+            bTR.style.opacity = '0';
+            bBL.style.opacity = '0';
+            bBR.style.opacity = '0';
+
+            for (let i = 1; i < 4; i++) tDots[i].style.opacity = '0';
+            
+            setPos(tDots[0], 0, Y_MID, 1.15);
+            tDots[0].style.opacity = '1';
+            tDots[0].style.borderColor = '#58a6ff';
+            tDots[0].style.background = 'rgba(88, 166, 255, 0.2)';
+            tDots[0].style.boxShadow = '0 0 14px rgba(88, 166, 255, 0.5)';
+            return;
+          }
+
+          if (ms >= 6500) {
+            const fade = 1 - (ms - 6500) / 900;
+            tDots[0].style.opacity = `${fade}`;
+            caption.style.opacity = `${fade}`;
+            bTL.style.opacity = '0';
+            bTR.style.opacity = '0';
+          }
+        }
+
+        let startTime = performance.now();
+        function animLoop(now) {
+          const elapsed = (now - startTime) % TOTAL_DURATION;
+          update(elapsed);
+          requestAnimationFrame(animLoop);
+        }
+        requestAnimationFrame(animLoop);
+
+        card.addEventListener('click', () => {
+          startTime = performance.now();
+        });
+      })();
 
       nextProblem();
     })();

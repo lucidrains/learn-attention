@@ -1,32 +1,393 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>learn-attention</title>
   <style>
-    body {
+    * {
+      box-sizing: border-box;
       margin: 0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      padding: 0;
+    }
+
+    body {
       background-color: #0b0c10;
       color: #e0e6ed;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem 1.5rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 440px;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
     }
 
     h1 {
-      font-size: 2.5rem;
+      font-size: 1.5rem;
       font-weight: 500;
       letter-spacing: -0.02em;
+      color: #fff;
+    }
+
+    .prereqs-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #7d8590;
+    }
+
+    .prereqs-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem;
+    }
+
+    .op-badge {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.9rem;
+      color: #c9d1d9;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .op-add { color: #3fb950; }
+    .op-mul { color: #58a6ff; }
+    .op-exp { color: #f85149; }
+    .op-div { color: #d29922; }
+
+    .op-badge.add .sym { color: #3fb950; }
+    .op-badge.mul .sym { color: #58a6ff; }
+    .op-badge.exp .sym { color: #f85149; }
+    .op-badge.div .sym { color: #d29922; }
+
+    .filter-btn[data-op="add"].active { background: rgba(63, 185, 80, 0.15); border-color: #3fb950; color: #3fb950; }
+    .filter-btn[data-op="mul"].active { background: rgba(88, 166, 255, 0.15); border-color: #58a6ff; color: #58a6ff; }
+    .filter-btn[data-op="exp"].active { background: rgba(248, 81, 73, 0.15); border-color: #f85149; color: #f85149; }
+    .filter-btn[data-op="div"].active { background: rgba(210, 153, 34, 0.15); border-color: #d29922; color: #d29922; }
+
+    .card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .filters {
+      display: flex;
+      gap: 0.35rem;
+    }
+
+    .filter-btn {
+      background: transparent;
+      border: 1px solid #30363d;
+      color: #8b949e;
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      font-family: ui-monospace, monospace;
+      line-height: 1.2;
+    }
+
+    .filter-btn[data-op="div"] {
+      font-size: 1rem;
+    }
+
+    .filter-btn:hover {
+      color: #fff;
+      border-color: #8b949e;
+    }
+
+    .filter-btn.active {
+      background: #30363d;
+      color: #fff;
+    }
+
+    .problem {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 2.5rem;
+      color: #fff;
+      letter-spacing: 0.04em;
+      margin: 0.25rem 0;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 0.5rem;
+      width: 100%;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 0.6rem 0.85rem;
+      color: #fff;
+      font-size: 1.1rem;
+      font-family: ui-monospace, monospace;
+      text-align: center;
+      outline: none;
+    }
+
+    input[type="text"]:focus {
+      border-color: #58a6ff;
+    }
+
+    button.submit-btn {
+      background: #238636;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 0.6rem 1.1rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    button.submit-btn:hover {
+      background: #2ea043;
+    }
+
+    button.submit-btn.incorrect {
+      background: #21262d;
+      border: 1px solid #da3633;
+      color: #f0f6fc;
+    }
+
+    button.submit-btn.incorrect:hover {
+      background: #30363d;
+      border-color: #f85149;
+    }
+
+    .feedback {
+      font-size: 0.85rem;
+      min-height: 1.2rem;
+      text-align: center;
+    }
+
+    .feedback.correct { color: #3fb950; }
+    .feedback.incorrect { color: #f85149; }
+
+    .stats {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid #21262d;
+      padding-top: 0.85rem;
+      font-size: 0.8rem;
+      color: #7d8590;
+    }
+
+    .stats span {
+      color: #c9d1d9;
     }
   </style>
 </head>
-
 <body>
-  <h1>attention</h1>
-</body>
+  <div class="container">
+    <header>
+      <div class="prereqs-label">Prerequisites</div>
+      <div class="prereqs-list">
+        <div class="op-badge add"><span class="sym">+</span> add</div>
+        <div class="op-badge mul"><span class="sym">&times;</span> multiply</div>
+        <div class="op-badge exp"><span class="sym">e</span> exp</div>
+        <div class="op-badge div"><span class="sym">&divide;</span> divide</div>
+      </div>
+    </header>
 
+    <div class="card">
+      <div class="filters">
+        <button class="filter-btn active" data-op="all">all</button>
+        <button class="filter-btn" data-op="add">+</button>
+        <button class="filter-btn" data-op="mul">&times;</button>
+        <button class="filter-btn" data-op="exp">exp</button>
+        <button class="filter-btn" data-op="div">&divide;</button>
+      </div>
+
+      <div class="problem" id="problem">...</div>
+
+      <div class="input-row">
+        <input type="text" id="answer" placeholder="answer" autocomplete="off" inputmode="decimal" />
+        <button class="submit-btn" id="submit">Check</button>
+      </div>
+
+      <div class="feedback" id="feedback"></div>
+
+      <div class="stats">
+        <div>streak: <span id="stat-streak">0</span></div>
+        <div>solved: <span id="stat-solved">0</span></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      let currentOp = 'all';
+      let currentProblem = null;
+      let isAnswered = false;
+      let streak = 0;
+      let solved = 0;
+
+      const problemEl = document.getElementById('problem');
+      const inputEl = document.getElementById('answer');
+      const submitBtn = document.getElementById('submit');
+      const feedbackEl = document.getElementById('feedback');
+      const streakEl = document.getElementById('stat-streak');
+      const solvedEl = document.getElementById('stat-solved');
+      const filterBtns = document.querySelectorAll('.filter-btn');
+
+      function randChoice(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+      }
+
+      function randFloat(min, max, step = 0.5) {
+        const steps = Math.round((max - min) / step);
+        return parseFloat((min + Math.floor(Math.random() * (steps + 1)) * step).toFixed(1));
+      }
+
+      const generators = {
+        add: () => {
+          const a = randFloat(0.5, 6.0, 0.5);
+          const b = randFloat(0.5, 6.0, 0.5);
+          return { html: `${a} <span class="op-add">+</span> ${b}`, target: a + b };
+        },
+        mul: () => {
+          const a = randChoice([0.5, 1.5, 2.0, 2.5, 3.0, 4.0]);
+          const b = randChoice([0.2, 0.5, 1.5, 2.0, 3.0]);
+          return { html: `${a} <span class="op-mul">\u00d7</span> ${b}`, target: a * b };
+        },
+        exp: () => {
+          const choices = [
+            { html: '<span class="op-exp">exp</span>(-\u221e)', target: 0, allowsE: false },
+            { html: '<span class="op-exp">exp</span>(0)', target: 1, allowsE: false },
+            { html: '<span class="op-exp">exp</span>(1)', target: Math.E, allowsE: true },
+            { html: '<span class="op-exp">exp</span>(-1.0)', target: Math.exp(-1.0), allowsE: false },
+            { html: '<span class="op-exp">exp</span>(-0.5)', target: Math.exp(-0.5), allowsE: false },
+            { html: '<span class="op-exp">exp</span>(0.5)', target: Math.exp(0.5), allowsE: false },
+            { html: '<span class="op-exp">exp</span>(1.5)', target: Math.exp(1.5), allowsE: false },
+            { html: '<span class="op-exp">exp</span>(2.0)', target: Math.exp(2.0), allowsE: false }
+          ];
+          return randChoice(choices);
+        },
+        div: () => {
+          const divisor = randChoice([2, 4, 5, 1.5, 0.5]);
+          const target = randChoice([0.5, 1.0, 1.5, 2.0, 3.0, 4.0]);
+          const dividend = parseFloat((divisor * target).toFixed(1));
+          return { html: `${dividend} <span class="op-div">\u00f7</span> ${divisor}`, target: dividend / divisor };
+        }
+      };
+
+      function nextProblem() {
+        isAnswered = false;
+        feedbackEl.textContent = '';
+        feedbackEl.className = 'feedback';
+        inputEl.value = '';
+        submitBtn.className = 'submit-btn';
+        submitBtn.textContent = 'Check';
+        inputEl.focus();
+
+        let op = currentOp;
+        if (op === 'all') {
+          op = randChoice(['add', 'mul', 'exp', 'div']);
+        }
+
+        currentProblem = generators[op]();
+        problemEl.innerHTML = currentProblem.html;
+      }
+
+      function checkAnswer() {
+        if (!currentProblem) return;
+        const raw = inputEl.value.trim().toLowerCase().replace(',', '.');
+        if (!raw) return;
+
+        let isCorrect = false;
+
+        if (currentProblem.allowsE && raw === 'e') {
+          isCorrect = true;
+        } else {
+          const val = parseFloat(raw);
+          if (isNaN(val)) {
+            feedbackEl.className = 'feedback incorrect';
+            feedbackEl.textContent = 'enter a valid number';
+            return;
+          }
+
+          const diff = Math.abs(val - currentProblem.target);
+          isCorrect = diff <= 0.1001 || Math.abs(parseFloat(val.toFixed(1)) - parseFloat(currentProblem.target.toFixed(1))) < 1e-5;
+        }
+
+        const targetDisplay = currentProblem.allowsE
+          ? `~${currentProblem.target.toFixed(1)} (or e)`
+          : (currentProblem.target === 0 ? '0' : `~${currentProblem.target.toFixed(1)}`);
+
+        isAnswered = true;
+
+        if (isCorrect) {
+          streak++;
+          solved++;
+          feedbackEl.className = 'feedback correct';
+          feedbackEl.textContent = `\u2713 correct! (${targetDisplay})`;
+          submitBtn.className = 'submit-btn';
+          submitBtn.textContent = 'Next \u2192';
+        } else {
+          streak = 0;
+          feedbackEl.className = 'feedback incorrect';
+          feedbackEl.textContent = `\u2715 target was ${targetDisplay}`;
+          submitBtn.className = 'submit-btn incorrect';
+          submitBtn.innerHTML = 'Next <span style="color:#f85149">\u2715</span>';
+        }
+
+        streakEl.textContent = streak;
+        solvedEl.textContent = solved;
+      }
+
+      filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          filterBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentOp = btn.dataset.op;
+          nextProblem();
+        });
+      });
+
+      submitBtn.addEventListener('click', () => {
+        if (isAnswered) nextProblem();
+        else checkAnswer();
+      });
+
+      inputEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          if (isAnswered) nextProblem();
+          else checkAnswer();
+        }
+      });
+
+      nextProblem();
+    })();
+  </script>
+</body>
 </html>

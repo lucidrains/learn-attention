@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -e
+
+MSG="${1:-update}"
+
+echo "Deploying to GitHub Pages..."
+git add index.html serve deploy README.md 2>/dev/null || git add -A
+git commit -m "$MSG" || echo "No changes to commit"
+git push origin main
+
+echo "Deployed to https://lucidrains.github.io/learn-attention/"

@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>learn-attention</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -24,7 +25,7 @@
 
     .container {
       width: 100%;
-      max-width: 440px;
+      max-width: 580px;
       display: flex;
       flex-direction: column;
       gap: 2rem;
@@ -97,38 +98,37 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 16px;
-      height: 16px;
+      width: 14px;
+      height: 14px;
       border-radius: 50%;
-      border: 1.5px solid #58a6ff;
-      background: rgba(88, 166, 255, 0.12);
+      border: 1px solid rgba(88, 166, 255, 0.45);
+      background: rgba(88, 166, 255, 0.15);
       box-sizing: border-box;
       flex-shrink: 0;
-      transition: box-shadow 0.15s ease, border-color 0.15s ease;
     }
 
     .num-circle.sm {
-      width: 11px;
-      height: 11px;
-      border-width: 1.5px;
+      width: 10px;
+      height: 10px;
+      border-width: 1px;
     }
 
     .num-circle.has-e {
-      width: 16px;
-      height: 16px;
+      width: 14px;
+      height: 14px;
     }
 
     .num-circle.has-e .sym {
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       line-height: 1;
-      font-weight: 600;
+      font-weight: 500;
       color: #f85149;
       transform: translateY(-0.5px);
     }
 
     .num-circle.highlight {
-      box-shadow: 0 0 8px rgba(88, 166, 255, 0.7);
-      border-color: #79c0ff;
+      border-color: #58a6ff;
+      background: rgba(88, 166, 255, 0.35);
     }
 
     .op-add { color: #3fb950; }
@@ -187,8 +187,9 @@
     }
 
     .slider-val {
-      color: #58a6ff;
-      font-weight: 600;
+      color: #79c0ff;
+      font-weight: 400;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     }
 
     input[type="range"] {
@@ -203,18 +204,17 @@
 
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 16px;
-      height: 16px;
+      width: 14px;
+      height: 14px;
       border-radius: 50%;
       background: #58a6ff;
       cursor: pointer;
-      box-shadow: 0 0 8px rgba(88, 166, 255, 0.6);
-      border: 2px solid #fff;
+      border: 1px solid #161b22;
       transition: transform 0.1s ease;
     }
 
     input[type="range"]::-webkit-slider-thumb:hover {
-      transform: scale(1.2);
+      transform: scale(1.15);
     }
 
     .canvas-stage {
@@ -225,6 +225,30 @@
       justify-content: center;
       align-items: center;
       cursor: pointer;
+    }
+
+    .canvas-stage.attn-stage {
+      position: relative;
+      height: 380px;
+    }
+
+    .canvas-stage.attn-stage canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    #attn-webgl-canvas {
+      pointer-events: none;
+      display: none;
+    }
+
+    @media (max-width: 520px) {
+      .canvas-stage.attn-stage {
+        height: 340px;
+      }
     }
 
     canvas {
@@ -248,6 +272,15 @@
     .caption-op.add { color: #3fb950; }
     .caption-op.exp { color: #f85149; }
     .caption-op.div { color: #a371f7; }
+    #attn-caption {
+      font-size: 0.8rem;
+      white-space: normal;
+      height: auto;
+      min-height: 1.4rem;
+      justify-content: center;
+      text-align: center;
+      padding: 0 0.5rem;
+    }
 
     .card {
       background: #161b22;
@@ -293,10 +326,21 @@
 
     .problem {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 2.5rem;
-      color: #fff;
+      font-size: 2.2rem;
+      color: #e6edf3;
+      font-weight: 400;
       letter-spacing: 0.04em;
       margin: 0.25rem 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .problem-num {
+      font-weight: 400;
+      color: #e6edf3;
     }
 
     .input-row {
@@ -481,6 +525,36 @@
 
       <div class="stage-caption" id="softmax-caption">Vector of 4</div>
     </div>
+
+    <div class="dot-card" id="attn-card">
+      <div class="dot-header">
+        <span>Attention Matrix</span>
+        <span id="attn-header-dim">Queries (rows) &middot; Keys (columns)</span>
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-labels">
+          <span>context length (queries &amp; keys)</span>
+          <span class="slider-val" id="attn-len-slider-label">2</span>
+        </div>
+        <input type="range" id="attn-len-slider" min="0" max="10" value="1" step="1" />
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-labels">
+          <span>vector dimension</span>
+          <span class="slider-val" id="attn-dim-slider-label">2</span>
+        </div>
+        <input type="range" id="attn-dim-slider" min="0" max="10" value="1" step="1" />
+      </div>
+
+      <div class="canvas-stage attn-stage" id="attn-canvas-stage" title="Click to replay">
+        <canvas id="attn-canvas"></canvas>
+        <canvas id="attn-webgl-canvas"></canvas>
+      </div>
+
+      <div class="stage-caption" id="attn-caption">Queries (rows) &amp; Keys (columns) &middot; 2 &times; 2 &middot; vec dim 2</div>
+    </div>
   </div>
 
   <script>
@@ -624,6 +698,53 @@
           else checkAnswer();
         }
       });
+
+      function createMagnitudeGradient(ctx, x, y, r, val, baseColor = '#58a6ff', alpha = 1, category = 'default') {
+        const num = typeof val === 'number' ? val : parseFloat(val);
+        const isNeg = !isNaN(num) && num < 0;
+        const mag = isNaN(num) ? 1.0 : Math.abs(num);
+
+        let maxRef = 3.0;
+        if (category === 'prob') maxRef = 1.0;
+        else if (category === 'exp') maxRef = 7.5;
+        else if (category === 'sum') maxRef = 14.0;
+        else if (category === 'binary') maxRef = 1.0;
+        else if (category === 'vector') maxRef = 2.0;
+        else if (category === 'mul') maxRef = 4.0;
+        else if (category === 'sim') maxRef = 3.0;
+
+        const t = Math.min(1.0, Math.max(0.06, mag / maxRef));
+
+        let rgb = [88, 166, 255]; // default blue
+        if (isNeg) {
+          rgb = [135, 138, 172]; // Muted, calm slate-violet for negative (not bright purple)
+        } else if (baseColor === '#f0883e' || baseColor === 'orange' || (typeof baseColor === 'string' && baseColor.includes('240, 136, 62'))) {
+          rgb = [240, 136, 62];
+        } else if (baseColor === '#3fb950' || baseColor === 'green' || (typeof baseColor === 'string' && baseColor.includes('63, 185, 80'))) {
+          rgb = [63, 185, 80];
+        } else if (baseColor === '#f85149' || baseColor === 'red' || (typeof baseColor === 'string' && baseColor.includes('248, 81, 73'))) {
+          rgb = [248, 81, 73];
+        } else if (baseColor === '#a371f7' || baseColor === 'purple' || (typeof baseColor === 'string' && baseColor.includes('163, 113, 247'))) {
+          rgb = [135, 138, 172]; // Muted slate-violet
+        } else if (Array.isArray(baseColor)) {
+          rgb = baseColor;
+        }
+
+        const [R, G, B] = rgb;
+        // Flat, subtle tint proportional to magnitude - completely non-skeumorphic
+        const fillA = (0.04 + 0.20 * t) * alpha;
+        const grad = `rgba(${R}, ${G}, ${B}, ${fillA.toFixed(3)})`;
+
+        // Very thin, crisp, delicate border
+        const strokeA = Math.min(1.0, (0.18 + 0.32 * t) * alpha);
+        const strokeColor = `rgba(${R}, ${G}, ${B}, ${strokeA.toFixed(3)})`;
+        const glowBlur = 0;
+        const glowColor = null;
+        // Modest, unbold text color (less harsh, softer contrast)
+        const textColor = isNeg ? (t < 0.20 ? '#8b949e' : '#b8bed6') : (t < 0.20 ? '#8b949e' : '#c9d1d9');
+
+        return { grad, strokeColor, glowBlur, glowColor, textColor, t };
+      }
 
       // Dot Product animation (Canvas based, scales from 4 to 16,384)
       (function initDotCanvasAnimation() {
@@ -807,31 +928,42 @@
                 const p = positions[i];
                 const px = p.x * easeX;
                 const py = yBase + p.y * easeY;
+                const lbl = (labels && labels[i] !== undefined) ? labels[i] : null;
+
+                let dotFill = fill;
+                let dotStroke = stroke;
+                if (lbl !== null) {
+                  const magInfo = createMagnitudeGradient(ctx, px, py, r, lbl, stroke, alpha);
+                  dotFill = magInfo.grad;
+                  dotStroke = magInfo.strokeColor;
+                }
+
                 ctx.beginPath();
                 ctx.arc(px, py, r, 0, Math.PI * 2);
-                if (fill) {
-                  ctx.fillStyle = fill;
+                if (dotFill) {
+                  ctx.fillStyle = dotFill;
                   ctx.fill();
                 }
-                ctx.lineWidth = 1.5;
-                ctx.strokeStyle = stroke;
+                ctx.lineWidth = 0.75;
+                ctx.strokeStyle = dotStroke;
                 ctx.stroke();
               }
             }
 
             // Real numbers inside circles if N <= 64 and radius is large enough
-            if (N <= 64 && r >= 9.5 && labels && labels.length > 0) {
+            if (N <= 64 && r >= 7.5 && labels && labels.length > 0) {
               ctx.shadowBlur = 0;
               const maxChars = Math.max(...labels.map(l => String(l).length), 2);
-              const fontSize = Math.min(10.5, Math.max(7.0, Math.floor((r * 1.8) / (maxChars * 0.65))));
-              ctx.font = `600 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
+              const fontSize = Math.min(8.5, Math.max(5.5, Math.floor((r * 1.25) / (maxChars * 0.65))));
+              ctx.font = `400 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
-              ctx.fillStyle = textColor;
               for (let i = 0; i < Math.min(N, labels.length); i++) {
                 const p = positions[i];
                 const px = p.x * easeX;
                 const py = yBase + p.y * easeY;
+                const magInfo = createMagnitudeGradient(ctx, px, py, r, labels[i], stroke, alpha);
+                ctx.fillStyle = magInfo.textColor;
                 ctx.fillText(labels[i], px, py);
               }
             }
@@ -927,24 +1059,33 @@
               ctx.save();
               ctx.translate(centerX, centerY);
               const rFinal = Math.max(12, layout.radius) * (1 + 0.35 * flash);
-              ctx.shadowColor = '#3fb950';
-              ctx.shadowBlur = flash * 28;
+              const sumVal = data ? data.sum : null;
+              let sumFill = `rgba(63, 185, 80, ${0.15 + 0.35 * flash})`;
+              let sumStroke = '#3fb950';
+              let sumTextCol = '#e6edf3';
+
+              if (sumVal !== null) {
+                const magInfo = createMagnitudeGradient(ctx, 0, Y_MID, rFinal, sumVal, '#3fb950', 1, 'sum');
+                sumFill = magInfo.grad;
+                sumStroke = magInfo.strokeColor;
+                sumTextCol = magInfo.textColor;
+              }
+
               ctx.beginPath();
               ctx.arc(0, Y_MID, rFinal, 0, Math.PI * 2);
-              ctx.fillStyle = `rgba(63, 185, 80, ${0.35 + 0.65 * flash})`;
+              ctx.fillStyle = sumFill;
               ctx.fill();
-              ctx.lineWidth = 1.5;
-              ctx.strokeStyle = '#3fb950';
+              ctx.lineWidth = 0.75;
+              ctx.strokeStyle = sumStroke;
               ctx.stroke();
 
-              if (N <= 64 && rFinal >= 9.5 && data) {
-                ctx.shadowBlur = 0;
+              if (N <= 64 && rFinal >= 7.5 && data) {
                 const maxChars = String(data.sum).length;
-                const fontSize = Math.min(11, Math.max(7.5, Math.floor((rFinal * 1.8) / (maxChars * 0.65))));
-                ctx.font = `600 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
+                const fontSize = Math.min(9.5, Math.max(6.0, Math.floor((rFinal * 1.3) / (maxChars * 0.65))));
+                ctx.font = `400 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillStyle = '#ffffff';
+                ctx.fillStyle = sumTextCol;
                 ctx.fillText(data.sum, 0, Y_MID);
               }
               ctx.restore();
@@ -959,29 +1100,38 @@
 
           // 5400 -> 7000: 1 single scalar number (blue number circle)
           if (ms >= 5400 && ms < 7000) {
-            caption.innerHTML = '= 1 number <span style="color:#58a6ff; font-weight:600;">(scalar)</span>';
+            caption.innerHTML = '= 1 number <span style="color:#58a6ff; font-weight:400;">(scalar)</span>';
 
             ctx.save();
             ctx.translate(centerX, centerY);
-            ctx.shadowColor = 'rgba(88,166,255,0.5)';
-            ctx.shadowBlur = 14;
             const rFinal = Math.max(12, layout.radius);
+            const sumVal = data ? data.sum : null;
+            let sumFill = 'rgba(88,166,255,0.15)';
+            let sumStroke = '#58a6ff';
+            let sumTextCol = '#e6edf3';
+
+            if (sumVal !== null) {
+              const magInfo = createMagnitudeGradient(ctx, 0, Y_MID, rFinal, sumVal, '#58a6ff', 1, 'sum');
+              sumFill = magInfo.grad;
+              sumStroke = magInfo.strokeColor;
+              sumTextCol = magInfo.textColor;
+            }
+
             ctx.beginPath();
             ctx.arc(0, Y_MID, rFinal, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(88,166,255,0.2)';
+            ctx.fillStyle = sumFill;
             ctx.fill();
-            ctx.lineWidth = 1.5;
-            ctx.strokeStyle = '#58a6ff';
+            ctx.lineWidth = 0.75;
+            ctx.strokeStyle = sumStroke;
             ctx.stroke();
 
-            if (N <= 64 && rFinal >= 9.5 && data) {
-              ctx.shadowBlur = 0;
+            if (N <= 64 && rFinal >= 7.5 && data) {
               const maxChars = String(data.sum).length;
-              const fontSize = Math.min(11, Math.max(7.5, Math.floor((rFinal * 1.8) / (maxChars * 0.65))));
-              ctx.font = `600 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
+              const fontSize = Math.min(9.5, Math.max(6.0, Math.floor((rFinal * 1.3) / (maxChars * 0.65))));
+              ctx.font = `400 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
-              ctx.fillStyle = '#ffffff';
+              ctx.fillStyle = sumTextCol;
               ctx.fillText(data.sum, 0, Y_MID);
             }
             ctx.restore();
@@ -995,25 +1145,34 @@
             ctx.save();
             ctx.translate(centerX, centerY);
             ctx.globalAlpha = fade;
-            ctx.shadowColor = 'rgba(88,166,255,0.5)';
-            ctx.shadowBlur = 14;
             const rFinal = Math.max(12, layout.radius);
+            const sumVal = data ? data.sum : null;
+            let sumFill = 'rgba(88,166,255,0.15)';
+            let sumStroke = '#58a6ff';
+            let sumTextCol = '#e6edf3';
+
+            if (sumVal !== null) {
+              const magInfo = createMagnitudeGradient(ctx, 0, Y_MID, rFinal, sumVal, '#58a6ff', fade, 'sum');
+              sumFill = magInfo.grad;
+              sumStroke = magInfo.strokeColor;
+              sumTextCol = magInfo.textColor;
+            }
+
             ctx.beginPath();
             ctx.arc(0, Y_MID, rFinal, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(88,166,255,0.2)';
+            ctx.fillStyle = sumFill;
             ctx.fill();
-            ctx.lineWidth = 1.5;
-            ctx.strokeStyle = '#58a6ff';
+            ctx.lineWidth = 0.75;
+            ctx.strokeStyle = sumStroke;
             ctx.stroke();
 
-            if (N <= 64 && rFinal >= 9.5 && data) {
-              ctx.shadowBlur = 0;
+            if (N <= 64 && rFinal >= 7.5 && data) {
               const maxChars = String(data.sum).length;
-              const fontSize = Math.min(11, Math.max(7.5, Math.floor((rFinal * 1.8) / (maxChars * 0.65))));
-              ctx.font = `600 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
+              const fontSize = Math.min(9.5, Math.max(6.0, Math.floor((rFinal * 1.3) / (maxChars * 0.65))));
+              ctx.font = `400 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
-              ctx.fillStyle = '#ffffff';
+              ctx.fillStyle = sumTextCol;
               ctx.fillText(data.sum, 0, Y_MID);
             }
             ctx.restore();
@@ -1214,31 +1373,42 @@
                 const p = positions[i];
                 const px = p.x * easeX;
                 const py = yBase + p.y * easeY;
+                const lbl = (labels && labels[i] !== undefined) ? labels[i] : null;
+
+                let dotFill = fill;
+                let dotStroke = stroke;
+                if (lbl !== null) {
+                  const magInfo = createMagnitudeGradient(ctx, px, py, r, lbl, stroke, alpha);
+                  dotFill = magInfo.grad;
+                  dotStroke = magInfo.strokeColor;
+                }
+
                 ctx.beginPath();
                 ctx.arc(px, py, r, 0, Math.PI * 2);
-                if (fill) {
-                  ctx.fillStyle = fill;
+                if (dotFill) {
+                  ctx.fillStyle = dotFill;
                   ctx.fill();
                 }
-                ctx.lineWidth = 1.5;
-                ctx.strokeStyle = stroke;
+                ctx.lineWidth = 0.75;
+                ctx.strokeStyle = dotStroke;
                 ctx.stroke();
               }
             }
 
             // Real numbers inside circles if N <= 64 and radius is large enough
-            if (N <= 64 && r >= 9.5 && labels && labels.length > 0) {
+            if (N <= 64 && r >= 7.5 && labels && labels.length > 0) {
               ctx.shadowBlur = 0;
               const maxChars = Math.max(...labels.map(l => String(l).length), 2);
-              const fontSize = Math.min(10.5, Math.max(7.0, Math.floor((r * 1.8) / (maxChars * 0.65))));
-              ctx.font = `600 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
+              const fontSize = Math.min(8.5, Math.max(5.5, Math.floor((r * 1.25) / (maxChars * 0.65))));
+              ctx.font = `400 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
-              ctx.fillStyle = textColor;
               for (let i = 0; i < Math.min(N, labels.length); i++) {
                 const p = positions[i];
                 const px = p.x * easeX;
                 const py = yBase + p.y * easeY;
+                const magInfo = createMagnitudeGradient(ctx, px, py, r, labels[i], stroke, alpha);
+                ctx.fillStyle = magInfo.textColor;
                 ctx.fillText(labels[i], px, py);
               }
             }
@@ -1328,24 +1498,33 @@
               ctx.save();
               ctx.translate(centerX, centerY);
               const rFinal = Math.max(12, layout.radius) * (1 + 0.35 * flash);
-              ctx.shadowColor = '#3fb950';
-              ctx.shadowBlur = flash * 28;
+              const sumVal = data ? data.sum : null;
+              let sumFill = `rgba(63, 185, 80, ${0.15 + 0.35 * flash})`;
+              let sumStroke = '#3fb950';
+              let sumTextCol = '#e6edf3';
+
+              if (sumVal !== null) {
+                const magInfo = createMagnitudeGradient(ctx, 0, Y_BOTTOM, rFinal, sumVal, '#3fb950', 1, 'sum');
+                sumFill = magInfo.grad;
+                sumStroke = magInfo.strokeColor;
+                sumTextCol = magInfo.textColor;
+              }
+
               ctx.beginPath();
               ctx.arc(0, Y_BOTTOM, rFinal, 0, Math.PI * 2);
-              ctx.fillStyle = `rgba(63, 185, 80, ${0.35 + 0.65 * flash})`;
+              ctx.fillStyle = sumFill;
               ctx.fill();
-              ctx.lineWidth = 1.5;
-              ctx.strokeStyle = '#3fb950';
+              ctx.lineWidth = 0.75;
+              ctx.strokeStyle = sumStroke;
               ctx.stroke();
 
-              if (N <= 64 && rFinal >= 9.5 && data) {
-                ctx.shadowBlur = 0;
+              if (N <= 64 && rFinal >= 7.5 && data) {
                 const maxChars = String(data.sum).length;
-                const fontSize = Math.min(11, Math.max(7.5, Math.floor((rFinal * 1.8) / (maxChars * 0.65))));
-                ctx.font = `600 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
+                const fontSize = Math.min(9.5, Math.max(6.0, Math.floor((rFinal * 1.3) / (maxChars * 0.65))));
+                ctx.font = `400 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillStyle = '#ffffff';
+                ctx.fillStyle = sumTextCol;
                 ctx.fillText(data.sum, 0, Y_BOTTOM);
               }
               ctx.restore();
@@ -1378,8 +1557,8 @@
 
               // Soft radiant cone from scalar up to numerator
               const coneGrad = ctx.createLinearGradient(0, Y_BOTTOM, 0, Y_TOP);
-              coneGrad.addColorStop(0, `rgba(163, 113, 247, ${rayAlpha * 0.28})`);
-              coneGrad.addColorStop(1, `rgba(163, 113, 247, ${rayAlpha * 0.04})`);
+              coneGrad.addColorStop(0, `rgba(163, 113, 247, ${rayAlpha * 0.20})`);
+              coneGrad.addColorStop(1, `rgba(163, 113, 247, ${rayAlpha * 0.02})`);
               ctx.fillStyle = coneGrad;
               ctx.beginPath();
               ctx.moveTo(0, Y_BOTTOM);
@@ -1389,8 +1568,8 @@
               ctx.fill();
 
               // Radiant purple projection lines
-              ctx.strokeStyle = `rgba(163, 113, 247, ${rayAlpha * 0.65})`;
-              ctx.lineWidth = 1.2;
+              ctx.strokeStyle = `rgba(163, 113, 247, ${rayAlpha * 0.50})`;
+              ctx.lineWidth = 1.0;
               if (N <= 16) {
                 for (let i = 0; i < N; i++) {
                   ctx.beginPath();
@@ -1418,24 +1597,33 @@
               ctx.translate(centerX, centerY);
               ctx.globalAlpha = sumAlpha;
               const rFinal = Math.max(12, layout.radius);
-              ctx.shadowColor = '#3fb950';
-              ctx.shadowBlur = 10;
+              const sumVal = data ? data.sum : null;
+              let sumFill = 'rgba(63, 185, 80, 0.2)';
+              let sumStroke = '#3fb950';
+              let sumTextCol = '#e6edf3';
+
+              if (sumVal !== null) {
+                const magInfo = createMagnitudeGradient(ctx, 0, Y_BOTTOM, rFinal, sumVal, '#3fb950', sumAlpha, 'sum');
+                sumFill = magInfo.grad;
+                sumStroke = magInfo.strokeColor;
+                sumTextCol = magInfo.textColor;
+              }
+
               ctx.beginPath();
               ctx.arc(0, Y_BOTTOM, rFinal, 0, Math.PI * 2);
-              ctx.fillStyle = 'rgba(63, 185, 80, 0.3)';
+              ctx.fillStyle = sumFill;
               ctx.fill();
-              ctx.lineWidth = 1.5;
-              ctx.strokeStyle = '#3fb950';
+              ctx.lineWidth = 0.75;
+              ctx.strokeStyle = sumStroke;
               ctx.stroke();
 
-              if (N <= 64 && rFinal >= 9.5 && data) {
-                ctx.shadowBlur = 0;
+              if (N <= 64 && rFinal >= 7.5 && data) {
                 const maxChars = String(data.sum).length;
-                const fontSize = Math.min(11, Math.max(7.5, Math.floor((rFinal * 1.8) / (maxChars * 0.65))));
-                ctx.font = `600 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
+                const fontSize = Math.min(9.5, Math.max(6.0, Math.floor((rFinal * 1.3) / (maxChars * 0.65))));
+                ctx.font = `400 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillStyle = '#ffffff';
+                ctx.fillStyle = sumTextCol;
                 ctx.fillText(data.sum, 0, Y_BOTTOM);
               }
               ctx.restore();
@@ -1443,15 +1631,15 @@
 
             // Numerator circles transition from exp to normalized prob, flashing purple
             const strokeColor = isDivided ? '#a371f7' : '#f85149';
-            const purpleBg = `rgba(163, 113, 247, ${0.2 + 0.6 * flash})`;
+            const purpleBg = `rgba(163, 113, 247, ${0.15 + 0.35 * flash})`;
             const labels = isDivided && data ? data.prob : (data ? data.exp : null);
-            drawDotBatch(layout.positions, Y_TOP, 1, 1, 1 + 0.15 * flash, strokeColor, purpleBg, flash * 20, '#a371f7', 1, labels, '#ffffff');
+            drawDotBatch(layout.positions, Y_TOP, 1, 1, 1 + 0.15 * flash, strokeColor, purpleBg, 0, null, 1, labels, '#ffffff');
             return;
           }
 
           // 6600 -> 7600ms: Output normalized probabilities vector (moving back to center)
           if (ms >= 6600 && ms < 7600) {
-            caption.innerHTML = `= Vector of ${N.toLocaleString()} <span style="color:#58a6ff; font-weight:600;">(sums to 1.0)</span>`;
+            caption.innerHTML = `= Vector of ${N.toLocaleString()} <span style="color:#58a6ff; font-weight:400;">(sums to 1.0)</span>`;
 
             const p = Math.min(1, (ms - 6600) / 600);
             const ease = p * p * (3 - 2 * p);
@@ -1473,6 +1661,1516 @@
             drawBracket(bracketR, Y_MID, bracketH, false, fade);
 
             drawDotBatch(layout.positions, Y_MID, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.22)', 8, '#58a6ff', fade, data ? data.prob : null, '#c9d1d9');
+          }
+        }
+
+        function animLoop(now) {
+          const elapsed = (now - startTime) % TOTAL_DURATION;
+          render(elapsed);
+          requestAnimationFrame(animLoop);
+        }
+        requestAnimationFrame(animLoop);
+
+        canvasStage.addEventListener('click', () => {
+          startTime = performance.now();
+        });
+      })();
+
+      // Attention Matrix animation (queries & keys, context length 1 to 1024, dim 1 to 1024)
+      (function initAttnCanvasAnimation() {
+        const POWERS = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024];
+        let currentLenIdx = 1; // Default 2
+        let currentDimIdx = 1; // Default 2
+        let T = POWERS[currentLenIdx];
+        let d = POWERS[currentDimIdx];
+
+        const lenSlider = document.getElementById('attn-len-slider');
+        const lenSliderLabel = document.getElementById('attn-len-slider-label');
+        const dimSlider = document.getElementById('attn-dim-slider');
+        const dimSliderLabel = document.getElementById('attn-dim-slider-label');
+        const headerDim = document.getElementById('attn-header-dim');
+        const caption = document.getElementById('attn-caption');
+        const canvasStage = document.getElementById('attn-canvas-stage');
+        const canvas = document.getElementById('attn-canvas');
+        const webglCanvas = document.getElementById('attn-webgl-canvas');
+        if (!canvas || !lenSlider || !dimSlider) return;
+
+        const ctx = canvas.getContext('2d');
+        let width = 0;
+        let height = 0;
+        let dpr = window.devicePixelRatio || 1;
+
+        function createThreeAttnRenderer(canvasEl) {
+          if (!window.THREE || !canvasEl) return null;
+
+          const renderer = new THREE.WebGLRenderer({
+            canvas: canvasEl,
+            alpha: true,
+            antialias: true,
+            powerPreference: 'high-performance'
+          });
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+          const scene = new THREE.Scene();
+          const camera = new THREE.OrthographicCamera(-1, 1, -1, 1, 0.1, 1000);
+          camera.position.z = 10;
+
+          const MAX_INSTANCES = 16384 + 128 * 3; // 128x128 matrix + Q + K + Sum
+          const baseGeo = new THREE.PlaneGeometry(1, 1);
+          const geo = new THREE.InstancedBufferGeometry();
+          geo.index = baseGeo.index;
+          geo.attributes.position = baseGeo.attributes.position;
+          geo.attributes.uv = baseGeo.attributes.uv;
+
+          const posArray = new Float32Array(MAX_INSTANCES * 3);
+          const colorArray = new Float32Array(MAX_INSTANCES * 3);
+          const sizeArray = new Float32Array(MAX_INSTANCES);
+          const alphaArray = new Float32Array(MAX_INSTANCES);
+
+          const posAttr = new THREE.InstancedBufferAttribute(posArray, 3);
+          const colorAttr = new THREE.InstancedBufferAttribute(colorArray, 3);
+          const sizeAttr = new THREE.InstancedBufferAttribute(sizeArray, 1);
+          const alphaAttr = new THREE.InstancedBufferAttribute(alphaArray, 1);
+
+          posAttr.setUsage(THREE.DynamicDrawUsage);
+          colorAttr.setUsage(THREE.DynamicDrawUsage);
+          sizeAttr.setUsage(THREE.DynamicDrawUsage);
+          alphaAttr.setUsage(THREE.DynamicDrawUsage);
+
+          geo.setAttribute('a_instancePos', posAttr);
+          geo.setAttribute('a_color', colorAttr);
+          geo.setAttribute('a_size', sizeAttr);
+          geo.setAttribute('a_alpha', alphaAttr);
+
+          const mat = new THREE.ShaderMaterial({
+            vertexShader: `
+              attribute vec3 a_instancePos;
+              attribute vec3 a_color;
+              attribute float a_size;
+              attribute float a_alpha;
+              varying vec3 v_color;
+              varying float v_alpha;
+              varying vec2 v_uv;
+
+              void main() {
+                v_color = a_color;
+                v_alpha = a_alpha;
+                v_uv = uv;
+                vec3 transformed = position * a_size + a_instancePos;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(transformed, 1.0);
+              }
+            `,
+            fragmentShader: `
+              varying vec3 v_color;
+              varying float v_alpha;
+              varying vec2 v_uv;
+
+              void main() {
+                vec2 p = v_uv - vec2(0.5);
+                float dist = length(p);
+                if (dist > 0.5) discard;
+                float edge = smoothstep(0.5, 0.40, dist);
+                float core = smoothstep(0.38, 0.0, dist) * 0.45;
+                vec3 col = v_color + vec3(core);
+                gl_FragColor = vec4(col, v_alpha * edge);
+              }
+            `,
+            side: THREE.DoubleSide,
+            transparent: true,
+            depthWrite: false,
+            depthTest: false,
+            blending: THREE.NormalBlending
+          });
+
+          const mesh = new THREE.Mesh(geo, mat);
+          mesh.frustumCulled = false;
+          scene.add(mesh);
+
+          function resize(w, h) {
+            renderer.setSize(w, h, false);
+            camera.left = -w / 2;
+            camera.right = w / 2;
+            camera.top = -h / 2;
+            camera.bottom = h / 2;
+            camera.updateProjectionMatrix();
+          }
+
+          function renderFrame(T_val, d_val, ms, geom, w, h, s) {
+            camera.position.set(0, -14 * s, 10);
+            camera.lookAt(0, -14 * s, 0);
+            camera.updateMatrixWorld();
+
+            const T_vis = Math.min(T_val, 128);
+            const totalMatrix = T_vis * T_vis;
+            const totalDots = totalMatrix + T_vis * 3;
+            geo.instanceCount = totalDots;
+
+            const stepX = geom.matW / T_vis;
+            const stepY = geom.matH / T_vis;
+            const dotR = Math.max(1.1, stepX * 0.36);
+
+            const initQX = -(geom.matW / 2 + 54 * s);
+            const initKX = (geom.matW / 2 + 54 * s);
+            const initKeyY = (geom.rowY[0] + geom.rowY[T_vis - 1]) / 2;
+            const spanK = Math.min(140 * s, geom.matW * 0.95);
+
+            let qX = geom.leftQueryX;
+            let kY = geom.topKeyY;
+            let qkAlpha = 1.0;
+
+            if (ms < 1400) {
+              qX = initQX;
+              kY = initKeyY;
+            } else if (ms < 3200) {
+              const p = (ms - 1400) / 1800;
+              const ease = p * p * (3 - 2 * p);
+              qX = initQX + (geom.leftQueryX - initQX) * ease;
+              kY = initKeyY + (geom.topKeyY - initKeyY) * ease;
+            } else if (ms < 5200) {
+              qkAlpha = 0.85;
+            } else if (ms < 7200) {
+              qkAlpha = 0.40;
+            } else if (ms < 10200) {
+              qkAlpha = 0.25;
+            } else if (ms < 11800) {
+              qkAlpha = 0.20;
+            } else {
+              qkAlpha = 0.40;
+            }
+
+            if (ms >= 13600) {
+              const fade = Math.max(0, 1 - (ms - 13600) / 1000);
+              qkAlpha *= fade;
+            }
+
+            // Q instances [0 .. T_vis - 1]
+            for (let i = 0; i < T_vis; i++) {
+              const qy = geom.rowY[i];
+              posArray[i * 3] = qX;
+              posArray[i * 3 + 1] = qy;
+              posArray[i * 3 + 2] = 0;
+              colorArray[i * 3] = 0.35;
+              colorArray[i * 3 + 1] = 0.65;
+              colorArray[i * 3 + 2] = 1.0;
+              sizeArray[i] = dotR * 2.1;
+              alphaArray[i] = qkAlpha;
+            }
+
+            // K instances [T_vis .. 2*T_vis - 1]
+            for (let j = 0; j < T_vis; j++) {
+              let kx;
+              if (ms < 1400) {
+                kx = initKX - spanK / 2 + (j + 0.5) * (spanK / T_vis);
+              } else if (ms < 3200) {
+                const p = (ms - 1400) / 1800;
+                const ease = p * p * (3 - 2 * p);
+                const startKX = initKX - spanK / 2 + (j + 0.5) * (spanK / T_vis);
+                kx = startKX + (geom.colX[j] - startKX) * ease;
+              } else {
+                kx = geom.colX[j];
+              }
+              const idx = T_vis + j;
+              posArray[idx * 3] = kx;
+              posArray[idx * 3 + 1] = kY;
+              posArray[idx * 3 + 2] = 0;
+              colorArray[idx * 3] = 0.35;
+              colorArray[idx * 3 + 1] = 0.65;
+              colorArray[idx * 3 + 2] = 1.0;
+              sizeArray[idx] = dotR * 2.1;
+              alphaArray[idx] = qkAlpha;
+            }
+
+            // Row Sums [2*T_vis .. 3*T_vis - 1]
+            let sumAlpha = 0;
+            let sumFlash = 0;
+            if (ms >= 8600 && ms < 10200) {
+              const p = (ms - 8600) / 1600;
+              if (p >= 0.72) {
+                sumAlpha = 1.0;
+                sumFlash = Math.sin(((p - 0.72) / 0.28) * Math.PI);
+              }
+            } else if (ms >= 10200 && ms < 11800) {
+              const p = (ms - 10200) / 1600;
+              sumAlpha = Math.max(0, 1 - Math.max(0, (p - 0.45) / 0.55));
+            } else if (ms >= 11800) {
+              sumAlpha = 0.75;
+              if (ms >= 13600) {
+                sumAlpha *= Math.max(0, 1 - (ms - 13600) / 1000);
+              }
+            }
+
+            for (let i = 0; i < T_vis; i++) {
+              const idx = 2 * T_vis + i;
+              posArray[idx * 3] = geom.rightSumX;
+              posArray[idx * 3 + 1] = geom.rowY[i];
+              posArray[idx * 3 + 2] = 0;
+              colorArray[idx * 3] = 0.25;
+              colorArray[idx * 3 + 1] = 0.73;
+              colorArray[idx * 3 + 2] = 0.31;
+              sizeArray[idx] = dotR * (2.0 + 0.5 * sumFlash);
+              alphaArray[idx] = sumAlpha;
+            }
+
+            // Matrix dots [3*T_vis .. totalDots - 1]
+            let matR = 0, matG = 0, matB = 0;
+            let matAlpha = 0;
+            let matScale = 1.0;
+            let isPhase8 = false;
+
+            if (ms < 3200) {
+              matAlpha = 0;
+            } else if (ms >= 3200 && ms < 5200) {
+              const p = (ms - 3200) / 2000;
+              if (p >= 0.65) {
+                const contactPhase = (p - 0.65) / 0.35;
+                const flash = Math.sin(contactPhase * Math.PI);
+                matR = 0.94; matG = 0.53; matB = 0.24;
+                matAlpha = 0.85 + 0.15 * flash;
+                matScale = 1.0 + 0.22 * flash;
+              } else {
+                matAlpha = 0;
+              }
+            } else if (ms >= 5200 && ms < 7200) {
+              const p = (ms - 5200) / 2000;
+              const mergePhase = p >= 0.72 ? (p - 0.72) / 0.28 : 0;
+              const flash = Math.sin(mergePhase * Math.PI);
+              matR = 0.25; matG = 0.73; matB = 0.31;
+              matAlpha = 0.90;
+              matScale = 1.0 + 0.20 * flash;
+            } else if (ms >= 7200 && ms < 8600) {
+              const p = (ms - 7200) / 1400;
+              const flash = Math.sin(p * Math.PI);
+              matR = 0.97; matG = 0.32; matB = 0.29;
+              matAlpha = 0.90;
+              matScale = 1.0 + 0.18 * flash;
+            } else if (ms >= 8600 && ms < 10200) {
+              matR = 0.97; matG = 0.32; matB = 0.29;
+              matAlpha = 0.80;
+              matScale = 1.0;
+            } else if (ms >= 10200 && ms < 11800) {
+              const p = (ms - 10200) / 1600;
+              const isDivided = p >= 0.40;
+              const flash = Math.sin(p * Math.PI);
+              if (isDivided) {
+                matR = 0.64; matG = 0.44; matB = 0.97;
+              } else {
+                matR = 0.97; matG = 0.32; matB = 0.29;
+              }
+              matAlpha = 0.85 + 0.15 * flash;
+              matScale = 1.0 + 0.14 * flash;
+            } else if (ms >= 11800) {
+              isPhase8 = true;
+              matAlpha = 1.0;
+              if (ms >= 13600) {
+                const fade = Math.max(0, 1 - (ms - 13600) / 1000);
+                matAlpha *= fade;
+              }
+            }
+
+            const baseOffset = 3 * T_vis;
+            for (let i = 0; i < T_vis; i++) {
+              const cy = geom.rowY[i];
+              for (let j = 0; j < T_vis; j++) {
+                const cx = geom.colX[j];
+                const mIdx = baseOffset + i * T_vis + j;
+                posArray[mIdx * 3] = cx;
+                posArray[mIdx * 3 + 1] = cy;
+                posArray[mIdx * 3 + 2] = 0;
+
+                if (isPhase8) {
+                  const dist = Math.abs(i - j);
+                  const localBand = Math.exp(-dist * (4.0 / T_vis));
+                  const noise = 0.10 * Math.sin(i * 12.3 + j * 7.7);
+                  const score = Math.max(0.12, Math.min(1.0, (i === j ? 1.0 : (localBand * 0.75 + noise))));
+
+                  colorArray[mIdx * 3] = 0.20 + 0.45 * score;
+                  colorArray[mIdx * 3 + 1] = 0.45 + 0.40 * score;
+                  colorArray[mIdx * 3 + 2] = 0.85 + 0.15 * score;
+                  sizeArray[mIdx] = dotR * (1.6 + 0.8 * score);
+                  alphaArray[mIdx] = matAlpha * (0.25 + 0.75 * score);
+                } else {
+                  colorArray[mIdx * 3] = matR;
+                  colorArray[mIdx * 3 + 1] = matG;
+                  colorArray[mIdx * 3 + 2] = matB;
+                  sizeArray[mIdx] = dotR * 2.0 * matScale;
+                  alphaArray[mIdx] = matAlpha;
+                }
+              }
+            }
+
+            posAttr.needsUpdate = true;
+            colorAttr.needsUpdate = true;
+            sizeAttr.needsUpdate = true;
+            alphaAttr.needsUpdate = true;
+
+            renderer.render(scene, camera);
+          }
+
+          return {
+            resize,
+            renderFrame
+          };
+        }
+
+        let threeAttn = null;
+        try {
+          threeAttn = createThreeAttnRenderer(webglCanvas);
+        } catch (e) {
+          console.warn("Three.js WebGL initialization failed:", e);
+        }
+
+        function resize() {
+          const rect = canvasStage.getBoundingClientRect();
+          width = rect.width;
+          height = rect.height;
+          canvas.width = width * dpr;
+          canvas.height = height * dpr;
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          if (threeAttn) {
+            threeAttn.resize(width, height);
+          }
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        function updateLen(idx) {
+          currentLenIdx = Math.max(0, Math.min(POWERS.length - 1, idx));
+          lenSlider.value = currentLenIdx;
+          T = POWERS[currentLenIdx];
+          lenSliderLabel.textContent = T.toLocaleString();
+          headerDim.innerHTML = "Queries (rows) &middot; Keys (columns)";
+          startTime = performance.now();
+          if (webglCanvas) {
+            const isThree = (T >= 64 && threeAttn !== null);
+            webglCanvas.style.display = isThree ? 'block' : 'none';
+            if (isThree && width && height) {
+              threeAttn.resize(width, height);
+            }
+          }
+        }
+
+        function updateDim(idx) {
+          currentDimIdx = Math.max(0, Math.min(POWERS.length - 1, idx));
+          dimSlider.value = currentDimIdx;
+          d = POWERS[currentDimIdx];
+          dimSliderLabel.textContent = d.toLocaleString();
+          headerDim.innerHTML = "Queries (rows) &middot; Keys (columns)";
+          startTime = performance.now();
+        }
+
+        lenSlider.addEventListener('input', (e) => {
+          updateLen(parseInt(e.target.value, 10));
+        });
+
+        dimSlider.addEventListener('input', (e) => {
+          updateDim(parseInt(e.target.value, 10));
+        });
+
+        const ATTN_PRESETS = {
+          "1x1": {
+            q: [['0.8']],
+            k: [['0.9']],
+            mul: [[['0.72']]],
+            sim: [['0.72']],
+            exp: [['2.05']],
+            sum: ['2.05'],
+            prob: [['1.00']]
+          },
+          "1x2": {
+            q: [['1.0', '1.0']],
+            k: [['1.0', '1.0']],
+            mul: [[['1.0', '1.0']]],
+            sim: [['2.0']],
+            exp: [['7.4']],
+            sum: ['7.4'],
+            prob: [['1.00']]
+          },
+          "1x4": {
+            q: [['1', '0', '1', '0']],
+            k: [['1', '1', '1', '0']],
+            mul: [[['1', '0', '1', '0']]],
+            sim: [['2']],
+            exp: [['7.4']],
+            sum: ['7.4'],
+            prob: [['1.00']]
+          },
+          "2x1": {
+            q: [['1.0'], ['0.5']],
+            k: [['1.0'], ['0.8']],
+            mul: [
+              [['1.0'], ['0.8']],
+              [['0.5'], ['0.4']]
+            ],
+            sim: [
+              ['1.0', '0.8'],
+              ['0.5', '0.4']
+            ],
+            exp: [
+              ['2.7', '2.2'],
+              ['1.6', '1.5']
+            ],
+            sum: ['4.9', '3.1'],
+            prob: [
+              ['0.55', '0.45'],
+              ['0.52', '0.48']
+            ]
+          },
+          "2x2": {
+            q: [
+              ['1.0', '1.0'],
+              ['0.0', '1.0']
+            ],
+            k: [
+              ['1.0', '1.0'],
+              ['2.0', '-1.0']
+            ],
+            mul: [
+              [['1.0', '1.0'], ['2.0', '-1.0']],
+              [['0.0', '1.0'], ['0.0', '-1.0']]
+            ],
+            sim: [
+              ['2.0', '1.0'],
+              ['1.0', '-1.0']
+            ],
+            exp: [
+              ['7.4', '2.7'],
+              ['2.7', '0.4']
+            ],
+            sum: ['10.1', '3.1'],
+            prob: [
+              ['0.73', '0.27'],
+              ['0.87', '0.13']
+            ]
+          },
+          "2x4": {
+            q: [
+              ['1', '1', '0', '0'],
+              ['0', '0', '1', '1']
+            ],
+            k: [
+              ['1', '1', '0', '1'],
+              ['0', '1', '1', '1']
+            ],
+            mul: [
+              [['1', '1', '0', '0'], ['0', '1', '0', '0']],
+              [['0', '0', '0', '1'], ['0', '0', '1', '1']]
+            ],
+            sim: [
+              ['2', '1'],
+              ['1', '2']
+            ],
+            exp: [
+              ['7.4', '2.7'],
+              ['2.7', '7.4']
+            ],
+            sum: ['10.1', '10.1'],
+            prob: [
+              ['0.73', '0.27'],
+              ['0.27', '0.73']
+            ]
+          },
+          "4x4": {
+            q: [
+              ['1', '1', '0', '0'],
+              ['0', '1', '1', '0'],
+              ['0', '0', '1', '1'],
+              ['1', '0', '0', '1']
+            ],
+            k: [
+              ['1', '1', '0', '0'],
+              ['0', '1', '1', '0'],
+              ['0', '0', '1', '1'],
+              ['1', '0', '0', '1']
+            ],
+            mul: [
+              [['1', '1', '0', '0'], ['0', '1', '0', '0'], ['0', '0', '0', '0'], ['1', '0', '0', '0']],
+              [['0', '1', '0', '0'], ['0', '1', '1', '0'], ['0', '0', '1', '0'], ['0', '0', '0', '0']],
+              [['0', '0', '0', '0'], ['0', '0', '1', '0'], ['0', '0', '1', '1'], ['0', '0', '0', '1']],
+              [['1', '0', '0', '0'], ['0', '0', '0', '0'], ['0', '0', '0', '1'], ['1', '0', '0', '1']]
+            ],
+            sim: [
+              ['2', '1', '0', '1'],
+              ['1', '2', '1', '0'],
+              ['0', '1', '2', '1'],
+              ['1', '0', '1', '2']
+            ],
+            exp: [
+              ['7.4', '2.7', '1.0', '2.7'],
+              ['2.7', '7.4', '2.7', '1.0'],
+              ['1.0', '2.7', '7.4', '2.7'],
+              ['2.7', '1.0', '2.7', '7.4']
+            ],
+            sum: ['13.8', '13.8', '13.8', '13.8'],
+            prob: [
+              ['0.54', '0.20', '0.06', '0.20'],
+              ['0.20', '0.54', '0.20', '0.06'],
+              ['0.06', '0.20', '0.54', '0.20'],
+              ['0.20', '0.06', '0.20', '0.54']
+            ]
+          }
+        };
+
+        function getData(T_len, d_dim) {
+          if (T_len >= 64) {
+            return { q: null, k: null, mul: null, sim: null, exp: null, sum: null, prob: null };
+          }
+          const key = `${T_len}x${d_dim}`;
+          if (ATTN_PRESETS[key]) return ATTN_PRESETS[key];
+
+          const qNums = [];
+          const kNums = [];
+          for (let i = 0; i < T_len; i++) {
+            const row = [];
+            for (let m = 0; m < d_dim; m++) {
+              row.push(((i + m) % 2 === 0) ? 1 : 0);
+            }
+            qNums.push(row);
+          }
+          for (let j = 0; j < T_len; j++) {
+            const col = [];
+            for (let m = 0; m < d_dim; m++) {
+              col.push(((j * 2 + m) % 3 === 0) ? 1 : 0);
+            }
+            kNums.push(col);
+          }
+
+          const q = qNums.map(row => row.map(v => String(v)));
+          const k = kNums.map(col => col.map(v => String(v)));
+
+          const mul = [];
+          const sim = [];
+          const exp = [];
+          const sum = [];
+          const prob = [];
+
+          for (let i = 0; i < T_len; i++) {
+            const mulRow = [];
+            const simRow = [];
+            const expRow = [];
+            let rowSum = 0;
+            for (let j = 0; j < T_len; j++) {
+              let dot = 0;
+              const mulVec = [];
+              for (let m = 0; m < d_dim; m++) {
+                const p = qNums[i][m] * kNums[j][m];
+                dot += p;
+                if (d_dim <= 8) mulVec.push(String(p));
+              }
+              if (d_dim >= 8 || dot === 0) {
+                dot = (i === j) ? 2.0 : Math.max(-0.5, 1.2 - 0.5 * Math.abs(i - j));
+              }
+              mulRow.push(mulVec);
+              simRow.push(dot.toFixed(d_dim <= 4 ? 0 : 1));
+              const ev = Math.exp(dot);
+              expRow.push(ev.toFixed(1));
+              rowSum += ev;
+            }
+            mul.push(mulRow);
+            sim.push(simRow);
+            exp.push(expRow);
+            sum.push(rowSum.toFixed(1));
+
+            const probRow = [];
+            let pSum = 0;
+            for (let j = 0; j < T_len; j++) {
+              const p = Math.exp(parseFloat(simRow[j])) / rowSum;
+              probRow.push(p);
+              pSum += p;
+            }
+            const finalRow = probRow.map(p => (p / pSum).toFixed(2));
+            prob.push(finalRow);
+          }
+          const result = { q, k, mul, sim, exp, sum, prob };
+          ATTN_PRESETS[key] = result;
+          return result;
+        }
+
+        function subscript(n) {
+          const subs = ["\u2080", "\u2081", "\u2082", "\u2083", "\u2084", "\u2085", "\u2086", "\u2087", "\u2088", "\u2089"];
+          return String(n).split('').map(c => subs[parseInt(c, 10)] || c).join('');
+        }
+
+        function getGridGeometry(tCount, s, canvasW, canvasH) {
+          const centerY = 16 * s;
+          const maxMatW = Math.min(canvasW ? canvasW - 190 * s : 250 * s, 260 * s);
+          const maxMatH = Math.min(canvasH ? canvasH - 160 * s : 240 * s, 240 * s);
+          const maxMat = Math.min(maxMatW, maxMatH);
+          const T_calc = Math.min(tCount, 128);
+
+          let matW, matH, cellR;
+          if (tCount === 1) {
+            matW = 54 * s;
+            matH = 54 * s;
+            cellR = 17 * s;
+          } else if (tCount === 2) {
+            matW = 96 * s;
+            matH = 80 * s;
+            cellR = 14 * s;
+          } else if (tCount === 4) {
+            matW = 144 * s;
+            matH = 120 * s;
+            cellR = 9.5 * s;
+          } else if (tCount === 8) {
+            matW = Math.min(maxMat, 192 * s);
+            matH = matW;
+            const step = matW / 8;
+            cellR = step * 0.35;
+          } else if (tCount === 16) {
+            matW = Math.min(maxMat, 224 * s);
+            matH = matW;
+            const step = matW / 16;
+            cellR = Math.max(1.2, step * 0.34);
+          } else {
+            // tCount >= 32
+            matW = Math.min(maxMat, 230 * s);
+            matH = matW;
+            const step = matW / T_calc;
+            cellR = Math.max(0.7, step * 0.34);
+          }
+
+          const stepX = matW / T_calc;
+          const stepY = matH / T_calc;
+          const colX = [];
+          const rowY = [];
+          for (let j = 0; j < T_calc; j++) colX.push(-matW / 2 + (j + 0.5) * stepX);
+          for (let i = 0; i < T_calc; i++) rowY.push(centerY - matH / 2 + (i + 0.5) * stepY);
+
+          const matL = -matW / 2 - (tCount <= 4 ? 14 * s : 9 * s);
+          const matR = matW / 2 + (tCount <= 4 ? 14 * s : 9 * s);
+          const matHBrack = matH + (tCount <= 4 ? 16 * s : 10 * s);
+
+          const leftQueryX = matL - (tCount <= 2 ? (d <= 2 ? 52 * s : 74 * s) : (tCount <= 4 ? (d <= 2 ? 48 * s : 68 * s) : 38 * s));
+          const topKeyY = (centerY - matH / 2) - (tCount <= 2 ? (d <= 2 ? 48 * s : 68 * s) : (tCount <= 4 ? (d <= 2 ? 44 * s : 64 * s) : 38 * s));
+          const rightSumX = matR + (tCount <= 2 ? 46 * s : (tCount <= 4 ? 42 * s : 36 * s));
+
+          return {
+            matW,
+            matH,
+            matL,
+            matR,
+            matTop: centerY - matH / 2 - 8 * s,
+            matBot: centerY + matH / 2 + 8 * s,
+            matHBrack,
+            colX,
+            rowY,
+            cellW: stepX * (tCount <= 4 ? 0.92 : 0.96),
+            cellH: stepY * (tCount <= 4 ? 0.88 : 0.96),
+            cellR,
+            stepX,
+            stepY,
+            T_calc,
+            leftQueryX,
+            topKeyY,
+            rightSumX
+          };
+        }
+
+        function getVectorLayout(count, isVertical, length, s = 1, maxCircleR = 999) {
+          const points = [];
+          if (count === 1) {
+            const r = Math.min(13.0 * s, maxCircleR);
+            return {
+              points: [{ x: 0, y: 0, r }],
+              r,
+              length: 2 * r,
+              extentW: 2 * r,
+              extentH: 2 * r
+            };
+          }
+          if (count <= 8) {
+            const spacing = length / count;
+            const targetR = count <= 2 ? 12.0 * s : (count <= 4 ? 10.0 * s : 5.5 * s);
+            const maxR = Math.min(targetR, maxCircleR);
+            const r = Math.max(1.5, Math.min(maxR, (spacing * 0.84) / 2));
+            const start = -length / 2 + spacing / 2;
+            for (let i = 0; i < count; i++) {
+              const offset = start + i * spacing;
+              points.push({
+                x: isVertical ? 0 : offset,
+                y: isVertical ? offset : 0,
+                r: r
+              });
+            }
+            const extentH = isVertical ? (points[count - 1].y - points[0].y) + 2 * r : 2 * r;
+            const extentW = isVertical ? 2 * r : (points[count - 1].x - points[0].x) + 2 * r;
+            return { points, r, length, extentW, extentH };
+          }
+          const maxPts = Math.min(count, 48);
+          const spacing = length / maxPts;
+          const r = Math.max(0.6, Math.min(Math.min(1.8, maxCircleR), (spacing * 0.8) / 2));
+          const start = -length / 2 + spacing / 2;
+          for (let i = 0; i < count; i++) {
+            const idx = i % 48;
+            const lane = Math.floor(i / 48);
+            const offset = start + idx * spacing;
+            const laneOffset = (lane - (Math.ceil(count / 48) - 1) / 2) * (r * 2.4);
+            points.push({
+              x: isVertical ? laneOffset : offset,
+              y: isVertical ? offset : laneOffset,
+              r: r
+            });
+          }
+          const extentH = isVertical ? length + 2 * r : 20 * s;
+          const extentW = isVertical ? 20 * s : length + 2 * r;
+          return { points, r, length, extentW, extentH };
+        }
+
+        const TOTAL_DURATION = 14600;
+        let startTime = performance.now();
+
+        function render(ms) {
+          ctx.clearRect(0, 0, width, height);
+
+          const s = Math.min(1.0, Math.max(0.70, (width - 24) / 460));
+          const centerX = width / 2;
+          const centerY = height / 2 + 14 * s;
+
+          const geom = getGridGeometry(T, s, width, height);
+          const data = getData(T, d);
+          const isWebGL = (T >= 64 && threeAttn !== null);
+          const showNumbers = !isWebGL && (T <= 4 && d <= 4);
+
+          // Bound vector circle radius by row/col step to prevent overlap at T >= 8
+          const maxQueryCircleR = geom.stepY ? (geom.stepY * 0.44) : (13 * s);
+          const maxKeyCircleR = geom.stepX ? (geom.stepX * 0.44) : (13 * s);
+
+          const vecLenHoriz = d <= 1 ? 28 * s : (d <= 2 ? 56 * s : (d <= 4 ? 96 * s : (d <= 8 ? 104 * s : 116 * s)));
+          const vecLenVert = d <= 1 ? 28 * s : (d <= 2 ? 56 * s : (d <= 4 ? 96 * s : (d <= 8 ? 104 * s : 116 * s)));
+
+          const layoutHoriz = getVectorLayout(d, false, vecLenHoriz, s, maxQueryCircleR);
+          const layoutVert = getVectorLayout(d, true, vecLenVert, s, maxKeyCircleR);
+          const cellVecLen = Math.min(vecLenHoriz * 0.65, (geom.stepX ? geom.stepX * 0.72 : 36 * s));
+          const cellLayout = getVectorLayout(d, false, cellVecLen, s, geom.cellR * 0.68);
+
+          function drawBracket(x, y, h, isLeft, alpha = 1, color = "#484f58", wing = 5) {
+            if (alpha <= 0) return;
+            ctx.save();
+            ctx.translate(centerX + x, centerY + y);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.0;
+            ctx.globalAlpha = alpha;
+            ctx.beginPath();
+            if (isLeft) {
+              ctx.moveTo(wing, -h / 2);
+              ctx.lineTo(0, -h / 2);
+              ctx.lineTo(0, h / 2);
+              ctx.lineTo(wing, h / 2);
+            } else {
+              ctx.moveTo(-wing, -h / 2);
+              ctx.lineTo(0, -h / 2);
+              ctx.lineTo(0, h / 2);
+              ctx.lineTo(-wing, h / 2);
+            }
+            ctx.stroke();
+            ctx.restore();
+          }
+
+          function drawCircle(x, y, r, stroke, fill, text = null, glow = 0, glowColor = null, alpha = 1, textColor = "#e6edf3", category = 'default') {
+            if (alpha <= 0) return;
+            ctx.save();
+            ctx.translate(centerX + x, centerY + y);
+            ctx.globalAlpha = alpha;
+
+            let finalFill = fill;
+            let finalStroke = stroke;
+            let finalTextColor = textColor;
+
+            if (text !== null && text !== undefined) {
+              const magInfo = createMagnitudeGradient(ctx, 0, 0, r, text, stroke, alpha, category);
+              finalFill = magInfo.grad;
+              finalStroke = magInfo.strokeColor;
+              finalTextColor = magInfo.textColor;
+            }
+
+            ctx.beginPath();
+            ctx.arc(0, 0, Math.max(0.5, r), 0, Math.PI * 2);
+            if (finalFill) {
+              ctx.fillStyle = finalFill;
+              ctx.fill();
+            }
+            if (finalStroke) {
+              ctx.lineWidth = 0.75;
+              ctx.strokeStyle = finalStroke;
+              ctx.stroke();
+            }
+            if (showNumbers && text !== null && text !== undefined && r >= 5.5) {
+              ctx.shadowBlur = 0;
+              const maxChars = String(text).length;
+              const fontSize = Math.min(8.5, Math.max(5.5, Math.floor((r * 1.25) / (maxChars * 0.65))));
+              ctx.font = `400 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillStyle = finalTextColor;
+              ctx.fillText(text, 0, 0);
+            }
+            ctx.restore();
+          }
+
+          function drawVector(baseX, baseY, layout, stroke, fill, labels = null, glow = 0, glowColor = null, alpha = 1, textColor = "#ffffff", scaleR = 1, category = 'vector') {
+            if (alpha <= 0) return;
+            const r = layout.r * scaleR;
+            for (let i = 0; i < d; i++) {
+              const p = layout.points[i];
+              const rawVal = (labels && labels[i] !== undefined) ? labels[i] : null;
+              drawCircle(baseX + p.x, baseY + p.y, r, stroke, fill, rawVal, glow, glowColor, alpha, textColor, category);
+            }
+          }
+
+          function drawLabel(text, x, y, color = "#7d8590", align = "center", font = null, alpha = 1) {
+            if (alpha <= 0) return;
+            ctx.save();
+            ctx.translate(centerX + x, centerY + y);
+            ctx.globalAlpha = alpha;
+            ctx.font = font || `400 ${Math.round(10.5 * s)}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+            ctx.fillStyle = color;
+            ctx.textAlign = align;
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, 0, 0);
+            ctx.restore();
+          }
+
+          function drawGridOutline(alpha) {
+            if (alpha <= 0) return;
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.globalAlpha = alpha;
+            ctx.strokeStyle = "rgba(48, 54, 61, 0.7)";
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 3]);
+            const drawCount = geom.T_calc || T;
+            if (drawCount <= 8) {
+              for (let i = 0; i < drawCount; i++) {
+                for (let j = 0; j < drawCount; j++) {
+                  const cx = geom.colX[j];
+                  const cy = geom.rowY[i];
+                  ctx.strokeRect(cx - geom.cellW / 2, cy - geom.cellH / 2, geom.cellW, geom.cellH);
+                }
+              }
+            } else if (drawCount <= 16) {
+              const x0 = geom.colX[0] - geom.cellW / 2;
+              const x1 = geom.colX[drawCount - 1] + geom.cellW / 2;
+              const y0 = geom.rowY[0] - geom.cellH / 2;
+              const y1 = geom.rowY[drawCount - 1] + geom.cellH / 2;
+              ctx.beginPath();
+              for (let i = 0; i < drawCount; i++) {
+                ctx.moveTo(x0, geom.rowY[i]);
+                ctx.lineTo(x1, geom.rowY[i]);
+              }
+              for (let j = 0; j < drawCount; j++) {
+                ctx.moveTo(geom.colX[j], y0);
+                ctx.lineTo(geom.colX[j], y1);
+              }
+              ctx.stroke();
+            } else {
+              const x0 = geom.colX[0] - geom.cellW / 2;
+              const x1 = geom.colX[drawCount - 1] + geom.cellW / 2;
+              const y0 = geom.rowY[0] - geom.cellH / 2;
+              const y1 = geom.rowY[drawCount - 1] + geom.cellH / 2;
+              ctx.strokeRect(x0, y0, x1 - x0, y1 - y0);
+              ctx.beginPath();
+              ctx.moveTo((x0 + x1) / 2, y0);
+              ctx.lineTo((x0 + x1) / 2, y1);
+              ctx.moveTo(x0, (y0 + y1) / 2);
+              ctx.lineTo(x1, (y0 + y1) / 2);
+              ctx.stroke();
+            }
+            ctx.setLineDash([]);
+            ctx.restore();
+          }
+
+          function drawMatrix(stroke, fill, cellValues, glow = 0, glowColor = null, alpha = 1, textColor = "#ffffff", rMult = 1, isFinalProb = false, category = 'default') {
+            if (alpha <= 0) return;
+            const bColor = glow > 5 ? glowColor : "#484f58";
+            drawBracket(geom.matL, 16 * s, geom.matHBrack, true, alpha, bColor, 7);
+            drawBracket(geom.matR, 16 * s, geom.matHBrack, false, alpha, bColor, 7);
+
+            if (isWebGL) return; // WebGL renders the dense matrix dots
+
+            const rCircle = geom.cellR * rMult;
+            const cat = isFinalProb ? 'prob' : category;
+            for (let i = 0; i < T; i++) {
+              for (let j = 0; j < T; j++) {
+                const cx = geom.colX[j];
+                const cy = geom.rowY[i];
+                const rawVal = (cellValues && cellValues[i] && cellValues[i][j] !== undefined) ? cellValues[i][j] : null;
+
+                drawCircle(cx, cy, rCircle, stroke, fill, rawVal, glow, glowColor, alpha, textColor, cat);
+              }
+            }
+          }
+
+          const colBracketH = layoutVert.extentH + 10 * s;
+          const colBracketW = layoutVert.extentW;
+          const rowBracketH = layoutHoriz.extentH + 10 * s;
+          const rowBracketW = layoutHoriz.extentW;
+
+          // Initial positions for Phase 1
+          const initQX = (T === 1) ? -75 * s : -(geom.matW / 2 + (d <= 2 ? 65 * s : 88 * s));
+          const initKX = (T === 1) ? 75 * s : (geom.matW / 2 + (d <= 2 ? 65 * s : 88 * s));
+          const initKeyY = (geom.rowY[0] + geom.rowY[geom.rowY.length - 1]) / 2;
+
+          function getInitKeyX(j) {
+            if (T === 1) return initKX;
+            const span = Math.min(140 * s, geom.matW * 0.95);
+            return initKX - span / 2 + (j + 0.5) * (span / (geom.T_calc || T));
+          }
+
+          // Static background queries (left) and keys (top) during calculation
+          function drawStaticHeaders(alpha = 0.85) {
+            if (alpha <= 0) return;
+            drawGridOutline(alpha * 0.75);
+
+            // Queries left
+            const qHeaderY = geom.rowY[0] - rowBracketH / 2 - 12 * s;
+            drawLabel("Queries (rows)", geom.leftQueryX, qHeaderY, "#58a6ff", "center", null, alpha);
+            if (T <= 2) {
+              for (let i = 0; i < T; i++) {
+                const qy = geom.rowY[i];
+                if (T <= 4) {
+                  drawLabel(`q${subscript(i + 1)}`, geom.leftQueryX - rowBracketW / 2 - 14 * s, qy, "#7d8590", "right", null, alpha);
+                }
+                drawBracket(geom.leftQueryX - rowBracketW / 2 - 4 * s, qy, rowBracketH, true, alpha);
+                drawBracket(geom.leftQueryX + rowBracketW / 2 + 4 * s, qy, rowBracketH, false, alpha);
+                if (!isWebGL) {
+                  const qLabels = (data && data.q && data.q[i]) ? data.q[i] : null;
+                  drawVector(geom.leftQueryX, qy, layoutHoriz, '#58a6ff', 'rgba(88,166,255,0.15)', qLabels, 0, null, alpha, '#e6edf3', 1, 'vector');
+                }
+              }
+            } else {
+              if (!isWebGL) {
+                for (let i = 0; i < T; i++) {
+                  const qy = geom.rowY[i];
+                  if (T <= 4) {
+                    drawLabel(`q${subscript(i + 1)}`, geom.leftQueryX - rowBracketW / 2 - 14 * s, qy, "#7d8590", "right", null, alpha);
+                  }
+                  const qLabels = (data && data.q && data.q[i]) ? data.q[i] : null;
+                  drawVector(geom.leftQueryX, qy, layoutHoriz, '#58a6ff', 'rgba(88,166,255,0.15)', qLabels, 0, null, alpha, '#e6edf3', 1, 'vector');
+                }
+              }
+              const topQ = geom.rowY[0] - rowBracketH / 2;
+              const botQ = geom.rowY[geom.rowY.length - 1] + rowBracketH / 2;
+              drawBracket(geom.leftQueryX - rowBracketW / 2 - 4 * s, (topQ + botQ) / 2, botQ - topQ, true, alpha);
+              drawBracket(geom.leftQueryX + rowBracketW / 2 + 4 * s, (topQ + botQ) / 2, botQ - topQ, false, alpha);
+            }
+
+            // Keys top
+            const kHeaderY = geom.topKeyY - colBracketH / 2 - 24 * s;
+            drawLabel("Keys (columns)", 0, kHeaderY, "#58a6ff", "center", null, alpha);
+            if (T <= 2) {
+              for (let j = 0; j < T; j++) {
+                const kx = geom.colX[j];
+                if (T <= 4) {
+                  drawLabel(`k${subscript(j + 1)}`, kx, geom.topKeyY - colBracketH / 2 - 10 * s, "#7d8590", "center", null, alpha);
+                }
+                drawBracket(kx - colBracketW / 2 - 4 * s, geom.topKeyY, colBracketH, true, alpha);
+                drawBracket(kx + colBracketW / 2 + 4 * s, geom.topKeyY, colBracketH, false, alpha);
+                if (!isWebGL) {
+                  const kLabels = (data && data.k && data.k[j]) ? data.k[j] : null;
+                  drawVector(kx, geom.topKeyY, layoutVert, '#58a6ff', 'rgba(88,166,255,0.15)', kLabels, 0, null, alpha, '#e6edf3', 1, 'vector');
+                }
+              }
+            } else {
+              if (!isWebGL) {
+                for (let j = 0; j < T; j++) {
+                  const kx = geom.colX[j];
+                  if (T <= 4) {
+                    drawLabel(`k${subscript(j + 1)}`, kx, geom.topKeyY - colBracketH / 2 - 10 * s, "#7d8590", "center", null, alpha);
+                  }
+                  const kLabels = (data && data.k && data.k[j]) ? data.k[j] : null;
+                  drawVector(kx, geom.topKeyY, layoutVert, '#58a6ff', 'rgba(88,166,255,0.15)', kLabels, 0, null, alpha, '#e6edf3', 1, 'vector');
+                }
+              }
+              const leftK = geom.colX[0] - colBracketW / 2 - 4 * s;
+              const rightK = geom.colX[geom.colX.length - 1] + colBracketW / 2 + 4 * s;
+              drawBracket(leftK, geom.topKeyY, colBracketH, true, alpha);
+              drawBracket(rightK, geom.topKeyY, colBracketH, false, alpha);
+            }
+          }
+
+          // ==================== PHASE 1: 0 -> 1400ms (Initial Setup) ====================
+          if (ms < 1400) {
+            caption.style.opacity = '1';
+            caption.innerHTML = `Queries (rows) &amp; Keys (columns) &middot; ${T.toLocaleString()} &times; ${T.toLocaleString()} &middot; vec dim ${d.toLocaleString()}`;
+
+            const qHeaderY = geom.rowY[0] - rowBracketH / 2 - 12 * s;
+            const kHeaderY = geom.topKeyY - colBracketH / 2 - 24 * s;
+            drawLabel("Queries (rows)", initQX, qHeaderY, "#58a6ff");
+            drawLabel("Keys (columns)", initKX, kHeaderY, "#58a6ff");
+
+            if (!isWebGL) {
+              if (T <= 2) {
+                for (let i = 0; i < T; i++) {
+                  const qy = geom.rowY[i];
+                  if (T <= 4) {
+                    drawLabel(`q${subscript(i + 1)}`, initQX - rowBracketW / 2 - 14 * s, qy, "#7d8590", "right");
+                  }
+                  drawBracket(initQX - rowBracketW / 2 - 4 * s, qy, rowBracketH, true);
+                  drawBracket(initQX + rowBracketW / 2 + 4 * s, qy, rowBracketH, false);
+                  const qLabels = (data && data.q && data.q[i]) ? data.q[i] : null;
+                  drawVector(initQX, qy, layoutHoriz, '#58a6ff', 'rgba(88,166,255,0.15)', qLabels, 0, null, 1, '#e6edf3', 1, 'vector');
+                }
+              } else {
+                for (let i = 0; i < T; i++) {
+                  const qy = geom.rowY[i];
+                  if (T <= 4) {
+                    drawLabel(`q${subscript(i + 1)}`, initQX - rowBracketW / 2 - 14 * s, qy, "#7d8590", "right");
+                  }
+                  const qLabels = (data && data.q && data.q[i]) ? data.q[i] : null;
+                  drawVector(initQX, qy, layoutHoriz, '#58a6ff', 'rgba(88,166,255,0.15)', qLabels, 0, null, 1, '#e6edf3', 1, 'vector');
+                }
+                const topQ = geom.rowY[0] - rowBracketH / 2;
+                const botQ = geom.rowY[T - 1] + rowBracketH / 2;
+                drawBracket(initQX - rowBracketW / 2 - 4 * s, (topQ + botQ) / 2, botQ - topQ, true);
+                drawBracket(initQX + rowBracketW / 2 + 4 * s, (topQ + botQ) / 2, botQ - topQ, false);
+              }
+
+              if (T <= 2) {
+                for (let j = 0; j < T; j++) {
+                  const kx = getInitKeyX(j);
+                  const ky = (T === 1) ? geom.rowY[0] : initKeyY;
+                  if (T <= 4) {
+                    drawLabel(`k${subscript(j + 1)}`, kx, ky - colBracketH / 2 - 10 * s, "#7d8590", "center");
+                  }
+                  drawBracket(kx - colBracketW / 2 - 4 * s, ky, colBracketH, true);
+                  drawBracket(kx + colBracketW / 2 + 4 * s, ky, colBracketH, false);
+                  const kLabels = (data && data.k && data.k[j]) ? data.k[j] : null;
+                  drawVector(kx, ky, layoutVert, '#58a6ff', 'rgba(88,166,255,0.15)', kLabels, 0, null, 1, '#e6edf3', 1, 'vector');
+                }
+              } else {
+                const ky = initKeyY;
+                for (let j = 0; j < T; j++) {
+                  const kx = getInitKeyX(j);
+                  if (T <= 4) {
+                    drawLabel(`k${subscript(j + 1)}`, kx, ky - colBracketH / 2 - 10 * s, "#7d8590", "center");
+                  }
+                  const kLabels = (data && data.k && data.k[j]) ? data.k[j] : null;
+                  drawVector(kx, ky, layoutVert, '#58a6ff', 'rgba(88,166,255,0.15)', kLabels, 0, null, 1, '#e6edf3', 1, 'vector');
+                }
+                const leftK = getInitKeyX(0) - colBracketW / 2 - 4 * s;
+                const rightK = getInitKeyX(T - 1) + colBracketW / 2 + 4 * s;
+                drawBracket(leftK, ky, colBracketH, true);
+                drawBracket(rightK, ky, colBracketH, false);
+              }
+            } else {
+              // WebGL brackets
+              const topQ = geom.rowY[0] - rowBracketH / 2;
+              const botQ = geom.rowY[geom.rowY.length - 1] + rowBracketH / 2;
+              drawBracket(initQX - rowBracketW / 2 - 4 * s, (topQ + botQ) / 2, botQ - topQ, true);
+              drawBracket(initQX + rowBracketW / 2 + 4 * s, (topQ + botQ) / 2, botQ - topQ, false);
+
+              const leftK = getInitKeyX(0) - colBracketW / 2 - 4 * s;
+              const rightK = getInitKeyX(geom.T_calc - 1) + colBracketW / 2 + 4 * s;
+              drawBracket(leftK, initKeyY, colBracketH, true);
+              drawBracket(rightK, initKeyY, colBracketH, false);
+
+              threeAttn.renderFrame(T, d, ms, geom, width, height, s);
+            }
+            return;
+          }
+
+          // ==================== PHASE 2: 1400 -> 3200ms (Queries -> rows left, Keys -> columns top) ====================
+          if (ms >= 1400 && ms < 3200) {
+            caption.innerHTML = 'Queries &rarr; rows (left), Keys &rarr; columns (top)';
+            const p = (ms - 1400) / 1800;
+            const ease = p * p * (3 - 2 * p);
+
+            drawGridOutline(ease * 0.85);
+
+            const curQX = initQX + (geom.leftQueryX - initQX) * ease;
+            const qHeaderY = geom.rowY[0] - rowBracketH / 2 - 12 * s;
+            drawLabel("Queries (rows)", curQX, qHeaderY, "#58a6ff", "center", null, 1 - ease * 0.3);
+
+            const kyStart = (T === 1) ? geom.rowY[0] : initKeyY;
+            const curKY = kyStart + (geom.topKeyY - kyStart) * ease;
+            const headerKeyX = initKX * (1 - ease);
+            drawLabel("Keys (columns)", headerKeyX, curKY - colBracketH / 2 - 20 * s, "#58a6ff", "center");
+
+            if (!isWebGL) {
+              if (T <= 2) {
+                for (let i = 0; i < T; i++) {
+                  const qy = geom.rowY[i];
+                  if (T <= 4) {
+                    drawLabel(`q${subscript(i + 1)}`, curQX - rowBracketW / 2 - 14 * s, qy, "#7d8590", "right");
+                  }
+                  drawBracket(curQX - rowBracketW / 2 - 4 * s, qy, rowBracketH, true);
+                  drawBracket(curQX + rowBracketW / 2 + 4 * s, qy, rowBracketH, false);
+                  const qLabels = (data && data.q && data.q[i]) ? data.q[i] : null;
+                  drawVector(curQX, qy, layoutHoriz, '#58a6ff', 'rgba(88,166,255,0.15)', qLabels, 0, null, 1, '#e6edf3', 1, 'vector');
+                }
+              } else {
+                for (let i = 0; i < T; i++) {
+                  const qy = geom.rowY[i];
+                  if (T <= 4) {
+                    drawLabel(`q${subscript(i + 1)}`, curQX - rowBracketW / 2 - 14 * s, qy, "#7d8590", "right");
+                  }
+                  const qLabels = (data && data.q && data.q[i]) ? data.q[i] : null;
+                  drawVector(curQX, qy, layoutHoriz, '#58a6ff', 'rgba(88,166,255,0.15)', qLabels, 0, null, 1, '#e6edf3', 1, 'vector');
+                }
+                const topQ = geom.rowY[0] - rowBracketH / 2;
+                const botQ = geom.rowY[T - 1] + rowBracketH / 2;
+                drawBracket(curQX - rowBracketW / 2 - 4 * s, (topQ + botQ) / 2, botQ - topQ, true);
+                drawBracket(curQX + rowBracketW / 2 + 4 * s, (topQ + botQ) / 2, botQ - topQ, false);
+              }
+
+              if (T <= 2) {
+                for (let j = 0; j < T; j++) {
+                  const startKX = getInitKeyX(j);
+                  const curKX = startKX + (geom.colX[j] - startKX) * ease;
+                  if (T <= 4) {
+                    drawLabel(`k${subscript(j + 1)}`, curKX, curKY - colBracketH / 2 - 10 * s, "#7d8590", "center");
+                  }
+                  drawBracket(curKX - colBracketW / 2 - 4 * s, curKY, colBracketH, true);
+                  drawBracket(curKX + colBracketW / 2 + 4 * s, curKY, colBracketH, false);
+                  const kLabels = (data && data.k && data.k[j]) ? data.k[j] : null;
+                  drawVector(curKX, curKY, layoutVert, '#58a6ff', 'rgba(88,166,255,0.15)', kLabels, 0, null, 1, '#e6edf3', 1, 'vector');
+                }
+              } else {
+                for (let j = 0; j < T; j++) {
+                  const startKX = getInitKeyX(j);
+                  const curKX = startKX + (geom.colX[j] - startKX) * ease;
+                  if (T <= 4) {
+                    drawLabel(`k${subscript(j + 1)}`, curKX, curKY - colBracketH / 2 - 10 * s, "#7d8590", "center");
+                  }
+                  const kLabels = (data && data.k && data.k[j]) ? data.k[j] : null;
+                  drawVector(curKX, curKY, layoutVert, '#58a6ff', 'rgba(88,166,255,0.15)', kLabels, 0, null, 1, '#e6edf3', 1, 'vector');
+                }
+                const leftStart = getInitKeyX(0) - colBracketW / 2 - 4 * s;
+                const leftEnd = geom.colX[0] - colBracketW / 2 - 4 * s;
+                const rightStart = getInitKeyX(T - 1) + colBracketW / 2 + 4 * s;
+                const rightEnd = geom.colX[T - 1] + colBracketW / 2 + 4 * s;
+                drawBracket(leftStart + (leftEnd - leftStart) * ease, curKY, colBracketH, true);
+                drawBracket(rightStart + (rightEnd - rightStart) * ease, curKY, colBracketH, false);
+              }
+            } else {
+              const topQ = geom.rowY[0] - rowBracketH / 2;
+              const botQ = geom.rowY[geom.rowY.length - 1] + rowBracketH / 2;
+              drawBracket(curQX - rowBracketW / 2 - 4 * s, (topQ + botQ) / 2, botQ - topQ, true);
+              drawBracket(curQX + rowBracketW / 2 + 4 * s, (topQ + botQ) / 2, botQ - topQ, false);
+
+              const leftStart = getInitKeyX(0) - colBracketW / 2 - 4 * s;
+              const leftEnd = geom.colX[0] - colBracketW / 2 - 4 * s;
+              const rightStart = getInitKeyX(geom.T_calc - 1) + colBracketW / 2 + 4 * s;
+              const rightEnd = geom.colX[geom.colX.length - 1] + colBracketW / 2 + 4 * s;
+              drawBracket(leftStart + (leftEnd - leftStart) * ease, curKY, colBracketH, true);
+              drawBracket(rightStart + (rightEnd - rightStart) * ease, curKY, colBracketH, false);
+
+              threeAttn.renderFrame(T, d, ms, geom, width, height, s);
+            }
+            return;
+          }
+
+          // ==================== PHASE 3: 3200 -> 5200ms (Dot Product Step 1: Pairwise Multiply) ====================
+          if (ms >= 3200 && ms < 5200) {
+            caption.innerHTML = '<span class="caption-op mul">Dot Product</span>: <span class="caption-op mul">&times; multiply</span> rows &amp; columns pairwise';
+            drawStaticHeaders(0.85);
+
+            const p = (ms - 3200) / 2000;
+            const moveProg = Math.min(1, p / 0.65);
+            const easeMove = moveProg * moveProg * (3 - 2 * moveProg);
+
+            const isContact = p >= 0.65;
+            const contactPhase = isContact ? (p - 0.65) / 0.35 : 0;
+            const flash = Math.sin(contactPhase * Math.PI);
+
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.lineWidth = 1.2;
+
+            const maxColX = geom.colX[geom.colX.length - 1];
+            const guideEndX = geom.leftQueryX + (maxColX + 16 * s - geom.leftQueryX) * easeMove;
+            ctx.strokeStyle = "rgba(88, 166, 255, 0.35)";
+            const rowCount = geom.T_calc || T;
+            const lineStep = rowCount > 16 ? Math.ceil(rowCount / 16) : 1;
+            ctx.beginPath();
+            for (let i = 0; i < rowCount; i += lineStep) {
+              ctx.moveTo(geom.leftQueryX + rowBracketW / 2 + 4 * s, geom.rowY[i]);
+              ctx.lineTo(guideEndX, geom.rowY[i]);
+            }
+
+            const maxRowY = geom.rowY[geom.rowY.length - 1];
+            const guideEndY = geom.topKeyY + (maxRowY + 14 * s - geom.topKeyY) * easeMove;
+            for (let j = 0; j < rowCount; j += lineStep) {
+              ctx.moveTo(geom.colX[j], geom.topKeyY + colBracketH / 2);
+              ctx.lineTo(geom.colX[j], guideEndY);
+            }
+            ctx.stroke();
+            ctx.restore();
+
+            if (!isWebGL && isContact) {
+              const orangeBg = `rgba(240, 136, 62, ${0.18 + 0.35 * flash})`;
+              const scale = 1 + 0.18 * flash;
+              for (let i = 0; i < T; i++) {
+                for (let j = 0; j < T; j++) {
+                  const cx = geom.colX[j];
+                  const cy = geom.rowY[i];
+                  const mulLabels = (showNumbers && data && data.mul && data.mul[i] && data.mul[i][j]) ? data.mul[i][j] : null;
+                  if (d === 1 || !showNumbers) {
+                    const mulVal = mulLabels ? mulLabels[0] : null;
+                    drawCircle(cx, cy, geom.cellR * scale, '#f0883e', orangeBg, mulVal, 0, null, 1, '#e6edf3', 'mul');
+                  } else if (d <= 4) {
+                    drawVector(cx, cy, cellLayout, '#f0883e', orangeBg, mulLabels, 0, null, 1, '#e6edf3', scale, 'mul');
+                  } else {
+                    drawCircle(cx, cy, geom.cellR * scale, '#f0883e', orangeBg, null, 0, null, 1, '#e6edf3', 'mul');
+                  }
+                }
+              }
+            } else if (isWebGL) {
+              threeAttn.renderFrame(T, d, ms, geom, width, height, s);
+            }
+            return;
+          }
+
+          // ==================== PHASE 4: 5200 -> 7200ms (Dot Product Step 2: Sum into Similarity Matrix) ====================
+          if (ms >= 5200 && ms < 7200) {
+            caption.innerHTML = '<span class="caption-op add">Dot Product (Q &middot; K<sup>T</sup>)</span>: <span class="caption-op add">+ sum</span> &rarr; similarity scores';
+            drawStaticHeaders(0.4);
+
+            const p = (ms - 5200) / 2000;
+            const coalesceProg = Math.min(1, p / 0.72);
+            const easeCoal = coalesceProg * coalesceProg * (3 - 2 * coalesceProg);
+
+            const isMerged = p >= 0.72;
+            const mergePhase = isMerged ? (p - 0.72) / 0.28 : 0;
+            const flash = Math.sin(mergePhase * Math.PI);
+
+            const bColor = flash > 0.2 ? '#3fb950' : '#484f58';
+            drawBracket(geom.matL, 16 * s, geom.matHBrack, true, 1, bColor, 7);
+            drawBracket(geom.matR, 16 * s, geom.matHBrack, false, 1, bColor, 7);
+
+            if (!isWebGL) {
+              for (let i = 0; i < T; i++) {
+                for (let j = 0; j < T; j++) {
+                  const cx = geom.colX[j];
+                  const cy = geom.rowY[i];
+                  if (isMerged) {
+                    const simVal = (showNumbers && data && data.sim && data.sim[i]) ? data.sim[i][j] : (i === j ? '2.0' : '1.0');
+                    const rFinal = geom.cellR * (1 + 0.20 * flash);
+                    const greenBg = `rgba(63, 185, 80, ${0.18 + 0.35 * flash})`;
+                    drawCircle(cx, cy, rFinal, '#3fb950', greenBg, simVal, 0, null, 1, '#e6edf3', 'sim');
+                  } else {
+                    const factor = 1 - easeCoal;
+                    const mulLabels = (showNumbers && factor > 0.55 && data && data.mul && data.mul[i] && data.mul[i][j]) ? data.mul[i][j] : null;
+                    if (d === 1 || !showNumbers) {
+                      const mulVal = mulLabels ? mulLabels[0] : null;
+                      drawCircle(cx, cy, geom.cellR, '#f0883e', 'rgba(240, 136, 62, 0.20)', mulVal, 0, null, 1, '#e6edf3', 'mul');
+                    } else if (d <= 4) {
+                      for (let m = 0; m < d; m++) {
+                        const pt = cellLayout.points[m];
+                        drawCircle(cx + pt.x * factor, cy + pt.y * factor, cellLayout.r, '#f0883e', 'rgba(240, 136, 62, 0.20)', mulLabels ? mulLabels[m] : null, 0, null, 1, '#e6edf3', 'mul');
+                      }
+                    } else {
+                      drawCircle(cx, cy, geom.cellR * (0.8 + 0.2 * (1 - factor)), '#f0883e', 'rgba(240, 136, 62, 0.20)', null, 0, null, 1, '#e6edf3', 'mul');
+                    }
+                  }
+                }
+              }
+            } else {
+              threeAttn.renderFrame(T, d, ms, geom, width, height, s);
+            }
+            return;
+          }
+
+          // ==================== PHASE 5: 7200 -> 8600ms (Softmax Step 1: Elementwise Exp) ====================
+          if (ms >= 7200 && ms < 8600) {
+            caption.innerHTML = '<span class="caption-op exp">Softmax</span> (step 1): <span class="caption-op exp">exp</span> elementwise on each row';
+            drawStaticHeaders(0.25);
+
+            const p = (ms - 7200) / 1400;
+            const flash = Math.sin(p * Math.PI);
+            const rMult = 1 + 0.14 * flash;
+            const redBg = `rgba(248, 81, 73, ${0.15 + 0.30 * flash})`;
+
+            const expVals = (p > 0.25 && data) ? data.exp : (data ? data.sim : null);
+            drawMatrix('#f85149', redBg, expVals, 0, null, 1, '#e6edf3', rMult, false, 'exp');
+
+            if (isWebGL) {
+              threeAttn.renderFrame(T, d, ms, geom, width, height, s);
+            }
+            return;
+          }
+
+          // ==================== PHASE 6: 8600 -> 10200ms (Softmax Step 2: Row Sums to Right) ====================
+          if (ms >= 8600 && ms < 10200) {
+            caption.innerHTML = '<span class="caption-op exp">Softmax</span> (step 2): <span class="caption-op add">+ sum</span> each row &rarr; denominators';
+            drawStaticHeaders(0.25);
+
+            const p = (ms - 8600) / 1600;
+            const sumProg = Math.min(1, p / 0.72);
+            const easeSum = sumProg * sumProg * (3 - 2 * sumProg);
+
+            const isSummed = p >= 0.72;
+            const sumPhase = isSummed ? (p - 0.72) / 0.28 : 0;
+            const flash = Math.sin(sumPhase * Math.PI);
+
+            const expVals = data ? data.exp : null;
+            drawMatrix('#f85149', 'rgba(248, 81, 73, 0.18)', expVals, 0, null, 1, '#e6edf3', 1, false, 'exp');
+
+            if (T > 4 && isSummed) {
+              drawLabel("row sum", geom.rightSumX, geom.rowY[0] - 14 * s, "#3fb950", "center", `400 ${Math.round(10 * s)}px ui-monospace`);
+            }
+
+            if (!isWebGL) {
+              for (let i = 0; i < T; i++) {
+                const cy = geom.rowY[i];
+                const rowSumVal = (showNumbers && data && data.sum) ? data.sum[i] : '2.0';
+                if (isSummed) {
+                  const rSum = geom.cellR * (1 + 0.22 * flash);
+                  const greenBg = `rgba(63, 185, 80, ${0.18 + 0.35 * flash})`;
+                  drawCircle(geom.rightSumX, cy, rSum, '#3fb950', greenBg, rowSumVal, 0, null, 1, '#e6edf3', 'sum');
+                  if (T <= 2 || i === 0) {
+                    if (T <= 4) {
+                      drawLabel("sum", geom.rightSumX, cy - 18 * s, "#3fb950", "center", `400 ${Math.round(9 * s)}px ui-monospace`);
+                    }
+                  }
+                } else {
+                  if (T === 1) {
+                    const curX = geom.colX[0] + (geom.rightSumX - geom.colX[0]) * easeSum;
+                    drawCircle(curX, cy, geom.cellR, '#f85149', 'rgba(248, 81, 73, 0.20)', (showNumbers && expVals) ? expVals[0][0] : null, 0, null, 0.85, '#e6edf3', 'exp');
+                  } else {
+                    for (let j = 0; j < T; j++) {
+                      const curX = geom.colX[j] + (geom.rightSumX - geom.colX[j]) * easeSum;
+                      const showNums = showNumbers && (T <= 2) && ((geom.colX[1] - geom.colX[0]) * (1 - easeSum) > 16 * s);
+                      drawCircle(curX, cy, geom.cellR * 0.9, '#f85149', 'rgba(248, 81, 73, 0.20)', (showNums && expVals) ? expVals[i][j] : null, 0, null, 0.85, '#e6edf3', 'exp');
+                    }
+                  }
+                }
+              }
+            } else {
+              threeAttn.renderFrame(T, d, ms, geom, width, height, s);
+            }
+            return;
+          }
+
+          // ==================== PHASE 7: 10200 -> 11800ms (Softmax Step 3: Divide by Row Sum) ====================
+          if (ms >= 10200 && ms < 11800) {
+            caption.innerHTML = '<span class="caption-op exp">Softmax</span> (step 3): <span class="caption-op div">&divide; divide</span> each row by its sum';
+            drawStaticHeaders(0.2);
+
+            const p = (ms - 10200) / 1600;
+            const isDivided = p >= 0.40;
+            const flash = Math.sin(p * Math.PI);
+
+            const rayAlpha = Math.max(0, Math.sin(p * Math.PI));
+            if (rayAlpha > 0) {
+              ctx.save();
+              ctx.translate(centerX, centerY);
+              ctx.strokeStyle = `rgba(163, 113, 247, ${rayAlpha * 0.55})`;
+              ctx.lineWidth = 1.0;
+              const numRays = geom.T_calc || T;
+              const rayStep = numRays > 16 ? Math.ceil(numRays / 16) : 1;
+              ctx.beginPath();
+              for (let i = 0; i < numRays; i += rayStep) {
+                ctx.moveTo(geom.rightSumX, geom.rowY[i]);
+                ctx.lineTo(geom.colX[0] - geom.cellW / 2, geom.rowY[i]);
+              }
+              ctx.stroke();
+              ctx.restore();
+            }
+
+            if (!isWebGL) {
+              const sumAlpha = Math.max(0, 1 - Math.max(0, (p - 0.45) / 0.55));
+              if (sumAlpha > 0) {
+                for (let i = 0; i < T; i++) {
+                  const sVal = (showNumbers && data && data.sum) ? data.sum[i] : null;
+                  drawCircle(geom.rightSumX, geom.rowY[i], geom.cellR, '#3fb950', 'rgba(63, 185, 80, 0.18)', sVal, 0, null, sumAlpha, '#e6edf3', 'sum');
+                }
+              }
+
+              const strokeColor = isDivided ? '#a371f7' : '#f85149';
+              const purpleBg = `rgba(163, 113, 247, ${0.15 + 0.35 * flash})`;
+              const curVals = isDivided && data ? data.prob : (data ? data.exp : null);
+              drawMatrix(strokeColor, purpleBg, curVals, 0, null, 1, '#e6edf3', 1 + 0.12 * flash, false, isDivided ? 'prob' : 'exp');
+            } else {
+              drawMatrix('#a371f7', 'rgba(163,113,247,0.18)', null, 0, null, 1);
+              threeAttn.renderFrame(T, d, ms, geom, width, height, s);
+            }
+            return;
+          }
+
+          // ==================== PHASE 8: 11800 -> 13600ms (Attention Matrix Output) ====================
+          if (ms >= 11800 && ms < 13600) {
+            caption.innerHTML = '= Attention Matrix A = <span class="caption-op exp">softmax</span>(Q &middot; K<sup>T</sup>) <span style="color:#3fb950; font-weight:400;">(row sum = 1.0)</span>';
+            drawStaticHeaders(0.4);
+
+            const probVals = data ? data.prob : null;
+
+            // Draw clean green line across each row
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.lineWidth = 1.0;
+            ctx.strokeStyle = "rgba(63, 185, 80, 0.70)";
+            const xLineStart = geom.colX[0] - geom.cellW / 2;
+            const xLineEnd = (T <= 4) ? (geom.matR + 12 * s) : (geom.colX[T - 1] + geom.cellW / 2);
+            for (let i = 0; i < T; i++) {
+              ctx.beginPath();
+              ctx.moveTo(xLineStart, geom.rowY[i]);
+              ctx.lineTo(xLineEnd, geom.rowY[i]);
+              ctx.stroke();
+            }
+            ctx.restore();
+
+            drawMatrix('#58a6ff', 'rgba(88, 166, 255, 0.18)', probVals, 0, null, 1, '#e6edf3', 1, true, 'prob');
+
+            if (T <= 4) {
+              for (let i = 0; i < T; i++) {
+                drawLabel("row sum = 1.0", geom.matR + 16 * s, geom.rowY[i], "#3fb950", "left", `400 ${Math.round(9.5 * s)}px ui-monospace`);
+              }
+            } else {
+              drawLabel("row sum = 1.0", geom.matR + 16 * s, geom.rowY[0] - 12 * s, "#3fb950", "left", `400 ${Math.round(9.5 * s)}px ui-monospace`);
+              if (!isWebGL) {
+                for (let i = 0; i < T; i++) {
+                  drawCircle(geom.rightSumX, geom.rowY[i], Math.min(geom.cellR * 0.75, 4 * s), '#3fb950', 'rgba(63, 185, 80, 0.3)', null, 0, null, 0.8, '#e6edf3');
+                }
+              }
+            }
+
+            if (isWebGL) {
+              threeAttn.renderFrame(T, d, ms, geom, width, height, s);
+            }
+            return;
+          }
+
+          // ==================== PHASE 9: 13600 -> 14600ms (Fade out and loop) ====================
+          if (ms >= 13600) {
+            const fade = Math.max(0, 1 - (ms - 13600) / 1000);
+            caption.style.opacity = `${fade}`;
+            drawStaticHeaders(0.4 * fade);
+
+            const probVals = data ? data.prob : null;
+
+            // Draw clean green line across each row with fade
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.lineWidth = 1.0;
+            ctx.strokeStyle = `rgba(63, 185, 80, ${(0.70 * fade).toFixed(3)})`;
+            const xLineStart = geom.colX[0] - geom.cellW / 2;
+            const xLineEnd = (T <= 4) ? (geom.matR + 12 * s) : (geom.colX[T - 1] + geom.cellW / 2);
+            for (let i = 0; i < T; i++) {
+              ctx.beginPath();
+              ctx.moveTo(xLineStart, geom.rowY[i]);
+              ctx.lineTo(xLineEnd, geom.rowY[i]);
+              ctx.stroke();
+            }
+            ctx.restore();
+
+            drawMatrix('#58a6ff', 'rgba(88, 166, 255, 0.18)', probVals, 0, null, fade, '#e6edf3', 1, true, 'prob');
+
+            if (T <= 4) {
+              for (let i = 0; i < T; i++) {
+                drawLabel("row sum = 1.0", geom.matR + 16 * s, geom.rowY[i], "#3fb950", "left", `400 ${Math.round(9.5 * s)}px ui-monospace`, fade);
+              }
+            } else {
+              drawLabel("row sum = 1.0", geom.matR + 16 * s, geom.rowY[0] - 12 * s, "#3fb950", "left", `400 ${Math.round(9.5 * s)}px ui-monospace`, fade);
+              if (!isWebGL) {
+                for (let i = 0; i < T; i++) {
+                  drawCircle(geom.rightSumX, geom.rowY[i], Math.min(geom.cellR * 0.75, 4 * s), '#3fb950', 'rgba(63, 185, 80, 0.3)', null, 0, null, 0.8 * fade, '#e6edf3');
+                }
+              }
+            }
+
+            if (isWebGL) {
+              threeAttn.renderFrame(T, d, ms, geom, width, height, s);
+            }
           }
         }
 

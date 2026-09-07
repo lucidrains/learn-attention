@@ -154,9 +154,8 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 1rem;
+      gap: 0.9rem;
       user-select: none;
-      cursor: pointer;
     }
 
     .dot-header {
@@ -170,44 +169,68 @@
       color: #7d8590;
     }
 
-    .anim-stage {
-      position: relative;
+    .slider-row {
       width: 100%;
-      height: 140px;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
+      gap: 0.45rem;
+      padding: 0.2rem 0;
+    }
+
+    .slider-labels {
+      display: flex;
+      justify-content: space-between;
       align-items: center;
-      overflow: hidden;
+      font-size: 0.75rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      color: #7d8590;
     }
 
-    .bracket-wing {
-      position: absolute;
-      width: 8px;
-      height: 30px;
-      border: 1.5px solid #484f58;
-      box-sizing: border-box;
-      will-change: transform, opacity, border-color;
+    .slider-val {
+      color: #58a6ff;
+      font-weight: 600;
     }
 
-    .bracket-wing.left {
-      border-right: none;
-      border-radius: 4px 0 0 4px;
+    input[type="range"] {
+      width: 100%;
+      -webkit-appearance: none;
+      background: #21262d;
+      height: 6px;
+      border-radius: 3px;
+      outline: none;
+      cursor: pointer;
     }
 
-    .bracket-wing.right {
-      border-left: none;
-      border-radius: 0 4px 4px 0;
-    }
-
-    .anim-dot {
-      position: absolute;
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
       width: 16px;
       height: 16px;
       border-radius: 50%;
-      border: 1.5px solid #58a6ff;
-      background: rgba(88, 166, 255, 0.15);
-      box-sizing: border-box;
-      will-change: transform, opacity, background, border-color, box-shadow;
+      background: #58a6ff;
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(88, 166, 255, 0.6);
+      border: 2px solid #fff;
+      transition: transform 0.1s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .canvas-stage {
+      position: relative;
+      width: 100%;
+      height: 170px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
     }
 
     .stage-caption {
@@ -391,34 +414,6 @@
       </div>
     </header>
 
-    <div class="dot-card" id="dot-card" title="Click to replay">
-      <div class="dot-header">
-        <span>Dot Product</span>
-        <span>Vector of 4</span>
-      </div>
-
-      <div class="anim-stage" id="stage">
-        <!-- Brackets: Top Left/Right, Bottom Left/Right -->
-        <div class="bracket-wing left" id="b-tl"></div>
-        <div class="bracket-wing right" id="b-tr"></div>
-        <div class="bracket-wing left" id="b-bl"></div>
-        <div class="bracket-wing right" id="b-br"></div>
-
-        <!-- 8 Dots: T0..T3 and B0..B3 -->
-        <div class="anim-dot" id="dot-t0"></div>
-        <div class="anim-dot" id="dot-t1"></div>
-        <div class="anim-dot" id="dot-t2"></div>
-        <div class="anim-dot" id="dot-t3"></div>
-
-        <div class="anim-dot" id="dot-b0"></div>
-        <div class="anim-dot" id="dot-b1"></div>
-        <div class="anim-dot" id="dot-b2"></div>
-        <div class="anim-dot" id="dot-b3"></div>
-      </div>
-
-      <div class="stage-caption" id="caption">Two vectors of 4</div>
-    </div>
-
     <div class="card">
       <div class="filters">
         <button class="filter-btn active" data-op="all">all</button>
@@ -441,6 +436,27 @@
         <div>streak: <span id="stat-streak">0</span></div>
         <div>solved: <span id="stat-solved">0</span></div>
       </div>
+    </div>
+
+    <div class="dot-card" id="dot-card">
+      <div class="dot-header">
+        <span>Dot Product</span>
+        <span id="header-dim">Vector of 4</span>
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-labels">
+          <span>dimension (power of 2)</span>
+          <span class="slider-val" id="slider-label">4</span>
+        </div>
+        <input type="range" id="dim-slider" min="0" max="12" value="0" step="1" />
+      </div>
+
+      <div class="canvas-stage" id="canvas-stage" title="Click to replay">
+        <canvas id="anim-canvas"></canvas>
+      </div>
+
+      <div class="stage-caption" id="caption">Two vectors of 4</div>
     </div>
   </div>
 
@@ -586,220 +602,338 @@
         }
       });
 
-      // Dot Product animation
-      (function initDotAnimation() {
-        const X_COORDS = [-51, -17, 17, 51];
-        const BRACKET_OFFSET = 24;
-        const X_BRACKET_L = -51 - BRACKET_OFFSET;
-        const X_BRACKET_R = 51 + BRACKET_OFFSET;
-        
-        const Y_TOP = -37;
-        const Y_BOTTOM = 37;
-        const Y_MID = 0;
+      // Dot Product animation (Canvas based, scales from 4 to 16,384)
+      (function initDotCanvasAnimation() {
+        const POWERS = [4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384];
+        let currentPowerIdx = 0;
+        let N = POWERS[currentPowerIdx];
 
-        const tDots = [0,1,2,3].map(i => document.getElementById('dot-t' + i));
-        const bDots = [0,1,2,3].map(i => document.getElementById('dot-b' + i));
-        const bTL = document.getElementById('b-tl');
-        const bTR = document.getElementById('b-tr');
-        const bBL = document.getElementById('b-bl');
-        const bBR = document.getElementById('b-br');
+        const slider = document.getElementById('dim-slider');
+        const sliderLabel = document.getElementById('slider-label');
+        const headerDim = document.getElementById('header-dim');
         const caption = document.getElementById('caption');
-        const card = document.getElementById('dot-card');
+        const canvasStage = document.getElementById('canvas-stage');
+        const canvas = document.getElementById('anim-canvas');
+        if (!canvas || !slider) return;
 
-        if (!card || !caption || !bTL) return;
+        const ctx = canvas.getContext('2d');
+        let width = 0;
+        let height = 0;
+        let dpr = window.devicePixelRatio || 1;
 
-        function setPos(el, x, y, scale = 1) {
-          el.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+        function resize() {
+          const rect = canvas.getBoundingClientRect();
+          width = rect.width;
+          height = rect.height;
+          canvas.width = width * dpr;
+          canvas.height = height * dpr;
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        function updateDim(idx) {
+          currentPowerIdx = Math.max(0, Math.min(POWERS.length - 1, idx));
+          slider.value = currentPowerIdx;
+          N = POWERS[currentPowerIdx];
+          sliderLabel.textContent = N.toLocaleString();
+          headerDim.textContent = "Vector of " + N.toLocaleString();
+          startTime = performance.now();
         }
 
-        function resetStyles() {
-          caption.style.opacity = '1';
-          caption.innerHTML = 'Two vectors of 4';
+        slider.addEventListener('input', (e) => {
+          updateDim(parseInt(e.target.value, 10));
+        });
 
-          setPos(bTL, X_BRACKET_L, Y_TOP);
-          setPos(bTR, X_BRACKET_R, Y_TOP);
-          setPos(bBL, X_BRACKET_L, Y_BOTTOM);
-          setPos(bBR, X_BRACKET_R, Y_BOTTOM);
+        function getParticlesLayout(count, availableW, availableH) {
+          if (count <= 128) {
+            const cols = count;
+            const rows = 1;
+            const spacing = availableW / cols;
+            const radius = Math.max(1.2, Math.min(8, (spacing * 0.65) / 2));
+            const startX = -availableW / 2 + spacing / 2;
 
-          [bTL, bTR, bBL, bBR].forEach(b => {
-            b.style.opacity = '1';
-            b.style.borderColor = '#484f58';
-          });
-
-          for (let i = 0; i < 4; i++) {
-            setPos(tDots[i], X_COORDS[i], Y_TOP);
-            setPos(bDots[i], X_COORDS[i], Y_BOTTOM);
-            
-            tDots[i].style.opacity = '1';
-            tDots[i].style.borderColor = '#58a6ff';
-            tDots[i].style.background = 'rgba(88, 166, 255, 0.15)';
-            tDots[i].style.boxShadow = 'none';
-
-            bDots[i].style.opacity = '1';
-            bDots[i].style.borderColor = '#58a6ff';
-            bDots[i].style.background = 'rgba(88, 166, 255, 0.15)';
-            bDots[i].style.boxShadow = 'none';
+            const positions = [];
+            for (let i = 0; i < count; i++) {
+              positions.push({
+                x: startX + i * spacing,
+                y: 0,
+                r: radius
+              });
+            }
+            return { positions, cols, rows, radius, width: availableW, height: radius * 2 };
           }
+
+          let cols = 64;
+          if (count >= 2048) cols = 128;
+          if (count >= 8192) cols = 256;
+
+          const rows = Math.ceil(count / cols);
+          const spacingX = availableW / cols;
+          const maxGridH = Math.min(36, Math.max(12, rows * 1.5));
+          const spacingY = rows > 1 ? maxGridH / (rows - 1) : 0;
+          const radius = Math.max(0.5, Math.min(1.2, spacingX * 0.45));
+          const startX = -availableW / 2 + spacingX / 2;
+          const startY = -maxGridH / 2;
+
+          const positions = [];
+          for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+              if (positions.length < count) {
+                positions.push({
+                  x: startX + c * spacingX,
+                  y: rows > 1 ? startY + r * spacingY : 0,
+                  r: radius
+                });
+              }
+            }
+          }
+          return { positions, cols, rows, radius, width: availableW, height: maxGridH };
         }
 
         const TOTAL_DURATION = 7400;
+        let startTime = performance.now();
 
-        function update(ms) {
+        function render(ms) {
+          ctx.clearRect(0, 0, width, height);
+
+          const centerX = width / 2;
+          const centerY = height / 2;
+
+          const availW = Math.min(width - 50, 310);
+          const availH = 34;
+          const layout = getParticlesLayout(N, availW, availH);
+
+          const Y_TOP = -42;
+          const Y_BOTTOM = 42;
+          const Y_MID = 0;
+
+          const bracketW = availW + Math.max(18, layout.radius * 3.5);
+          const bracketH = Math.max(28, layout.height + 14);
+          const bracketL = -bracketW / 2;
+          const bracketR = bracketW / 2;
+
+          function drawBracket(x, y, h, isLeft, alpha = 1, color = "#484f58") {
+            if (alpha <= 0) return;
+            ctx.save();
+            ctx.translate(centerX + x, centerY + y);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.5;
+            ctx.globalAlpha = alpha;
+            ctx.beginPath();
+            const wing = 6;
+            if (isLeft) {
+              ctx.moveTo(wing, -h / 2);
+              ctx.lineTo(0, -h / 2);
+              ctx.lineTo(0, h / 2);
+              ctx.lineTo(wing, h / 2);
+            } else {
+              ctx.moveTo(-wing, -h / 2);
+              ctx.lineTo(0, -h / 2);
+              ctx.lineTo(0, h / 2);
+              ctx.lineTo(-wing, h / 2);
+            }
+            ctx.stroke();
+            ctx.restore();
+          }
+
+          function drawDotBatch(positions, yBase, easeY, easeX, scale, stroke, fill, glow = 0, glowColor = null, alpha = 1) {
+            if (alpha <= 0) return;
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.globalAlpha = alpha;
+
+            if (glow > 0 && glowColor) {
+              ctx.shadowColor = glowColor;
+              ctx.shadowBlur = glow;
+            }
+
+            const r = layout.radius * scale;
+            const isTiny = r < 2.0;
+
+            if (isTiny) {
+              ctx.beginPath();
+              const d = Math.max(1.0, r * 2);
+              for (let i = 0; i < N; i++) {
+                const p = positions[i];
+                const px = p.x * easeX;
+                const py = yBase + p.y * easeY;
+                ctx.rect(px - d / 2, py - d / 2, d, d);
+              }
+              ctx.fillStyle = stroke;
+              ctx.fill();
+            } else {
+              for (let i = 0; i < N; i++) {
+                const p = positions[i];
+                const px = p.x * easeX;
+                const py = yBase + p.y * easeY;
+                ctx.beginPath();
+                ctx.arc(px, py, r, 0, Math.PI * 2);
+                if (fill) {
+                  ctx.fillStyle = fill;
+                  ctx.fill();
+                }
+                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = stroke;
+                ctx.stroke();
+              }
+            }
+            ctx.restore();
+          }
+
+          // 0 -> 1200: Initial state (Two vectors of N)
           if (ms < 1200) {
-            resetStyles();
+            caption.style.opacity = '1';
+            caption.innerHTML = `Two vectors of ${N.toLocaleString()}`;
+
+            drawBracket(bracketL, Y_TOP, bracketH, true);
+            drawBracket(bracketR, Y_TOP, bracketH, false);
+            drawBracket(bracketL, Y_BOTTOM, bracketH, true);
+            drawBracket(bracketR, Y_BOTTOM, bracketH, false);
+
+            drawDotBatch(layout.positions, Y_TOP, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.15)');
+            drawDotBatch(layout.positions, Y_BOTTOM, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.15)');
             return;
           }
 
-          if (ms >= 1200 && ms < 2500) {
+          // 1200 -> 2700: Vertical move & collision -> orange products match up!
+          if (ms >= 1200 && ms < 2700) {
             caption.innerHTML = '<span class="caption-op mul">&times; multiply</span> pairwise';
 
-            const p = (ms - 1200) / 1300;
-            const moveProgress = Math.min(1, p / 0.85);
+            const p = (ms - 1200) / 1500;
+            const moveProgress = Math.min(1, p / 0.75);
             const ease = moveProgress < 1 ? moveProgress * moveProgress * (3 - 2 * moveProgress) : 1;
-            
+
             const curYTop = Y_TOP + (Y_MID - Y_TOP) * ease;
             const curYBottom = Y_BOTTOM + (Y_MID - Y_BOTTOM) * ease;
 
-            setPos(bTL, X_BRACKET_L, curYTop);
-            setPos(bTR, X_BRACKET_R, curYTop);
-            setPos(bBL, X_BRACKET_L, curYBottom);
-            setPos(bBR, X_BRACKET_R, curYBottom);
+            const isContact = p >= 0.75;
+            const contactPhase = isContact ? (p - 0.75) / 0.25 : 0;
+            const flash = Math.sin(contactPhase * Math.PI);
 
-            if (p >= 0.85) {
-              const flashPhase = (p - 0.85) / 0.15;
-              const flash = Math.sin(flashPhase * Math.PI);
+            const bAlpha = isContact ? Math.max(0, 1 - contactPhase * 2) : 1;
+            const bColor = flash > 0.2 ? '#f0883e' : '#484f58';
+
+            // Brackets move vertically and merge into 1 bracket
+            drawBracket(bracketL, curYTop, bracketH, true, 1, bColor);
+            drawBracket(bracketR, curYTop, bracketH, false, 1, bColor);
+            drawBracket(bracketL, curYBottom, bracketH, true, bAlpha, bColor);
+            drawBracket(bracketR, curYBottom, bracketH, false, bAlpha, bColor);
+
+            if (isContact) {
+              // At collision point: ORANGE CIRCLES match up where the two numbers collided!
               const scale = 1 + 0.35 * flash;
-
-              for (let i = 0; i < 4; i++) {
-                setPos(tDots[i], X_COORDS[i], Y_MID, scale);
-                tDots[i].style.borderColor = '#f0883e';
-                tDots[i].style.background = `rgba(240, 136, 62, ${0.2 + 0.8 * flash})`;
-                tDots[i].style.boxShadow = `0 0 ${20 * flash}px #f0883e, 0 0 ${35 * flash}px rgba(240, 136, 62, 0.85)`;
-                
-                bDots[i].style.opacity = `${Math.max(0, 1 - flashPhase * 2)}`;
-                setPos(bDots[i], X_COORDS[i], Y_MID, scale);
-              }
-
-              bBL.style.opacity = `${Math.max(0, 1 - flashPhase * 2)}`;
-              bBR.style.opacity = `${Math.max(0, 1 - flashPhase * 2)}`;
-              
-              bTL.style.borderColor = flash > 0.4 ? '#f0883e' : '#484f58';
-              bTR.style.borderColor = flash > 0.4 ? '#f0883e' : '#484f58';
+              const orangeBg = `rgba(240, 136, 62, ${0.35 + 0.65 * flash})`;
+              drawDotBatch(layout.positions, Y_MID, 1, 1, scale, '#f0883e', orangeBg, flash * 20, '#f0883e');
             } else {
-              for (let i = 0; i < 4; i++) {
-                setPos(tDots[i], X_COORDS[i], curYTop);
-                setPos(bDots[i], X_COORDS[i], curYBottom);
-              }
+              // Blue numbers approach each other
+              drawDotBatch(layout.positions, curYTop, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.15)');
+              drawDotBatch(layout.positions, curYBottom, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.15)');
             }
             return;
           }
 
-          if (ms >= 2500 && ms < 3500) {
-            caption.innerHTML = '4 products &rarr; <span class="caption-op add">+ add</span> together';
+          // 2700 -> 3800: Hold at N orange products inside the single bracket
+          if (ms >= 2700 && ms < 3800) {
+            caption.innerHTML = `${N.toLocaleString()} products &rarr; <span class="caption-op add">+ add</span> together`;
 
-            setPos(bTL, X_BRACKET_L, Y_MID);
-            setPos(bTR, X_BRACKET_R, Y_MID);
-            bTL.style.opacity = '1';
-            bTR.style.opacity = '1';
-            bTL.style.borderColor = '#484f58';
-            bTR.style.borderColor = '#484f58';
+            drawBracket(bracketL, Y_MID, bracketH, true);
+            drawBracket(bracketR, Y_MID, bracketH, false);
 
-            bBL.style.opacity = '0';
-            bBR.style.opacity = '0';
-
-            for (let i = 0; i < 4; i++) {
-              bDots[i].style.opacity = '0';
-              tDots[i].style.opacity = '1';
-              setPos(tDots[i], X_COORDS[i], Y_MID, 1);
-              tDots[i].style.borderColor = '#58a6ff';
-              tDots[i].style.background = 'rgba(88, 166, 255, 0.15)';
-              tDots[i].style.boxShadow = 'none';
-            }
+            // Distinct orange circles representing the products
+            drawDotBatch(layout.positions, Y_MID, 1, 1, 1, '#f0883e', 'rgba(240, 136, 62, 0.25)');
             return;
           }
 
-          if (ms >= 3500 && ms < 4800) {
+          // 3800 -> 5400: Addition -> all numbers visibly coalescing into one number!
+          if (ms >= 3800 && ms < 5400) {
             caption.innerHTML = '<span class="caption-op add">+ add</span> together';
-            const p = (ms - 3500) / 1300;
-            const moveProgress = Math.min(1, p / 0.85);
-            const ease = moveProgress < 1 ? moveProgress * moveProgress * (3 - 2 * moveProgress) : 1;
+            const p = (ms - 3800) / 1600;
+            const coalesceProgress = Math.min(1, p / 0.80);
+            const ease = coalesceProgress < 1 ? coalesceProgress * coalesceProgress * (3 - 2 * coalesceProgress) : 1;
 
-            const curX0 = X_COORDS[0] * (1 - ease);
-            const curX3 = X_COORDS[3] * (1 - ease);
+            const isMerged = p >= 0.80;
+            const flashPhase = isMerged ? (p - 0.80) / 0.20 : 0;
+            const flash = Math.sin(flashPhase * Math.PI);
 
-            const curBracketL = curX0 - BRACKET_OFFSET * (1 - ease * 0.7);
-            const curBracketR = curX3 + BRACKET_OFFSET * (1 - ease * 0.7);
+            // Bracket shrinks horizontally as numbers coalesce
+            const curBracketDist = (bracketW / 2) * (1 - ease * 0.90);
+            const bAlpha = isMerged ? Math.max(0, 1 - flashPhase * 1.8) : 1;
+            const bColor = flash > 0.2 ? '#3fb950' : '#484f58';
 
-            setPos(bTL, curBracketL, Y_MID);
-            setPos(bTR, curBracketR, Y_MID);
+            drawBracket(-curBracketDist, Y_MID, bracketH, true, bAlpha, bColor);
+            drawBracket(curBracketDist, Y_MID, bracketH, false, bAlpha, bColor);
 
-            if (p >= 0.85) {
-              const flashPhase = (p - 0.85) / 0.15;
-              const flash = Math.sin(flashPhase * Math.PI);
-              const scale = 1 + 0.45 * flash;
-
-              setPos(tDots[0], 0, Y_MID, scale);
-              tDots[0].style.borderColor = '#3fb950';
-              tDots[0].style.background = `rgba(63, 185, 80, ${0.2 + 0.8 * flash})`;
-              tDots[0].style.boxShadow = `0 0 ${25 * flash}px #3fb950, 0 0 ${45 * flash}px rgba(63, 185, 80, 0.9)`;
-
-              for (let i = 1; i < 4; i++) {
-                tDots[i].style.opacity = `${Math.max(0, 1 - flashPhase * 2)}`;
-                setPos(tDots[i], 0, Y_MID, scale);
-              }
-
-              const bFade = Math.max(0, 1 - flashPhase * 1.5);
-              bTL.style.opacity = `${bFade}`;
-              bTR.style.opacity = `${bFade}`;
-              bTL.style.borderColor = '#3fb950';
-              bTR.style.borderColor = '#3fb950';
+            if (isMerged) {
+              // Coalesced into 1 number -> Green flash!
+              ctx.save();
+              ctx.translate(centerX, centerY);
+              const rFinal = 8 * (1 + 0.45 * flash);
+              ctx.shadowColor = '#3fb950';
+              ctx.shadowBlur = flash * 28;
+              ctx.beginPath();
+              ctx.arc(0, Y_MID, rFinal, 0, Math.PI * 2);
+              ctx.fillStyle = `rgba(63, 185, 80, ${0.35 + 0.65 * flash})`;
+              ctx.fill();
+              ctx.lineWidth = 1.5;
+              ctx.strokeStyle = '#3fb950';
+              ctx.stroke();
+              ctx.restore();
             } else {
-              for (let i = 0; i < 4; i++) {
-                const curX = X_COORDS[i] * (1 - ease);
-                setPos(tDots[i], curX, Y_MID);
-                tDots[i].style.opacity = '1';
-              }
-              bTL.style.opacity = '1';
-              bTR.style.opacity = '1';
+              // All orange numbers visibly coalescing into one center number
+              const coalesceFactor = 1 - ease;
+              drawDotBatch(layout.positions, Y_MID, coalesceFactor, coalesceFactor, 1, '#f0883e', 'rgba(240, 136, 62, 0.25)');
             }
             return;
           }
 
-          if (ms >= 4800 && ms < 6500) {
+          // 5400 -> 7000: 1 single scalar number (blue number circle)
+          if (ms >= 5400 && ms < 7000) {
             caption.innerHTML = '= 1 number <span style="color:#58a6ff; font-weight:600;">(scalar)</span>';
-            bTL.style.opacity = '0';
-            bTR.style.opacity = '0';
-            bBL.style.opacity = '0';
-            bBR.style.opacity = '0';
 
-            for (let i = 1; i < 4; i++) tDots[i].style.opacity = '0';
-            
-            setPos(tDots[0], 0, Y_MID, 1.15);
-            tDots[0].style.opacity = '1';
-            tDots[0].style.borderColor = '#58a6ff';
-            tDots[0].style.background = 'rgba(88, 166, 255, 0.2)';
-            tDots[0].style.boxShadow = '0 0 14px rgba(88, 166, 255, 0.5)';
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.shadowColor = 'rgba(88,166,255,0.5)';
+            ctx.shadowBlur = 14;
+            ctx.beginPath();
+            ctx.arc(0, Y_MID, 8, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(88,166,255,0.2)';
+            ctx.fill();
+            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = '#58a6ff';
+            ctx.stroke();
+            ctx.restore();
             return;
           }
 
-          if (ms >= 6500) {
-            const fade = 1 - (ms - 6500) / 900;
-            tDots[0].style.opacity = `${fade}`;
+          // 7000 -> 8000: Fade out / reset
+          if (ms >= 7000) {
+            const fade = 1 - (ms - 7000) / 1000;
             caption.style.opacity = `${fade}`;
-            bTL.style.opacity = '0';
-            bTR.style.opacity = '0';
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.globalAlpha = fade;
+            ctx.shadowColor = 'rgba(88,166,255,0.5)';
+            ctx.shadowBlur = 14;
+            ctx.beginPath();
+            ctx.arc(0, Y_MID, 8, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(88,166,255,0.2)';
+            ctx.fill();
+            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = '#58a6ff';
+            ctx.stroke();
+            ctx.restore();
           }
         }
 
-        let startTime = performance.now();
         function animLoop(now) {
           const elapsed = (now - startTime) % TOTAL_DURATION;
-          update(elapsed);
+          render(elapsed);
           requestAnimationFrame(animLoop);
         }
         requestAnimationFrame(animLoop);
 
-        card.addEventListener('click', () => {
+        canvasStage.addEventListener('click', () => {
           startTime = performance.now();
         });
       })();

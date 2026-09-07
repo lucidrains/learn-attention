@@ -50,6 +50,40 @@
       align-items: center;
     }
 
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .quiz-toggle-btn {
+      background: transparent;
+      border: 1px solid #30363d;
+      color: #8b949e;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.15s ease;
+      text-transform: lowercase;
+      line-height: 1.2;
+    }
+
+    .quiz-toggle-btn:hover {
+      color: #58a6ff;
+      border-color: #58a6ff;
+    }
+
+    .quiz-toggle-btn.active {
+      background: rgba(88, 166, 255, 0.12);
+      border-color: #58a6ff;
+      color: #58a6ff;
+    }
+
     .prereqs-label {
       font-size: 0.8rem;
       text-transform: uppercase;
@@ -156,6 +190,8 @@
       align-items: center;
       gap: 0.9rem;
       user-select: none;
+      box-sizing: border-box;
+      max-width: 100%;
     }
 
     .dot-header {
@@ -291,11 +327,31 @@
       flex-direction: column;
       align-items: center;
       gap: 1.25rem;
+      box-sizing: border-box;
+      max-width: 100%;
+    }
+
+    .quiz-card {
+      width: 100%;
+    }
+
+    .quiz-panel {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.1rem;
+      box-sizing: border-box;
+      padding-top: 1rem;
+      border-top: 1px solid #21262d;
+      margin-top: 0.35rem;
     }
 
     .filters {
       display: flex;
       gap: 0.35rem;
+      flex-wrap: wrap;
+      justify-content: center;
     }
 
     .filter-btn {
@@ -306,8 +362,9 @@
       border-radius: 6px;
       font-size: 0.85rem;
       cursor: pointer;
-      font-family: ui-monospace, monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       line-height: 1.2;
+      transition: all 0.1s ease;
     }
 
     .filter-btn[data-op="div"] {
@@ -326,16 +383,25 @@
 
     .problem {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 2.2rem;
+      font-size: 1.35rem;
       color: #e6edf3;
       font-weight: 400;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.02em;
       margin: 0.25rem 0;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
       flex-wrap: wrap;
+      text-align: center;
+      word-break: break-word;
+    }
+
+    .problem sup {
+      font-size: 0.65em;
+      vertical-align: 0.4em;
+      line-height: 0;
+      position: relative;
     }
 
     .problem-num {
@@ -347,19 +413,25 @@
       display: flex;
       gap: 0.5rem;
       width: 100%;
+      box-sizing: border-box;
+      justify-content: center;
     }
 
     input[type="text"] {
       flex: 1;
+      min-width: 0;
+      width: 100%;
+      box-sizing: border-box;
       background: #0d1117;
       border: 1px solid #30363d;
       border-radius: 6px;
       padding: 0.6rem 0.85rem;
       color: #fff;
-      font-size: 1.1rem;
-      font-family: ui-monospace, monospace;
+      font-size: 1.05rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       text-align: center;
       outline: none;
+      transition: border-color 0.15s ease;
     }
 
     input[type="text"]:focus {
@@ -367,17 +439,34 @@
     }
 
     button.submit-btn {
-      background: #238636;
-      color: #fff;
-      border: none;
+      flex-shrink: 0;
+      box-sizing: border-box;
+      min-width: 110px;
+      text-align: center;
+      background: #21262d;
+      color: #8b949e;
+      border: 1px solid #30363d;
       border-radius: 6px;
-      padding: 0.6rem 1.1rem;
+      padding: 0.6rem 1.15rem;
       font-size: 0.9rem;
       cursor: pointer;
       font-family: inherit;
+      white-space: nowrap;
+      transition: all 0.15s ease;
     }
 
     button.submit-btn:hover {
+      background: #30363d;
+      color: #c9d1d9;
+    }
+
+    button.submit-btn.ready-green {
+      background: #238636;
+      border-color: #2ea043;
+      color: #ffffff;
+    }
+
+    button.submit-btn.ready-green:hover {
       background: #2ea043;
     }
 
@@ -392,10 +481,36 @@
       border-color: #f85149;
     }
 
+    .quiz-box-input {
+      width: 48px;
+      height: 24px;
+      background: #0d1117;
+      border: 1px solid rgba(163, 113, 247, 0.55);
+      border-radius: 6px;
+      color: #e6edf3;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+      font-size: 0.78rem;
+      text-align: center;
+      outline: none;
+      padding: 0 3px;
+      box-sizing: border-box;
+      line-height: 1;
+      vertical-align: middle;
+      transition: all 0.15s ease;
+    }
+
+    .quiz-box-input:focus {
+      border-color: #a371f7;
+      box-shadow: 0 0 0 2px rgba(163, 113, 247, 0.25);
+    }
+
     .feedback {
       font-size: 0.85rem;
       min-height: 1.2rem;
       text-align: center;
+      line-height: 1.4;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      word-break: break-word;
     }
 
     .feedback.correct { color: #3fb950; }
@@ -409,18 +524,118 @@
       padding-top: 0.85rem;
       font-size: 0.8rem;
       color: #7d8590;
+      box-sizing: border-box;
     }
 
     .stats span {
       color: #c9d1d9;
     }
+
+    @media (max-width: 520px) {
+      body {
+        padding: 1rem 0.65rem;
+      }
+      .card, .dot-card {
+        padding: 1.15rem 0.95rem;
+      }
+      .problem {
+        font-size: 1.55rem;
+        gap: 0.35rem;
+      }
+      .filter-btn {
+        padding: 0.2rem 0.45rem;
+        font-size: 0.78rem;
+      }
+    }
+
+    .quiz-vec {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      position: relative;
+      padding: 3px 6px;
+      vertical-align: middle;
+    }
+    .quiz-vec::before,
+    .quiz-vec::after {
+      content: '';
+      position: absolute;
+      top: 1px;
+      bottom: 1px;
+      width: 4px;
+      border-top: 1px solid #484f58;
+      border-bottom: 1px solid #484f58;
+      pointer-events: none;
+    }
+    .quiz-vec::before {
+      left: 0;
+      border-left: 1px solid #484f58;
+    }
+    .quiz-vec::after {
+      right: 0;
+      border-right: 1px solid #484f58;
+    }
+    .quiz-circle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 22px;
+      height: 22px;
+      padding: 1px 5px 0 5px;
+      border-radius: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+      font-size: 0.72rem;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      border: 1px solid rgba(88, 166, 255, 0.45);
+      background: rgba(88, 166, 255, 0.12);
+      color: #e6edf3;
+      box-sizing: border-box;
+      line-height: 1;
+      vertical-align: middle;
+      text-align: center;
+    }
+    .quiz-circle.single {
+      width: 22px;
+      padding: 1px 0 0 0;
+      border-radius: 50%;
+    }
+    .quiz-circle.blue {
+      border-color: rgba(88, 166, 255, 0.55);
+      background: rgba(88, 166, 255, 0.14);
+      color: #c9d1d9;
+    }
+    .quiz-circle.orange {
+      border-color: rgba(240, 136, 62, 0.65);
+      background: rgba(240, 136, 62, 0.18);
+      color: #f0883e;
+    }
+    .quiz-circle.green {
+      border-color: rgba(63, 185, 80, 0.65);
+      background: rgba(63, 185, 80, 0.18);
+      color: #3fb950;
+    }
+    .quiz-circle.red {
+      border-color: rgba(248, 81, 73, 0.65);
+      background: rgba(248, 81, 73, 0.18);
+      color: #f85149;
+    }
+    .quiz-circle.purple {
+      border-color: rgba(163, 113, 247, 0.65);
+      background: rgba(163, 113, 247, 0.18);
+      color: #a371f7;
+    }
+
   </style>
 </head>
 <body>
   <div class="container">
     <header>
       <div class="prereqs-header">
-        <div class="prereqs-label">Prerequisites</div>
+        <div class="header-left">
+          <div class="prereqs-label">Prerequisites</div>
+          <button class="quiz-toggle-btn" id="prereq-quiz-toggle" aria-expanded="false">quiz &#9662;</button>
+        </div>
         <div class="float-legend">
           <span class="num-circle sm"></span>
           <span>number</span>
@@ -460,33 +675,37 @@
       </div>
     </header>
 
-    <div class="card">
+    <div class="card quiz-card" id="prereq-quiz-card" style="display: none;">
       <div class="filters">
         <button class="filter-btn active" data-op="all">all</button>
         <button class="filter-btn" data-op="add">+</button>
         <button class="filter-btn" data-op="mul">&times;</button>
         <button class="filter-btn" data-op="exp">exp</button>
         <button class="filter-btn" data-op="div">&divide;</button>
+        <button class="filter-btn" id="prereq-new-btn">new quiz</button>
       </div>
 
-      <div class="problem" id="problem">...</div>
+      <div class="problem" id="prereq-problem">...</div>
 
       <div class="input-row">
-        <input type="text" id="answer" placeholder="answer" autocomplete="off" inputmode="decimal" />
-        <button class="submit-btn" id="submit">Check</button>
+        <input type="text" id="prereq-answer" placeholder="answer" autocomplete="off" inputmode="decimal" />
+        <button class="submit-btn" id="prereq-submit">Check</button>
       </div>
 
-      <div class="feedback" id="feedback"></div>
+      <div class="feedback" id="prereq-feedback"></div>
 
       <div class="stats">
-        <div>streak: <span id="stat-streak">0</span></div>
-        <div>solved: <span id="stat-solved">0</span></div>
+        <div>streak: <span id="prereq-stat-streak">0</span></div>
+        <div>solved: <span id="prereq-stat-solved">0</span></div>
       </div>
     </div>
 
     <div class="dot-card" id="dot-card">
       <div class="dot-header">
-        <span>Dot Product</span>
+        <div class="header-left">
+          <span>Dot Product</span>
+          <button class="quiz-toggle-btn" id="dot-quiz-toggle" aria-expanded="false">quiz &#9662;</button>
+        </div>
         <span id="header-dim">Vector of 4</span>
       </div>
 
@@ -503,11 +722,36 @@
       </div>
 
       <div class="stage-caption" id="caption">Two vectors of 4</div>
+
+      <div class="quiz-panel" id="dot-quiz-panel" style="display: none;">
+        <div class="filters">
+          <button class="filter-btn active" data-mode="final">final</button>
+          <button class="filter-btn" data-mode="step">step by step</button>
+          <button class="filter-btn" id="dot-new-btn">new quiz</button>
+        </div>
+
+        <div class="problem" id="dot-problem">...</div>
+
+        <div class="input-row">
+          <input type="text" id="dot-answer" placeholder="answer" autocomplete="off" inputmode="decimal" />
+          <button class="submit-btn" id="dot-submit">Check</button>
+        </div>
+
+        <div class="feedback" id="dot-feedback"></div>
+
+        <div class="stats">
+          <div>streak: <span id="dot-stat-streak">0</span></div>
+          <div>solved: <span id="dot-stat-solved">0</span></div>
+        </div>
+      </div>
     </div>
 
     <div class="dot-card" id="softmax-card">
       <div class="dot-header">
-        <span>Softmax</span>
+        <div class="header-left">
+          <span>Softmax</span>
+          <button class="quiz-toggle-btn" id="softmax-quiz-toggle" aria-expanded="false">quiz &#9662;</button>
+        </div>
         <span id="softmax-header-dim">Vector of 4</span>
       </div>
 
@@ -524,20 +768,34 @@
       </div>
 
       <div class="stage-caption" id="softmax-caption">Vector of 4</div>
+
+      <div class="quiz-panel" id="softmax-quiz-panel" style="display: none;">
+        <div class="filters">
+          <button class="filter-btn active" data-mode="final">final</button>
+          <button class="filter-btn" data-mode="step">step by step</button>
+          <button class="filter-btn" id="softmax-new-btn">new quiz</button>
+        </div>
+
+        <div class="problem" id="softmax-problem">...</div>
+
+        <div class="input-row">
+          <input type="text" id="softmax-answer" placeholder="answer" autocomplete="off" inputmode="decimal" />
+          <button class="submit-btn" id="softmax-submit">Check</button>
+        </div>
+
+        <div class="feedback" id="softmax-feedback"></div>
+
+        <div class="stats">
+          <div>streak: <span id="softmax-stat-streak">0</span></div>
+          <div>solved: <span id="softmax-stat-solved">0</span></div>
+        </div>
+      </div>
     </div>
 
     <div class="dot-card" id="attn-card">
       <div class="dot-header">
         <span>Attention Matrix</span>
-        <span id="attn-header-dim">Queries (rows) &middot; Keys (columns)</span>
-      </div>
-
-      <div class="slider-row">
-        <div class="slider-labels">
-          <span>context length (queries &amp; keys)</span>
-          <span class="slider-val" id="attn-len-slider-label">2</span>
-        </div>
-        <input type="range" id="attn-len-slider" min="0" max="10" value="1" step="1" />
+        <span id="attn-header-dim">Queries &middot; Keys</span>
       </div>
 
       <div class="slider-row">
@@ -548,165 +806,761 @@
         <input type="range" id="attn-dim-slider" min="0" max="10" value="1" step="1" />
       </div>
 
+      <div class="slider-row">
+        <div class="slider-labels">
+          <span>number of vectors (context length)</span>
+          <span class="slider-val" id="attn-len-slider-label">2</span>
+        </div>
+        <input type="range" id="attn-len-slider" min="0" max="10" value="1" step="1" />
+      </div>
+
       <div class="canvas-stage attn-stage" id="attn-canvas-stage" title="Click to replay">
         <canvas id="attn-canvas"></canvas>
         <canvas id="attn-webgl-canvas"></canvas>
       </div>
 
-      <div class="stage-caption" id="attn-caption">Queries (rows) &amp; Keys (columns) &middot; 2 &times; 2 &middot; vec dim 2</div>
+      <div class="stage-caption" id="attn-caption">vectors &middot; 2 &middot; dim 2</div>
     </div>
   </div>
 
   <script>
     (function () {
-      let currentOp = 'all';
-      let currentProblem = null;
-      let isAnswered = false;
+    const rand_choice = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    const rand_int = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+    const rand_float = (min, max, step = 0.5) => {
+      const steps = Math.round((max - min) / step);
+      return parseFloat((min + Math.floor(Math.random() * (steps + 1)) * step).toFixed(1));
+    };
+
+    const subscript = (n) => {
+      const chars = { '0':'₀', '1':'₁', '2':'₂', '3':'₃', '4':'₄', '5':'₅', '6':'₆', '7':'₇', '8':'₈', '9':'₉' };
+      return String(n).split('').map(c => chars[c] || c).join('');
+    };
+
+    function num_circle(val, color = 'blue') {
+      const s = String(val);
+      const isSingle = s.length === 1;
+      return `<span class="quiz-circle ${color}${isSingle ? ' single' : ''}">${s}</span>`;
+    }
+
+    function vec_box(items, activeIdx = -1, activeColor = 'orange', defaultColor = 'blue') {
+      const circles = items.map((val, idx) => {
+        const col = (idx === activeIdx) ? activeColor : defaultColor;
+        return num_circle(val, col);
+      }).join(' ');
+      return `<span class="quiz-vec">${circles}</span>`;
+    }
+
+    function create_prereq_quiz() {
+      let current_op = 'all';
+      let current_problem = null;
+      let is_answered = false;
       let streak = 0;
       let solved = 0;
+      let is_open = false;
 
-      const problemEl = document.getElementById('problem');
-      const inputEl = document.getElementById('answer');
-      const submitBtn = document.getElementById('submit');
-      const feedbackEl = document.getElementById('feedback');
-      const streakEl = document.getElementById('stat-streak');
-      const solvedEl = document.getElementById('stat-solved');
-      const filterBtns = document.querySelectorAll('.filter-btn');
-
-      function randChoice(arr) {
-        return arr[Math.floor(Math.random() * arr.length)];
-      }
-
-      function randFloat(min, max, step = 0.5) {
-        const steps = Math.round((max - min) / step);
-        return parseFloat((min + Math.floor(Math.random() * (steps + 1)) * step).toFixed(1));
-      }
+      const toggle_btn = document.getElementById('prereq-quiz-toggle');
+      const card_el = document.getElementById('prereq-quiz-card');
+      const problem_el = document.getElementById('prereq-problem');
+      const input_el = document.getElementById('prereq-answer');
+      const submit_btn = document.getElementById('prereq-submit');
+      const feedback_el = document.getElementById('prereq-feedback');
+      const streak_el = document.getElementById('prereq-stat-streak');
+      const solved_el = document.getElementById('prereq-stat-solved');
+      const filter_btns = document.querySelectorAll('#prereq-quiz-card .filter-btn');
 
       const generators = {
         add: () => {
-          const a = randFloat(0.5, 6.0, 0.5);
-          const b = randFloat(0.5, 6.0, 0.5);
-          return { html: `${a} <span class="op-add">+</span> ${b}`, target: a + b };
+          const a = rand_float(0.5, 6.0, 0.5);
+          const b = rand_float(0.5, 6.0, 0.5);
+          const ans = parseFloat((a + b).toFixed(1));
+          return { html: `${num_circle(a, 'blue')} <span class="op-add">+</span> ${num_circle(b, 'blue')}`, target: ans, target_display: `${ans}`, explanation: `${a} + ${b} = ${ans}` };
         },
         mul: () => {
-          const a = randChoice([0.5, 1.5, 2.0, 2.5, 3.0, 4.0]);
-          const b = randChoice([0.2, 0.5, 1.5, 2.0, 3.0]);
-          return { html: `${a} <span class="op-mul">\u00d7</span> ${b}`, target: a * b };
+          const a = rand_choice([0.5, 1.5, 2.0, 2.5, 3.0, 4.0]);
+          const b = rand_choice([0.2, 0.5, 1.5, 2.0, 3.0]);
+          const ans = parseFloat((a * b).toFixed(2));
+          return { html: `${num_circle(a, 'blue')} <span class="op-mul">&times;</span> ${num_circle(b, 'blue')}`, target: ans, target_display: `${ans}`, explanation: `${a} &times; ${b} = ${ans}` };
         },
         exp: () => {
           const choices = [
-            { html: '<span class="op-exp">exp</span>(-\u221e)', target: 0, allowsE: false },
-            { html: '<span class="op-exp">exp</span>(0)', target: 1, allowsE: false },
-            { html: '<span class="op-exp">exp</span>(1)', target: Math.E, allowsE: true },
-            { html: '<span class="op-exp">exp</span>(-1.0)', target: Math.exp(-1.0), allowsE: false },
-            { html: '<span class="op-exp">exp</span>(-0.5)', target: Math.exp(-0.5), allowsE: false },
-            { html: '<span class="op-exp">exp</span>(0.5)', target: Math.exp(0.5), allowsE: false },
-            { html: '<span class="op-exp">exp</span>(1.5)', target: Math.exp(1.5), allowsE: false },
-            { html: '<span class="op-exp">exp</span>(2.0)', target: Math.exp(2.0), allowsE: false }
+            { html: `<span class="op-exp">exp</span>( ${num_circle('-\u221e', 'blue')} )`, target: 0, target_display: '0', allows_e: false, explanation: 'e^{-\u221e} = 0' },
+            { html: `<span class="op-exp">exp</span>( ${num_circle(0, 'blue')} )`, target: 1, target_display: '1', allows_e: false, explanation: 'e^0 = 1' },
+            { html: `<span class="op-exp">exp</span>( ${num_circle(1, 'blue')} )`, target: Math.E, target_display: '~2.7', allows_e: false, explanation: 'e^1 = e \u2248 2.72' },
+            { html: `<span class="op-exp">exp</span>( ${num_circle(-1.0, 'blue')} )`, target: Math.exp(-1.0), target_display: '~0.4', allows_e: false, explanation: 'e^{-1} \u2248 0.37' },
+            { html: `<span class="op-exp">exp</span>( ${num_circle(-0.5, 'blue')} )`, target: Math.exp(-0.5), target_display: '~0.6', allows_e: false, explanation: 'e^{-0.5} \u2248 0.61' },
+            { html: `<span class="op-exp">exp</span>( ${num_circle(0.5, 'blue')} )`, target: Math.exp(0.5), target_display: '~1.6', allows_e: false, explanation: 'e^{0.5} \u2248 1.65' },
+            { html: `<span class="op-exp">exp</span>( ${num_circle(1.5, 'blue')} )`, target: Math.exp(1.5), target_display: '~4.5', allows_e: false, explanation: 'e^{1.5} \u2248 4.48' },
+            { html: `<span class="op-exp">exp</span>( ${num_circle(2.0, 'blue')} )`, target: Math.exp(2.0), target_display: '~7.4', allows_e: false, explanation: 'e^{2.0} \u2248 7.39' }
           ];
-          return randChoice(choices);
+          return rand_choice(choices);
         },
         div: () => {
-          const divisor = randChoice([2, 4, 5, 1.5, 0.5]);
-          const target = randChoice([0.5, 1.0, 1.5, 2.0, 3.0, 4.0]);
+          const divisor = rand_choice([2, 4, 5, 1.5, 0.5]);
+          const target = rand_choice([0.5, 1.0, 1.5, 2.0, 3.0, 4.0]);
           const dividend = parseFloat((divisor * target).toFixed(1));
-          return { html: `${dividend} <span class="op-div">\u00f7</span> ${divisor}`, target: dividend / divisor };
+          const ans = parseFloat((dividend / divisor).toFixed(2));
+          return { html: `${num_circle(dividend, 'blue')} <span class="op-div">&divide;</span> ${num_circle(divisor, 'blue')}`, target: ans, target_display: `${ans}`, explanation: `${dividend} &divide; ${divisor} = ${ans}` };
         }
       };
 
-      function nextProblem() {
-        isAnswered = false;
-        feedbackEl.textContent = '';
-        feedbackEl.className = 'feedback';
-        inputEl.value = '';
-        submitBtn.className = 'submit-btn';
-        submitBtn.textContent = 'Check';
-        inputEl.focus();
-
-        let op = currentOp;
-        if (op === 'all') {
-          op = randChoice(['add', 'mul', 'exp', 'div']);
+      function toggle() {
+        is_open = !is_open;
+        card_el.style.display = is_open ? 'flex' : 'none';
+        if (toggle_btn) {
+          toggle_btn.classList.toggle('active', is_open);
+          toggle_btn.setAttribute('aria-expanded', is_open);
+          toggle_btn.innerHTML = is_open ? 'quiz &#9652;' : 'quiz &#9662;';
         }
+        if (is_open) {
+          if (!current_problem) next_problem();
+          setTimeout(() => input_el.focus(), 50);
+        }
+      }
+      if (toggle_btn) toggle_btn.addEventListener('click', toggle);
 
-        currentProblem = generators[op]();
-        problemEl.innerHTML = currentProblem.html;
+      function next_problem() {
+        is_answered = false;
+        feedback_el.textContent = '';
+        feedback_el.className = 'feedback';
+        input_el.value = '';
+        submit_btn.className = 'submit-btn';
+        submit_btn.textContent = 'Check';
+        input_el.focus();
+
+        const ops = ['add', 'mul', 'exp', 'div'];
+        const op = current_op === 'all' ? rand_choice(ops) : current_op;
+        current_problem = generators[op]();
+        problem_el.innerHTML = current_problem.html;
       }
 
-      function checkAnswer() {
-        if (!currentProblem) return;
-        const raw = inputEl.value.trim().toLowerCase().replace(',', '.');
+      function check_answer() {
+        if (!current_problem) return;
+        const raw = input_el.value.trim().toLowerCase().replace(',', '.');
         if (!raw) return;
 
-        let isCorrect = false;
-
-        if (currentProblem.allowsE && raw === 'e') {
-          isCorrect = true;
+        let is_correct = false;
+        if (current_problem.allows_e && raw === 'e') {
+          is_correct = true;
         } else {
           const val = parseFloat(raw);
           if (isNaN(val)) {
-            feedbackEl.className = 'feedback incorrect';
-            feedbackEl.textContent = 'enter a valid number';
+            feedback_el.className = 'feedback incorrect';
+            feedback_el.textContent = 'enter a valid number';
             return;
           }
-
-          const diff = Math.abs(val - currentProblem.target);
-          isCorrect = diff <= 0.1001 || Math.abs(parseFloat(val.toFixed(1)) - parseFloat(currentProblem.target.toFixed(1))) < 1e-5;
+          const tolerance = current_problem.tolerance ?? 0.1001;
+          const diff = Math.abs(val - current_problem.target);
+          is_correct = diff <= tolerance || Math.abs(parseFloat(val.toFixed(2)) - parseFloat(current_problem.target.toFixed(2))) < 1e-4;
         }
 
-        const targetDisplay = currentProblem.allowsE
-          ? `~${currentProblem.target.toFixed(1)} (or e)`
-          : (currentProblem.target === 0 ? '0' : `~${currentProblem.target.toFixed(1)}`);
+        const target_display = current_problem.target_display || (
+          current_problem.allows_e
+            ? `~${current_problem.target.toFixed(1)} (or e)`
+            : (Number.isInteger(current_problem.target) ? `${current_problem.target}` : `~${current_problem.target.toFixed(2)}`)
+        );
+        const explanation = current_problem.explanation ? ` &middot; ${current_problem.explanation}` : '';
+        is_answered = true;
 
-        isAnswered = true;
-
-        if (isCorrect) {
+        if (is_correct) {
           streak++;
           solved++;
-          feedbackEl.className = 'feedback correct';
-          feedbackEl.textContent = `\u2713 correct! (${targetDisplay})`;
-          submitBtn.className = 'submit-btn';
-          submitBtn.textContent = 'Next \u2192';
+          feedback_el.className = 'feedback correct';
+          feedback_el.innerHTML = `&#10003; correct! (${target_display})${explanation}`;
+          submit_btn.className = 'submit-btn ready-green';
+          submit_btn.textContent = 'New quiz \u2192';
         } else {
           streak = 0;
-          feedbackEl.className = 'feedback incorrect';
-          feedbackEl.textContent = `\u2715 target was ${targetDisplay}`;
-          submitBtn.className = 'submit-btn incorrect';
-          submitBtn.innerHTML = 'Next <span style="color:#f85149">\u2715</span>';
+          feedback_el.className = 'feedback incorrect';
+          feedback_el.innerHTML = `&#10005; target was ${target_display}${explanation}`;
+          submit_btn.className = 'submit-btn incorrect';
+          submit_btn.innerHTML = 'New quiz <span style="color:#f85149">&#10005;</span>';
         }
 
-        streakEl.textContent = streak;
-        solvedEl.textContent = solved;
+        streak_el.textContent = streak;
+        solved_el.textContent = solved;
       }
 
-      filterBtns.forEach(btn => {
+      filter_btns.forEach(btn => {
         btn.addEventListener('click', () => {
-          filterBtns.forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          currentOp = btn.dataset.op;
-          nextProblem();
+          if (btn.dataset.op) {
+            filter_btns.forEach(b => { if (b.dataset.op) b.classList.remove('active'); });
+            btn.classList.add('active');
+            current_op = btn.dataset.op;
+            next_problem();
+          }
         });
       });
 
-      submitBtn.addEventListener('click', () => {
-        if (isAnswered) nextProblem();
-        else checkAnswer();
+      const new_btn = document.getElementById('prereq-new-btn');
+      if (new_btn) {
+        new_btn.addEventListener('click', () => {
+          next_problem();
+        });
+      }
+
+      submit_btn.addEventListener('click', () => {
+        if (is_answered) next_problem();
+        else check_answer();
       });
 
-      inputEl.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          if (isAnswered) nextProblem();
-          else checkAnswer();
+      input_el.addEventListener('input', () => {
+        input_el.value = input_el.value.replace(/[^0-9.-]/g, '');
+        if (input_el.value.trim().length > 0) {
+          submit_btn.classList.add('ready-green');
+        } else {
+          submit_btn.classList.remove('ready-green');
         }
       });
+
+      input_el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          if (is_answered) next_problem();
+          else check_answer();
+        }
+      });
+    }
+
+    function create_dot_quiz() {
+      let mode = 'final';
+      let is_open = false;
+      let is_answered = false;
+      let streak = 0;
+      let solved = 0;
+
+      let u = [];
+      let v = [];
+      let step_idx = 0;
+      let prods = [];
+      let target = 0;
+
+      const toggle_btn = document.getElementById('dot-quiz-toggle');
+      const panel_el = document.getElementById('dot-quiz-panel');
+      const problem_el = document.getElementById('dot-problem');
+      const input_el = document.getElementById('dot-answer');
+      const submit_btn = document.getElementById('dot-submit');
+      const feedback_el = document.getElementById('dot-feedback');
+      const streak_el = document.getElementById('dot-stat-streak');
+      const solved_el = document.getElementById('dot-stat-solved');
+      const filter_btns = document.querySelectorAll('#dot-quiz-panel .filter-btn');
+
+      function toggle() {
+        is_open = !is_open;
+        panel_el.style.display = is_open ? 'flex' : 'none';
+        if (toggle_btn) {
+          toggle_btn.classList.toggle('active', is_open);
+          toggle_btn.setAttribute('aria-expanded', is_open);
+          toggle_btn.innerHTML = is_open ? 'quiz &#9652;' : 'quiz &#9662;';
+        }
+        if (is_open) {
+          if (u.length === 0) next_problem();
+          setTimeout(() => input_el.focus(), 50);
+        }
+      }
+      if (toggle_btn) toggle_btn.addEventListener('click', toggle);
+
+      function next_problem() {
+        is_answered = false;
+        feedback_el.textContent = '';
+        feedback_el.className = 'feedback';
+        input_el.value = '';
+        submit_btn.className = 'submit-btn';
+        submit_btn.textContent = 'Check';
+        input_el.focus();
+
+        const len = rand_choice([2, 3]);
+        u = [];
+        v = [];
+        for (let i = 0; i < len; i++) {
+          u.push(rand_int(-3, 4));
+          v.push(rand_int(-3, 4));
+        }
+        if (u.every(x => x === 0)) u[0] = 2;
+        if (v.every(x => x === 0)) v[0] = 3;
+
+        step_idx = 0;
+        prods = [];
+
+        render_problem();
+      }
+
+      function render_problem() {
+        input_el.value = '';
+        submit_btn.classList.remove('ready-green');
+        if (mode === 'final') {
+          let sum = 0;
+          for (let i = 0; i < u.length; i++) sum += u[i] * v[i];
+          target = sum;
+          problem_el.innerHTML = `${vec_box(u, -1, 'orange', 'blue')} &middot; ${vec_box(v, -1, 'orange', 'blue')}`;
+        } else {
+          const d = u.length;
+          if (step_idx < d) {
+            target = u[step_idx] * v[step_idx];
+            const u_vec = vec_box(u, step_idx, 'orange', 'blue');
+            const v_vec = vec_box(v, step_idx, 'orange', 'blue');
+            const mul_desc = `${num_circle(u[step_idx], 'orange')} &times; ${num_circle(v[step_idx], 'orange')}`;
+            problem_el.innerHTML = `<div style="font-size:0.85rem; color:#7d8590; width:100%; text-align:center; margin-bottom:0.4rem;">step ${step_idx + 1} of ${d + 1}: multiply ${mul_desc}</div>${u_vec} &middot; ${v_vec}`;
+          } else {
+            let sum = 0;
+            for (let i = 0; i < prods.length; i++) sum += prods[i];
+            target = sum;
+            const prods_str = prods.map(p => num_circle(p, 'orange')).join(' + ');
+            problem_el.innerHTML = `<div style="font-size:0.85rem; color:#7d8590; width:100%; text-align:center; margin-bottom:0.4rem;">step ${d + 1} of ${d + 1}: sum products</div>${prods_str}`;
+          }
+        }
+      }
+
+      function check_answer() {
+        const raw = input_el.value.trim().replace(',', '.');
+        if (!raw) return;
+        const val = parseFloat(raw);
+        if (isNaN(val)) {
+          feedback_el.className = 'feedback incorrect';
+          feedback_el.textContent = 'enter a valid number';
+          return;
+        }
+
+        const is_correct = Math.abs(val - target) < 1e-4;
+
+        if (mode === 'final') {
+          is_answered = true;
+          if (is_correct) {
+            streak++;
+            solved++;
+            const terms = u.map((ui, idx) => `(${ui}&times;${v[idx]})`).join(' + ');
+            feedback_el.className = 'feedback correct';
+            feedback_el.innerHTML = `&#10003; correct! ${terms} = ${target}`;
+            submit_btn.className = 'submit-btn ready-green';
+            submit_btn.textContent = 'New quiz \u2192';
+          } else {
+            streak = 0;
+            feedback_el.className = 'feedback incorrect';
+            feedback_el.innerHTML = `&#10005; target was ${target}`;
+            submit_btn.className = 'submit-btn incorrect';
+            submit_btn.innerHTML = 'New quiz <span style="color:#f85149">&#10005;</span>';
+          }
+          streak_el.textContent = streak;
+          solved_el.textContent = solved;
+        } else {
+          const d = u.length;
+          if (is_correct) {
+            if (step_idx < d) {
+              prods.push(target);
+              feedback_el.className = 'feedback correct';
+              feedback_el.innerHTML = `&#10003; ${u[step_idx]} &times; ${v[step_idx]} = ${target}`;
+              step_idx++;
+              render_problem();
+              input_el.focus();
+            } else {
+              is_answered = true;
+              streak++;
+              solved++;
+              feedback_el.className = 'feedback correct';
+              feedback_el.innerHTML = `&#10003; complete! sum = ${target}`;
+              submit_btn.className = 'submit-btn ready-green';
+              submit_btn.textContent = 'New quiz \u2192';
+              streak_el.textContent = streak;
+              solved_el.textContent = solved;
+            }
+          } else {
+            streak = 0;
+            streak_el.textContent = streak;
+            feedback_el.className = 'feedback incorrect';
+            feedback_el.innerHTML = `&#10005; target was ${target}`;
+          }
+        }
+      }
+
+      filter_btns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (btn.dataset.mode) {
+            filter_btns.forEach(b => { if (b.dataset.mode) b.classList.remove('active'); });
+            btn.classList.add('active');
+            mode = btn.dataset.mode;
+            if (mode === 'step') {
+              step_idx = 0;
+              prods = [];
+            }
+            if (!is_answered) {
+              feedback_el.textContent = '';
+              feedback_el.className = 'feedback';
+              submit_btn.className = 'submit-btn';
+              submit_btn.textContent = 'Check';
+            }
+            render_problem();
+            input_el.focus();
+          }
+        });
+      });
+
+      const new_btn = document.getElementById('dot-new-btn');
+      if (new_btn) {
+        new_btn.addEventListener('click', () => {
+          next_problem();
+        });
+      }
+
+      submit_btn.addEventListener('click', () => {
+        if (is_answered) next_problem();
+        else check_answer();
+      });
+
+      input_el.addEventListener('input', () => {
+        input_el.value = input_el.value.replace(/[^0-9.-]/g, '');
+        if (input_el.value.trim().length > 0) {
+          submit_btn.classList.add('ready-green');
+        } else {
+          submit_btn.classList.remove('ready-green');
+        }
+      });
+
+      input_el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          if (is_answered) next_problem();
+          else check_answer();
+        }
+      });
+    }
+
+    function create_softmax_quiz() {
+      let mode = 'final';
+      let is_open = false;
+      let is_answered = false;
+      let streak = 0;
+      let solved = 0;
+
+      let z = [];
+      let e_z = [];
+      let sum = 0;
+      let probs = [];
+      let step_idx = 0;
+      let target = 0;
+      let target_tolerance = 0.06;
+
+      const toggle_btn = document.getElementById('softmax-quiz-toggle');
+      const panel_el = document.getElementById('softmax-quiz-panel');
+      const problem_el = document.getElementById('softmax-problem');
+      const input_el = document.getElementById('softmax-answer');
+      const submit_btn = document.getElementById('softmax-submit');
+      const feedback_el = document.getElementById('softmax-feedback');
+      const streak_el = document.getElementById('softmax-stat-streak');
+      const solved_el = document.getElementById('softmax-stat-solved');
+      const filter_btns = document.querySelectorAll('#softmax-quiz-panel .filter-btn');
+
+      function toggle() {
+        is_open = !is_open;
+        panel_el.style.display = is_open ? 'flex' : 'none';
+        if (toggle_btn) {
+          toggle_btn.classList.toggle('active', is_open);
+          toggle_btn.setAttribute('aria-expanded', is_open);
+          toggle_btn.innerHTML = is_open ? 'quiz &#9652;' : 'quiz &#9662;';
+        }
+        if (is_open) {
+          if (z.length === 0) next_problem();
+          else setTimeout(() => {
+            if (mode === 'final') {
+              const first_box = problem_el.querySelector('.quiz-box-input');
+              if (first_box) first_box.focus();
+            } else {
+              input_el.focus();
+            }
+          }, 50);
+        }
+      }
+      if (toggle_btn) toggle_btn.addEventListener('click', toggle);
+
+      function next_problem() {
+        is_answered = false;
+        feedback_el.textContent = '';
+        feedback_el.className = 'feedback';
+        input_el.value = '';
+        submit_btn.className = 'submit-btn';
+        submit_btn.textContent = 'Check';
+
+        const problem_type = rand_choice(['mask', 'zeros', 'ones', 'mixed', 'twos']);
+        z = [];
+        e_z = [];
+
+        if (problem_type === 'mask') {
+          const len = rand_choice([2, 3]);
+          const mask_idx = rand_int(0, len - 1);
+          for (let i = 0; i < len; i++) {
+            if (i === mask_idx) {
+              z.push('-\u221e');
+              e_z.push(0);
+            } else {
+              z.push('0');
+              e_z.push(1);
+            }
+          }
+        } else if (problem_type === 'zeros') {
+          const len = rand_choice([2, 3]);
+          for (let i = 0; i < len; i++) {
+            z.push('0');
+            e_z.push(1);
+          }
+        } else if (problem_type === 'ones') {
+          const len = rand_choice([2, 3]);
+          for (let i = 0; i < len; i++) {
+            z.push('1');
+            e_z.push(2.7);
+          }
+        } else if (problem_type === 'twos') {
+          z = ['2', '2'];
+          e_z = [7.4, 7.4];
+        } else {
+          const high_idx = rand_choice([0, 1]);
+          const val = rand_choice([1, 2]);
+          z = high_idx === 0 ? [String(val), '0'] : ['0', String(val)];
+          const ev = val === 1 ? 2.7 : 7.4;
+          e_z = high_idx === 0 ? [ev, 1] : [1, ev];
+        }
+
+        let s_sum = 0;
+        for (let i = 0; i < e_z.length; i++) s_sum += e_z[i];
+        sum = parseFloat(s_sum.toFixed(1));
+
+        probs = e_z.map(v => parseFloat((v / sum).toFixed(2)));
+        step_idx = 0;
+        render_problem();
+      }
+
+      function update_submit_state() {
+        if (is_answered) return;
+        if (mode === 'final') {
+          const box_inputs = problem_el.querySelectorAll('.quiz-box-input');
+          const all_filled = box_inputs.length > 0 && Array.from(box_inputs).every(b => b.value.trim().length > 0);
+          submit_btn.classList.toggle('ready-green', all_filled);
+        } else {
+          submit_btn.classList.toggle('ready-green', input_el.value.trim().length > 0);
+        }
+      }
+
+      function render_problem() {
+        input_el.value = '';
+        submit_btn.classList.remove('ready-green');
+        const k = z.length;
+        const total_steps = 2 * k + 1;
+
+        if (mode === 'final') {
+          input_el.style.display = 'none';
+          const input_boxes = probs.map((_, i) =>
+            `<input class="quiz-box-input" data-idx="${i}" placeholder="p${subscript(i + 1)}" autocomplete="off" inputmode="decimal" />`
+          ).join(' ');
+          problem_el.innerHTML = `<div style="font-size:0.85rem; color:#7d8590; width:100%; text-align:center; margin-bottom:0.4rem;">calculate the softmax:</div>${vec_box(z, -1, 'orange', 'blue')} &rarr; <span class="quiz-vec">${input_boxes}</span>`;
+
+          const box_inputs = problem_el.querySelectorAll('.quiz-box-input');
+          box_inputs.forEach(box => {
+            box.addEventListener('input', () => {
+              box.value = box.value.replace(/[^0-9.-]/g, '');
+              update_submit_state();
+            });
+            box.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter') {
+                if (is_answered) {
+                  next_problem();
+                } else {
+                  const all_filled = Array.from(box_inputs).every(b => b.value.trim().length > 0);
+                  if (all_filled) {
+                    check_answer();
+                  } else {
+                    const next_empty = Array.from(box_inputs).find(b => !b.value.trim().length);
+                    if (next_empty) next_empty.focus();
+                  }
+                }
+              }
+            });
+          });
+          if (box_inputs.length > 0) {
+            setTimeout(() => box_inputs[0].focus(), 50);
+          }
+        } else {
+          input_el.style.display = '';
+          if (step_idx < k) {
+            target = e_z[step_idx];
+            target_tolerance = z[step_idx] === '1' ? 0.15 : (z[step_idx] === '2' ? 0.45 : 0.06);
+            const active_val = num_circle(z[step_idx], 'orange');
+            problem_el.innerHTML = `<div style="font-size:0.85rem; color:#7d8590; width:100%; text-align:center; margin-bottom:0.4rem;">step ${step_idx + 1} of ${total_steps}: exp( ${active_val} )</div>${vec_box(z, step_idx, 'orange', 'blue')}`;
+          } else if (step_idx === k) {
+            target = sum;
+            target_tolerance = 0.15;
+            const sum_terms = e_z.map(v => num_circle(v, 'red')).join(' + ');
+            problem_el.innerHTML = `<div style="font-size:0.85rem; color:#7d8590; width:100%; text-align:center; margin-bottom:0.4rem;">step ${k + 1} of ${total_steps}: sum denominator</div>${sum_terms} = ?`;
+          } else {
+            const p_idx = step_idx - (k + 1);
+            target = probs[p_idx];
+            target_tolerance = 0.06;
+            const div_desc = `${num_circle(e_z[p_idx], 'purple')} / ${num_circle(sum, 'green')}`;
+            problem_el.innerHTML = `<div style="font-size:0.85rem; color:#7d8590; width:100%; text-align:center; margin-bottom:0.4rem;">step ${step_idx + 1} of ${total_steps}: divide by sum</div>${div_desc}`;
+          }
+          setTimeout(() => input_el.focus(), 50);
+        }
+      }
+
+      function check_answer() {
+        const k = z.length;
+        const total_steps = 2 * k + 1;
+
+        if (mode === 'final') {
+          const box_inputs = problem_el.querySelectorAll('.quiz-box-input');
+          const values = [];
+          for (let i = 0; i < box_inputs.length; i++) {
+            const raw = box_inputs[i].value.trim().replace(',', '.');
+            if (!raw) {
+              feedback_el.className = 'feedback incorrect';
+              feedback_el.textContent = 'fill in all elements';
+              box_inputs[i].focus();
+              return;
+            }
+            const val = parseFloat(raw);
+            if (isNaN(val)) {
+              feedback_el.className = 'feedback incorrect';
+              feedback_el.textContent = 'enter a valid number';
+              box_inputs[i].focus();
+              return;
+            }
+            values.push(val);
+          }
+
+          let all_correct = true;
+          for (let i = 0; i < k; i++) {
+            const diff = Math.abs(values[i] - probs[i]);
+            if (diff > 0.06) {
+              all_correct = false;
+              box_inputs[i].style.borderColor = '#f85149';
+            } else {
+              box_inputs[i].style.borderColor = '#3fb950';
+            }
+          }
+
+          is_answered = true;
+          const p_circles = probs.map(p => num_circle(p, 'purple')).join(' ');
+
+          if (all_correct) {
+            streak++;
+            solved++;
+            feedback_el.className = 'feedback correct';
+            feedback_el.innerHTML = `&#10003; correct! softmax = <span class="quiz-vec">${p_circles}</span>`;
+            submit_btn.className = 'submit-btn ready-green';
+            submit_btn.textContent = 'New quiz \u2192';
+          } else {
+            streak = 0;
+            feedback_el.className = 'feedback incorrect';
+            feedback_el.innerHTML = `&#10005; softmax was <span class="quiz-vec">${p_circles}</span>`;
+            submit_btn.className = 'submit-btn incorrect';
+            submit_btn.innerHTML = 'New quiz <span style="color:#f85149">&#10005;</span>';
+          }
+          streak_el.textContent = streak;
+          solved_el.textContent = solved;
+        } else {
+          const raw = input_el.value.trim().replace(',', '.');
+          if (!raw) return;
+          const val = parseFloat(raw);
+          if (isNaN(val)) {
+            feedback_el.className = 'feedback incorrect';
+            feedback_el.textContent = 'enter a valid number';
+            return;
+          }
+          const is_correct = Math.abs(val - target) <= target_tolerance;
+
+          if (is_correct) {
+            if (step_idx < total_steps - 1) {
+              feedback_el.className = 'feedback correct';
+              feedback_el.innerHTML = `&#10003; correct: ${target}`;
+              step_idx++;
+              render_problem();
+            } else {
+              is_answered = true;
+              streak++;
+              solved++;
+              const p_circles = probs.map(p => num_circle(p, 'purple')).join(' ');
+              feedback_el.className = 'feedback correct';
+              feedback_el.innerHTML = `&#10003; complete! softmax = <span class="quiz-vec">${p_circles}</span>`;
+              submit_btn.className = 'submit-btn ready-green';
+              submit_btn.textContent = 'New quiz \u2192';
+              streak_el.textContent = streak;
+              solved_el.textContent = solved;
+            }
+          } else {
+            streak = 0;
+            streak_el.textContent = streak;
+            feedback_el.className = 'feedback incorrect';
+            feedback_el.innerHTML = `&#10005; target was ${target}`;
+          }
+        }
+      }
+
+      filter_btns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (btn.dataset.mode) {
+            filter_btns.forEach(b => { if (b.dataset.mode) b.classList.remove('active'); });
+            btn.classList.add('active');
+            mode = btn.dataset.mode;
+            if (mode === 'step') {
+              step_idx = 0;
+            }
+            if (!is_answered) {
+              feedback_el.textContent = '';
+              feedback_el.className = 'feedback';
+              submit_btn.className = 'submit-btn';
+              submit_btn.textContent = 'Check';
+            }
+            render_problem();
+          }
+        });
+      });
+
+      const new_btn = document.getElementById('softmax-new-btn');
+      if (new_btn) {
+        new_btn.addEventListener('click', () => {
+          next_problem();
+        });
+      }
+
+      submit_btn.addEventListener('click', () => {
+        if (is_answered) next_problem();
+        else check_answer();
+      });
+
+      input_el.addEventListener('input', () => {
+        input_el.value = input_el.value.replace(/[^0-9.-]/g, '');
+        update_submit_state();
+      });
+
+      input_el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          if (is_answered) next_problem();
+          else check_answer();
+        }
+      });
+    }
+
+    create_prereq_quiz();
+    create_dot_quiz();
+    create_softmax_quiz();
 
       function createMagnitudeGradient(ctx, x, y, r, val, baseColor = '#58a6ff', alpha = 1, category = 'default') {
         const num = typeof val === 'number' ? val : parseFloat(val);
         const isNeg = !isNaN(num) && num < 0;
         const mag = isNaN(num) ? 1.0 : Math.abs(num);
 
+        if (category === 'prob') {
+          const p = Math.min(1.0, Math.max(0.0, isNaN(num) ? 0.0 : num));
+          const fillA = Math.min(0.95, (0.04 + 0.88 * Math.pow(p, 1.25))) * alpha;
+          const strokeA = Math.min(1.0, (0.12 + 0.88 * p)) * alpha;
+          const R = Math.round(40 + (125 - 40) * Math.pow(p, 0.85));
+          const G = Math.round(90 + (205 - 90) * Math.pow(p, 0.85));
+          const B = 255;
+          const grad = `rgba(${R}, ${G}, ${B}, ${fillA.toFixed(3)})`;
+          const strokeColor = `rgba(${R}, ${G}, ${B}, ${strokeA.toFixed(3)})`;
+          const textColor = p > 0.55 ? '#ffffff' : (p > 0.20 ? '#c9d1d9' : '#7d8590');
+          const glowBlur = p > 0.45 ? Math.round(8 * (p - 0.45) * 1.8) : 0;
+          const glowColor = p > 0.45 ? `rgba(121, 192, 255, ${(0.65 * p).toFixed(2)})` : null;
+          return { grad, strokeColor, glowBlur, glowColor, textColor, t: p };
+        }
+
         let maxRef = 3.0;
-        if (category === 'prob') maxRef = 1.0;
-        else if (category === 'exp') maxRef = 7.5;
+        if (category === 'exp') maxRef = 7.5;
         else if (category === 'sum') maxRef = 14.0;
         else if (category === 'binary') maxRef = 1.0;
         else if (category === 'vector') maxRef = 2.0;
@@ -715,9 +1569,9 @@
 
         const t = Math.min(1.0, Math.max(0.06, mag / maxRef));
 
-        let rgb = [88, 166, 255]; // default blue
+        let rgb = [88, 166, 255];
         if (isNeg) {
-          rgb = [135, 138, 172]; // Muted, calm slate-violet for negative (not bright purple)
+          rgb = [135, 138, 172];
         } else if (baseColor === '#f0883e' || baseColor === 'orange' || (typeof baseColor === 'string' && baseColor.includes('240, 136, 62'))) {
           rgb = [240, 136, 62];
         } else if (baseColor === '#3fb950' || baseColor === 'green' || (typeof baseColor === 'string' && baseColor.includes('63, 185, 80'))) {
@@ -725,28 +1579,24 @@
         } else if (baseColor === '#f85149' || baseColor === 'red' || (typeof baseColor === 'string' && baseColor.includes('248, 81, 73'))) {
           rgb = [248, 81, 73];
         } else if (baseColor === '#a371f7' || baseColor === 'purple' || (typeof baseColor === 'string' && baseColor.includes('163, 113, 247'))) {
-          rgb = [135, 138, 172]; // Muted slate-violet
+          rgb = [135, 138, 172];
         } else if (Array.isArray(baseColor)) {
           rgb = baseColor;
         }
 
         const [R, G, B] = rgb;
-        // Flat, subtle tint proportional to magnitude - completely non-skeumorphic
         const fillA = (0.04 + 0.20 * t) * alpha;
         const grad = `rgba(${R}, ${G}, ${B}, ${fillA.toFixed(3)})`;
 
-        // Very thin, crisp, delicate border
         const strokeA = Math.min(1.0, (0.18 + 0.32 * t) * alpha);
         const strokeColor = `rgba(${R}, ${G}, ${B}, ${strokeA.toFixed(3)})`;
         const glowBlur = 0;
         const glowColor = null;
-        // Modest, unbold text color (less harsh, softer contrast)
         const textColor = isNeg ? (t < 0.20 ? '#8b949e' : '#b8bed6') : (t < 0.20 ? '#8b949e' : '#c9d1d9');
 
         return { grad, strokeColor, glowBlur, glowColor, textColor, t };
       }
 
-      // Dot Product animation (Canvas based, scales from 4 to 16,384)
       (function initDotCanvasAnimation() {
         const POWERS = [4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384];
         let currentPowerIdx = 0;
@@ -776,33 +1626,54 @@
         window.addEventListener('resize', resize);
         resize();
 
+        function generate_random_dot_data(count) {
+          if (count > 64) return null;
+          const a = [];
+          const b = [];
+          const mul = [];
+          let sum = 0;
+          for (let i = 0; i < count; i++) {
+            let av, bv;
+            if (count <= 4) {
+              av = rand_choice([1, 2, 3, 0.5, 1.5, 2.5]);
+              bv = rand_choice([1, 2, 0.5, 1.5, 2.0]);
+            } else if (count <= 8) {
+              av = rand_choice([1, 2, 1, 3, 0, 2, 1]);
+              bv = rand_choice([1, 0, 2, 1, 2, 1, 2]);
+            } else {
+              av = rand_int(0, 2);
+              bv = rand_int(0, 2);
+            }
+            const p = parseFloat((av * bv).toFixed(1));
+            a.push(String(av));
+            b.push(String(bv));
+            mul.push(String(p));
+            sum += p;
+          }
+          return { a, b, mul, sum: String(parseFloat(sum.toFixed(1))) };
+        }
+
+        let current_dot_data = generate_random_dot_data(N);
+        let last_dot_elapsed = 0;
+
+        function refresh_dot_data() {
+          current_dot_data = generate_random_dot_data(N);
+          last_dot_elapsed = 0;
+          startTime = performance.now();
+        }
+
         function updateDim(idx) {
           currentPowerIdx = Math.max(0, Math.min(POWERS.length - 1, idx));
           slider.value = currentPowerIdx;
           N = POWERS[currentPowerIdx];
           sliderLabel.textContent = N.toLocaleString();
           headerDim.textContent = "Vector of " + N.toLocaleString();
-          startTime = performance.now();
+          refresh_dot_data();
         }
 
         slider.addEventListener('input', (e) => {
           updateDim(parseInt(e.target.value, 10));
         });
-
-        const DOT_DATA = {
-          4: {
-            a: ['1.0', '2.0', '3.0', '1.0'],
-            b: ['2.0', '1.0', '0.5', '2.0'],
-            mul: ['2.0', '2.0', '1.5', '2.0'],
-            sum: '7.5'
-          },
-          8: {
-            a: ['1', '2', '1', '3', '2', '1', '2', '1'],
-            b: ['2', '1', '2', '1', '1', '2', '1', '2'],
-            mul: ['2', '2', '2', '3', '2', '2', '2', '2'],
-            sum: '17'
-          }
-        };
 
         function getParticlesLayout(count, availableW, availableH) {
           if (count <= 128) {
@@ -863,7 +1734,7 @@
           const availW = Math.min(width - 50, 310);
           const availH = 34;
           const layout = getParticlesLayout(N, availW, availH);
-          const data = DOT_DATA[N] || null;
+          const data = current_dot_data;
 
           const Y_TOP = -42;
           const Y_BOTTOM = 42;
@@ -879,7 +1750,7 @@
             ctx.save();
             ctx.translate(centerX + x, centerY + y);
             ctx.strokeStyle = color;
-            ctx.lineWidth = 1.5;
+            ctx.lineWidth = 1.0;
             ctx.globalAlpha = alpha;
             ctx.beginPath();
             const wing = 6;
@@ -940,6 +1811,8 @@
 
                 ctx.beginPath();
                 ctx.arc(px, py, r, 0, Math.PI * 2);
+                ctx.fillStyle = '#0d1117';
+                ctx.fill();
                 if (dotFill) {
                   ctx.fillStyle = dotFill;
                   ctx.fill();
@@ -950,7 +1823,6 @@
               }
             }
 
-            // Real numbers inside circles if N <= 64 and radius is large enough
             if (N <= 64 && r >= 7.5 && labels && labels.length > 0) {
               ctx.shadowBlur = 0;
               const maxChars = Math.max(...labels.map(l => String(l).length), 2);
@@ -971,7 +1843,6 @@
             ctx.restore();
           }
 
-          // 0 -> 1200: Initial state (Two vectors of N)
           if (ms < 1200) {
             caption.style.opacity = '1';
             caption.innerHTML = `Two vectors of ${N.toLocaleString()}`;
@@ -986,7 +1857,6 @@
             return;
           }
 
-          // 1200 -> 2700: Vertical move & collision -> orange products match up!
           if (ms >= 1200 && ms < 2700) {
             caption.innerHTML = '<span class="caption-op mul">&times; multiply</span> pairwise';
 
@@ -1004,38 +1874,32 @@
             const bAlpha = isContact ? Math.max(0, 1 - contactPhase * 2) : 1;
             const bColor = flash > 0.2 ? '#f0883e' : '#484f58';
 
-            // Brackets move vertically and merge into 1 bracket
             drawBracket(bracketL, curYTop, bracketH, true, 1, bColor);
             drawBracket(bracketR, curYTop, bracketH, false, 1, bColor);
             drawBracket(bracketL, curYBottom, bracketH, true, bAlpha, bColor);
             drawBracket(bracketR, curYBottom, bracketH, false, bAlpha, bColor);
 
             if (isContact) {
-              // At collision point: ORANGE CIRCLES match up where the two numbers collided!
               const scale = 1 + 0.35 * flash;
               const orangeBg = `rgba(240, 136, 62, ${0.35 + 0.65 * flash})`;
               drawDotBatch(layout.positions, Y_MID, 1, 1, scale, '#f0883e', orangeBg, flash * 20, '#f0883e', 1, data ? data.mul : null, '#ffffff');
             } else {
-              // Blue numbers approach each other
               drawDotBatch(layout.positions, curYTop, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.15)', 0, null, 1, data ? data.a : null, '#c9d1d9');
               drawDotBatch(layout.positions, curYBottom, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.15)', 0, null, 1, data ? data.b : null, '#c9d1d9');
             }
             return;
           }
 
-          // 2700 -> 3800: Hold at N orange products inside the single bracket
           if (ms >= 2700 && ms < 3800) {
             caption.innerHTML = `${N.toLocaleString()} products &rarr; <span class="caption-op add">+ add</span> together`;
 
             drawBracket(bracketL, Y_MID, bracketH, true);
             drawBracket(bracketR, Y_MID, bracketH, false);
 
-            // Distinct orange circles representing the products
             drawDotBatch(layout.positions, Y_MID, 1, 1, 1, '#f0883e', 'rgba(240, 136, 62, 0.25)', 0, null, 1, data ? data.mul : null, '#ffffff');
             return;
           }
 
-          // 3800 -> 5400: Addition -> all numbers visibly coalescing into one number!
           if (ms >= 3800 && ms < 5400) {
             caption.innerHTML = '<span class="caption-op add">+ add</span> together';
             const p = (ms - 3800) / 1600;
@@ -1046,7 +1910,6 @@
             const flashPhase = isMerged ? (p - 0.80) / 0.20 : 0;
             const flash = Math.sin(flashPhase * Math.PI);
 
-            // Bracket shrinks horizontally as numbers coalesce
             const curBracketDist = (bracketW / 2) * (1 - ease * 0.90);
             const bAlpha = isMerged ? Math.max(0, 1 - flashPhase * 1.8) : 1;
             const bColor = flash > 0.2 ? '#3fb950' : '#484f58';
@@ -1055,7 +1918,6 @@
             drawBracket(curBracketDist, Y_MID, bracketH, false, bAlpha, bColor);
 
             if (isMerged) {
-              // Coalesced into 1 number -> Green flash!
               ctx.save();
               ctx.translate(centerX, centerY);
               const rFinal = Math.max(12, layout.radius) * (1 + 0.35 * flash);
@@ -1090,7 +1952,6 @@
               }
               ctx.restore();
             } else {
-              // All orange numbers visibly coalescing into one center number
               const coalesceFactor = 1 - ease;
               const coalLabels = (coalesceFactor > 0.65 && data) ? data.mul : null;
               drawDotBatch(layout.positions, Y_MID, coalesceFactor, coalesceFactor, 1, '#f0883e', 'rgba(240, 136, 62, 0.25)', 0, null, 1, coalLabels, '#ffffff');
@@ -1098,7 +1959,6 @@
             return;
           }
 
-          // 5400 -> 7000: 1 single scalar number (blue number circle)
           if (ms >= 5400 && ms < 7000) {
             caption.innerHTML = '= 1 number <span style="color:#58a6ff; font-weight:400;">(scalar)</span>';
 
@@ -1138,7 +1998,6 @@
             return;
           }
 
-          // 7000 -> 8000: Fade out / reset
           if (ms >= 7000) {
             const fade = 1 - (ms - 7000) / 1000;
             caption.style.opacity = `${fade}`;
@@ -1181,17 +2040,20 @@
 
         function animLoop(now) {
           const elapsed = (now - startTime) % TOTAL_DURATION;
+          if (elapsed < last_dot_elapsed) {
+            current_dot_data = generate_random_dot_data(N);
+          }
+          last_dot_elapsed = elapsed;
           render(elapsed);
           requestAnimationFrame(animLoop);
         }
         requestAnimationFrame(animLoop);
 
         canvasStage.addEventListener('click', () => {
-          startTime = performance.now();
+          refresh_dot_data();
         });
       })();
 
-      // Softmax animation (Canvas based, scales from 4 to 16,384)
       (function initSoftmaxCanvasAnimation() {
         const POWERS = [4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384];
         let currentPowerIdx = 0;
@@ -1221,33 +2083,59 @@
         window.addEventListener('resize', resize);
         resize();
 
+        function generate_random_softmax_data(count) {
+          if (count > 64) return null;
+          const raw = [];
+          const exp = [];
+          let sumVal = 0;
+          for (let i = 0; i < count; i++) {
+            let z;
+            if (count <= 4) {
+              z = rand_choice([2.0, 1.5, 1.0, 0.5, 0.0, -0.5, -1.0]);
+            } else if (count <= 8) {
+              z = rand_choice([1.5, 1.0, 0.5, 0.0, -0.5, -1.0, 0.8, -0.2]);
+            } else {
+              z = rand_choice([1.0, 0.5, 0.0, -0.5, -1.0]);
+            }
+            const ez = Math.exp(z);
+            raw.push(z.toFixed(1));
+            exp.push(ez.toFixed(1));
+            sumVal += ez;
+          }
+          const prob = [];
+          for (let i = 0; i < count; i++) {
+            const p = Math.exp(parseFloat(raw[i])) / sumVal;
+            prob.push(p.toFixed(2));
+          }
+          return {
+            raw,
+            exp,
+            sum: sumVal.toFixed(1),
+            prob
+          };
+        }
+
+        let current_softmax_data = generate_random_softmax_data(N);
+        let last_softmax_elapsed = 0;
+
+        function refresh_softmax_data() {
+          current_softmax_data = generate_random_softmax_data(N);
+          last_softmax_elapsed = 0;
+          startTime = performance.now();
+        }
+
         function updateDim(idx) {
           currentPowerIdx = Math.max(0, Math.min(POWERS.length - 1, idx));
           slider.value = currentPowerIdx;
           N = POWERS[currentPowerIdx];
           sliderLabel.textContent = N.toLocaleString();
           headerDim.textContent = "Vector of " + N.toLocaleString();
-          startTime = performance.now();
+          refresh_softmax_data();
         }
 
         slider.addEventListener('input', (e) => {
           updateDim(parseInt(e.target.value, 10));
         });
-
-        const SOFTMAX_DATA = {
-          4: {
-            raw: ['2.0', '1.0', '0.1', '-1.0'],
-            exp: ['7.4', '2.7', '1.1', '0.4'],
-            sum: '11.6',
-            prob: ['0.64', '0.23', '0.10', '0.03']
-          },
-          8: {
-            raw: ['1.5', '0.8', '0.2', '0.0', '-.5', '-1', '0.5', '-.2'],
-            exp: ['4.5', '2.2', '1.2', '1.0', '0.6', '0.4', '1.6', '0.8'],
-            sum: '12.3',
-            prob: ['.37', '.18', '.10', '.08', '.05', '.03', '.13', '.06']
-          }
-        };
 
         function getParticlesLayout(count, availableW, availableH) {
           if (count <= 128) {
@@ -1296,8 +2184,9 @@
           return { positions, cols, rows, radius, width: availableW, height: maxGridH };
         }
 
-        const TOTAL_DURATION = 8200;
+        const TOTAL_DURATION = 11200;
         let startTime = performance.now();
+        window.__setSoftmaxTime = (t) => { startTime = performance.now() - t; };
 
         function render(ms) {
           ctx.clearRect(0, 0, width, height);
@@ -1308,7 +2197,7 @@
           const availW = Math.min(width - 50, 310);
           const availH = 34;
           const layout = getParticlesLayout(N, availW, availH);
-          const data = SOFTMAX_DATA[N] || null;
+          const data = current_softmax_data;
 
           const Y_TOP = -28;
           const Y_BOTTOM = 28;
@@ -1324,7 +2213,7 @@
             ctx.save();
             ctx.translate(centerX + x, centerY + y);
             ctx.strokeStyle = color;
-            ctx.lineWidth = 1.5;
+            ctx.lineWidth = 1.0;
             ctx.globalAlpha = alpha;
             ctx.beginPath();
             const wing = 6;
@@ -1385,6 +2274,8 @@
 
                 ctx.beginPath();
                 ctx.arc(px, py, r, 0, Math.PI * 2);
+                ctx.fillStyle = '#0d1117';
+                ctx.fill();
                 if (dotFill) {
                   ctx.fillStyle = dotFill;
                   ctx.fill();
@@ -1395,7 +2286,6 @@
               }
             }
 
-            // Real numbers inside circles if N <= 64 and radius is large enough
             if (N <= 64 && r >= 7.5 && labels && labels.length > 0) {
               ctx.shadowBlur = 0;
               const maxChars = Math.max(...labels.map(l => String(l).length), 2);
@@ -1416,7 +2306,6 @@
             ctx.restore();
           }
 
-          // 0 -> 1200ms: Initial state (Vector of N)
           if (ms < 1200) {
             caption.style.opacity = '1';
             caption.innerHTML = `Vector of ${N.toLocaleString()}`;
@@ -1428,7 +2317,6 @@
             return;
           }
 
-          // 1200 -> 2600ms: Elementwise exponentiation (exp, red)
           if (ms >= 1200 && ms < 2600) {
             caption.innerHTML = '<span class="caption-op exp">exp</span> elementwise &rarr; e<sup>x</sup>';
 
@@ -1446,7 +2334,6 @@
             return;
           }
 
-          // 2600 -> 3600ms: Move numerator up and split duplicate copy down for denominator
           if (ms >= 2600 && ms < 3600) {
             caption.innerHTML = `${N.toLocaleString()} values &rarr; <span class="caption-op add">+ add</span> to sum denominator`;
 
@@ -1461,18 +2348,14 @@
             drawBracket(bracketL, curYBottom, bracketH, true, ease);
             drawBracket(bracketR, curYBottom, bracketH, false, ease);
 
-            // Numerator stays red
             drawDotBatch(layout.positions, curYTop, 1, 1, 1, '#f85149', 'rgba(248,81,73,0.22)', 0, null, 1, data ? data.exp : null, '#ffffff');
-            // Denominator copy moves down
             drawDotBatch(layout.positions, curYBottom, 1, 1, 1, '#f85149', 'rgba(248,81,73,0.22)', 0, null, ease, data ? data.exp : null, '#ffffff');
             return;
           }
 
-          // 3600 -> 5200ms: Add denominator copy into 1 scalar sum (+ add, green)
           if (ms >= 3600 && ms < 5200) {
             caption.innerHTML = '<span class="caption-op add">+ add</span> all &rarr; sum denominator';
 
-            // Numerator remains steady at top
             drawBracket(bracketL, Y_TOP, bracketH, true);
             drawBracket(bracketR, Y_TOP, bracketH, false);
             drawDotBatch(layout.positions, Y_TOP, 1, 1, 1, '#f85149', 'rgba(248,81,73,0.22)', 0, null, 1, data ? data.exp : null, '#ffffff');
@@ -1485,7 +2368,6 @@
             const flashPhase = isMerged ? (p - 0.80) / 0.20 : 0;
             const flash = Math.sin(flashPhase * Math.PI);
 
-            // Bracket contracts towards center
             const curBracketDist = (bracketW / 2) * (1 - ease * 0.90);
             const bAlpha = isMerged ? Math.max(0, 1 - flashPhase * 1.8) : 1;
             const bColor = flash > 0.2 ? '#3fb950' : '#484f58';
@@ -1494,7 +2376,6 @@
             drawBracket(curBracketDist, Y_BOTTOM, bracketH, false, bAlpha, bColor);
 
             if (isMerged) {
-              // Merged into 1 scalar circle -> Green flash!
               ctx.save();
               ctx.translate(centerX, centerY);
               const rFinal = Math.max(12, layout.radius) * (1 + 0.35 * flash);
@@ -1536,7 +2417,6 @@
             return;
           }
 
-          // 5200 -> 6600ms: Divide numerator elements by the sum (divide, purple)
           if (ms >= 5200 && ms < 6600) {
             caption.innerHTML = '<span class="caption-op div">&divide; divide</span> each by sum';
 
@@ -1544,18 +2424,15 @@
             const isDivided = p >= 0.40;
             const flash = Math.sin(p * Math.PI);
 
-            // Numerator bracket
             const bColor = flash > 0.3 ? '#a371f7' : '#484f58';
             drawBracket(bracketL, Y_TOP, bracketH, true, 1, bColor);
             drawBracket(bracketR, Y_TOP, bracketH, false, 1, bColor);
 
-            // Draw purple projection rays from sum scalar to numerator
             const rayAlpha = Math.max(0, Math.sin(p * Math.PI));
             if (rayAlpha > 0) {
               ctx.save();
               ctx.translate(centerX, centerY);
 
-              // Soft radiant cone from scalar up to numerator
               const coneGrad = ctx.createLinearGradient(0, Y_BOTTOM, 0, Y_TOP);
               coneGrad.addColorStop(0, `rgba(163, 113, 247, ${rayAlpha * 0.20})`);
               coneGrad.addColorStop(1, `rgba(163, 113, 247, ${rayAlpha * 0.02})`);
@@ -1567,7 +2444,6 @@
               ctx.closePath();
               ctx.fill();
 
-              // Radiant purple projection lines
               ctx.strokeStyle = `rgba(163, 113, 247, ${rayAlpha * 0.50})`;
               ctx.lineWidth = 1.0;
               if (N <= 16) {
@@ -1590,7 +2466,6 @@
               ctx.restore();
             }
 
-            // Draw denominator scalar circle (fading as division completes)
             const sumAlpha = Math.max(0, 1 - Math.max(0, (p - 0.5) / 0.5));
             if (sumAlpha > 0) {
               ctx.save();
@@ -1629,7 +2504,6 @@
               ctx.restore();
             }
 
-            // Numerator circles transition from exp to normalized prob, flashing purple
             const strokeColor = isDivided ? '#a371f7' : '#f85149';
             const purpleBg = `rgba(163, 113, 247, ${0.15 + 0.35 * flash})`;
             const labels = isDivided && data ? data.prob : (data ? data.exp : null);
@@ -1637,50 +2511,111 @@
             return;
           }
 
-          // 6600 -> 7600ms: Output normalized probabilities vector (moving back to center)
-          if (ms >= 6600 && ms < 7600) {
-            caption.innerHTML = `= Vector of ${N.toLocaleString()} <span style="color:#58a6ff; font-weight:400;">(sums to 1.0)</span>`;
+          if (ms >= 6600 && ms < 7200) {
+            caption.style.opacity = '1';
+            caption.innerHTML = `= Vector of ${N.toLocaleString()}`;
 
-            const p = Math.min(1, (ms - 6600) / 600);
+            const p = (ms - 6600) / 600;
             const ease = p * p * (3 - 2 * p);
             const curY = Y_TOP + (Y_MID - Y_TOP) * ease;
 
             drawBracket(bracketL, curY, bracketH, true);
             drawBracket(bracketR, curY, bracketH, false);
-
             drawDotBatch(layout.positions, curY, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.22)', 8, '#58a6ff', 1, data ? data.prob : null, '#c9d1d9');
             return;
           }
 
-          // 7600 -> 8200ms: Fade out / reset
-          if (ms >= 7600) {
-            const fade = Math.max(0, 1 - (ms - 7600) / 600);
+          if (ms >= 7200 && ms < 9200) {
+            caption.style.opacity = '1';
+
+            let greenAlpha = 1.0;
+            if (ms < 7500) {
+              greenAlpha = (ms - 7200) / 300;
+            } else if (ms >= 8200) {
+              greenAlpha = Math.max(0, 1 - (ms - 8200) / 800);
+            }
+
+            if (greenAlpha > 0.05) {
+              caption.innerHTML = `= Vector of ${N.toLocaleString()} <span style="color:rgba(63, 185, 80, ${greenAlpha.toFixed(2)}); font-weight:400;">(sum = 1.0)</span>`;
+            } else {
+              caption.innerHTML = `= Vector of ${N.toLocaleString()}`;
+            }
+
+            const fitsRight = (centerX + bracketR + 75 < width - 8);
+            const xLineStart = bracketL - 4;
+            const xLineEnd = fitsRight ? (bracketR + 12) : bracketR;
+
+            if (greenAlpha > 0) {
+              ctx.save();
+              ctx.translate(centerX, centerY);
+              ctx.lineWidth = 1.0;
+              ctx.strokeStyle = `rgba(63, 185, 80, ${(0.70 * greenAlpha).toFixed(3)})`;
+              ctx.beginPath();
+              ctx.moveTo(xLineStart, Y_MID);
+              ctx.lineTo(xLineEnd, Y_MID);
+              ctx.stroke();
+
+              ctx.globalAlpha = greenAlpha;
+              ctx.font = '400 9.5px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace';
+              ctx.fillStyle = '#3fb950';
+              if (fitsRight) {
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('sum = 1.0', bracketR + 16, Y_MID);
+              } else {
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                ctx.fillText('sum = 1.0', 0, Y_MID - bracketH / 2 - 5);
+              }
+              ctx.restore();
+            }
+
+            drawBracket(bracketL, Y_MID, bracketH, true);
+            drawBracket(bracketR, Y_MID, bracketH, false);
+            drawDotBatch(layout.positions, Y_MID, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.22)', 8, '#58a6ff', 1, data ? data.prob : null, '#c9d1d9');
+            return;
+          }
+
+          if (ms >= 9200 && ms < 10400) {
+            caption.style.opacity = '1';
+            caption.innerHTML = `= Vector of ${N.toLocaleString()}`;
+
+            drawBracket(bracketL, Y_MID, bracketH, true);
+            drawBracket(bracketR, Y_MID, bracketH, false);
+            drawDotBatch(layout.positions, Y_MID, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.22)', 8, '#58a6ff', 1, data ? data.prob : null, '#c9d1d9');
+            return;
+          }
+
+          if (ms >= 10400) {
+            const fade = Math.max(0, 1 - (ms - 10400) / 800);
             caption.style.opacity = `${fade}`;
 
             drawBracket(bracketL, Y_MID, bracketH, true, fade);
             drawBracket(bracketR, Y_MID, bracketH, false, fade);
-
             drawDotBatch(layout.positions, Y_MID, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.22)', 8, '#58a6ff', fade, data ? data.prob : null, '#c9d1d9');
           }
         }
 
         function animLoop(now) {
           const elapsed = (now - startTime) % TOTAL_DURATION;
+          if (elapsed < last_softmax_elapsed) {
+            current_softmax_data = generate_random_softmax_data(N);
+          }
+          last_softmax_elapsed = elapsed;
           render(elapsed);
           requestAnimationFrame(animLoop);
         }
         requestAnimationFrame(animLoop);
 
         canvasStage.addEventListener('click', () => {
-          startTime = performance.now();
+          refresh_softmax_data();
         });
       })();
 
-      // Attention Matrix animation (queries & keys, context length 1 to 1024, dim 1 to 1024)
       (function initAttnCanvasAnimation() {
         const POWERS = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024];
-        let currentLenIdx = 1; // Default 2
-        let currentDimIdx = 1; // Default 2
+        let currentLenIdx = 1;
+        let currentDimIdx = 1;
         let T = POWERS[currentLenIdx];
         let d = POWERS[currentDimIdx];
 
@@ -1715,7 +2650,7 @@
           const camera = new THREE.OrthographicCamera(-1, 1, -1, 1, 0.1, 1000);
           camera.position.z = 10;
 
-          const MAX_INSTANCES = 16384 + 128 * 3; // 128x128 matrix + Q + K + Sum
+          const MAX_INSTANCES = 16384 + 128 * 3;
           const baseGeo = new THREE.PlaneGeometry(1, 1);
           const geo = new THREE.InstancedBufferGeometry();
           geo.index = baseGeo.index;
@@ -1814,36 +2749,55 @@
             const initKeyY = (geom.rowY[0] + geom.rowY[T_vis - 1]) / 2;
             const spanK = Math.min(140 * s, geom.matW * 0.95);
 
-            let qX = geom.leftQueryX;
-            let kY = geom.topKeyY;
+            let qX = 0;
             let qkAlpha = 1.0;
+            const kX = [];
+            const kYArr = [];
 
-            if (ms < 1400) {
-              qX = initQX;
-              kY = initKeyY;
-            } else if (ms < 3200) {
-              const p = (ms - 1400) / 1800;
+            if (ms < 1200) {
+              qX = 0;
+              for (let j = 0; j < T_vis; j++) {
+                kX.push(0);
+                kYArr.push(geom.rowY[j]);
+              }
+              qkAlpha = 1.0;
+            } else if (ms < 2800) {
+              const p = (ms - 1200) / 1600;
               const ease = p * p * (3 - 2 * p);
-              qX = initQX + (geom.leftQueryX - initQX) * ease;
-              kY = initKeyY + (geom.topKeyY - initKeyY) * ease;
-            } else if (ms < 5200) {
-              qkAlpha = 0.85;
-            } else if (ms < 7200) {
-              qkAlpha = 0.40;
-            } else if (ms < 10200) {
-              qkAlpha = 0.25;
-            } else if (ms < 11800) {
-              qkAlpha = 0.20;
+              qX = 0 + (geom.leftQueryX - 0) * ease;
+              for (let j = 0; j < T_vis; j++) {
+                kX.push(0 + (geom.colX[j] - 0) * ease);
+                kYArr.push(geom.rowY[j] + (geom.topKeyY - geom.rowY[j]) * ease);
+              }
+              qkAlpha = 1.0;
+            } else if (ms < 3600) {
+              qX = geom.leftQueryX;
+              for (let j = 0; j < T_vis; j++) {
+                kX.push(geom.colX[j]);
+                kYArr.push(geom.topKeyY);
+              }
+              qkAlpha = 1.0;
+            } else if (ms < 5600) {
+              qX = geom.leftQueryX;
+              for (let j = 0; j < T_vis; j++) {
+                kX.push(geom.colX[j]);
+                kYArr.push(geom.topKeyY);
+              }
+              const p = (ms - 3600) / 2000;
+              qkAlpha = Math.max(0, 1.0 - p / 0.45);
             } else {
-              qkAlpha = 0.40;
+              qkAlpha = 0.0;
+              for (let j = 0; j < T_vis; j++) {
+                kX.push(geom.colX[j]);
+                kYArr.push(geom.topKeyY);
+              }
             }
 
-            if (ms >= 13600) {
-              const fade = Math.max(0, 1 - (ms - 13600) / 1000);
+            if (ms >= 15600) {
+              const fade = Math.max(0, 1 - (ms - 15600) / 1000);
               qkAlpha *= fade;
             }
 
-            // Q instances [0 .. T_vis - 1]
             for (let i = 0; i < T_vis; i++) {
               const qy = geom.rowY[i];
               posArray[i * 3] = qX;
@@ -1856,22 +2810,10 @@
               alphaArray[i] = qkAlpha;
             }
 
-            // K instances [T_vis .. 2*T_vis - 1]
             for (let j = 0; j < T_vis; j++) {
-              let kx;
-              if (ms < 1400) {
-                kx = initKX - spanK / 2 + (j + 0.5) * (spanK / T_vis);
-              } else if (ms < 3200) {
-                const p = (ms - 1400) / 1800;
-                const ease = p * p * (3 - 2 * p);
-                const startKX = initKX - spanK / 2 + (j + 0.5) * (spanK / T_vis);
-                kx = startKX + (geom.colX[j] - startKX) * ease;
-              } else {
-                kx = geom.colX[j];
-              }
               const idx = T_vis + j;
-              posArray[idx * 3] = kx;
-              posArray[idx * 3 + 1] = kY;
+              posArray[idx * 3] = kX[j];
+              posArray[idx * 3 + 1] = kYArr[j];
               posArray[idx * 3 + 2] = 0;
               colorArray[idx * 3] = 0.35;
               colorArray[idx * 3 + 1] = 0.65;
@@ -1880,22 +2822,21 @@
               alphaArray[idx] = qkAlpha;
             }
 
-            // Row Sums [2*T_vis .. 3*T_vis - 1]
             let sumAlpha = 0;
             let sumFlash = 0;
-            if (ms >= 8600 && ms < 10200) {
-              const p = (ms - 8600) / 1600;
+            if (ms >= 9000 && ms < 10600) {
+              const p = (ms - 9000) / 1600;
               if (p >= 0.72) {
                 sumAlpha = 1.0;
                 sumFlash = Math.sin(((p - 0.72) / 0.28) * Math.PI);
               }
-            } else if (ms >= 10200 && ms < 11800) {
-              const p = (ms - 10200) / 1600;
+            } else if (ms >= 10600 && ms < 12200) {
+              const p = (ms - 10600) / 1600;
               sumAlpha = Math.max(0, 1 - Math.max(0, (p - 0.45) / 0.55));
-            } else if (ms >= 11800) {
+            } else if (ms >= 12200) {
               sumAlpha = 0.75;
-              if (ms >= 13600) {
-                sumAlpha *= Math.max(0, 1 - (ms - 13600) / 1000);
+              if (ms >= 13400) {
+                sumAlpha = Math.max(0, 0.75 * (1 - (ms - 13400) / 800));
               }
             }
 
@@ -1911,16 +2852,15 @@
               alphaArray[idx] = sumAlpha;
             }
 
-            // Matrix dots [3*T_vis .. totalDots - 1]
             let matR = 0, matG = 0, matB = 0;
             let matAlpha = 0;
             let matScale = 1.0;
             let isPhase8 = false;
 
-            if (ms < 3200) {
+            if (ms < 3600) {
               matAlpha = 0;
-            } else if (ms >= 3200 && ms < 5200) {
-              const p = (ms - 3200) / 2000;
+            } else if (ms >= 3600 && ms < 5600) {
+              const p = (ms - 3600) / 2000;
               if (p >= 0.65) {
                 const contactPhase = (p - 0.65) / 0.35;
                 const flash = Math.sin(contactPhase * Math.PI);
@@ -1930,25 +2870,25 @@
               } else {
                 matAlpha = 0;
               }
-            } else if (ms >= 5200 && ms < 7200) {
-              const p = (ms - 5200) / 2000;
+            } else if (ms >= 5600 && ms < 7600) {
+              const p = (ms - 5600) / 2000;
               const mergePhase = p >= 0.72 ? (p - 0.72) / 0.28 : 0;
               const flash = Math.sin(mergePhase * Math.PI);
               matR = 0.25; matG = 0.73; matB = 0.31;
               matAlpha = 0.90;
               matScale = 1.0 + 0.20 * flash;
-            } else if (ms >= 7200 && ms < 8600) {
-              const p = (ms - 7200) / 1400;
+            } else if (ms >= 7600 && ms < 9000) {
+              const p = (ms - 7600) / 1400;
               const flash = Math.sin(p * Math.PI);
               matR = 0.97; matG = 0.32; matB = 0.29;
               matAlpha = 0.90;
               matScale = 1.0 + 0.18 * flash;
-            } else if (ms >= 8600 && ms < 10200) {
+            } else if (ms >= 9000 && ms < 10600) {
               matR = 0.97; matG = 0.32; matB = 0.29;
               matAlpha = 0.80;
               matScale = 1.0;
-            } else if (ms >= 10200 && ms < 11800) {
-              const p = (ms - 10200) / 1600;
+            } else if (ms >= 10600 && ms < 12200) {
+              const p = (ms - 10600) / 1600;
               const isDivided = p >= 0.40;
               const flash = Math.sin(p * Math.PI);
               if (isDivided) {
@@ -1958,11 +2898,11 @@
               }
               matAlpha = 0.85 + 0.15 * flash;
               matScale = 1.0 + 0.14 * flash;
-            } else if (ms >= 11800) {
+            } else if (ms >= 12200) {
               isPhase8 = true;
               matAlpha = 1.0;
-              if (ms >= 13600) {
-                const fade = Math.max(0, 1 - (ms - 13600) / 1000);
+              if (ms >= 15600) {
+                const fade = Math.max(0, 1 - (ms - 15600) / 1000);
                 matAlpha *= fade;
               }
             }
@@ -1979,15 +2919,17 @@
 
                 if (isPhase8) {
                   const dist = Math.abs(i - j);
-                  const localBand = Math.exp(-dist * (4.0 / T_vis));
-                  const noise = 0.10 * Math.sin(i * 12.3 + j * 7.7);
-                  const score = Math.max(0.12, Math.min(1.0, (i === j ? 1.0 : (localBand * 0.75 + noise))));
+                  const localBand = Math.exp(-dist * (6.0 / T_vis));
+                  const noise = 0.08 * Math.sin(i * 13.7 + j * 19.3);
+                  const rawScore = (i === j ? 1.0 : (localBand * 0.70 + noise));
+                  const score = Math.max(0.0, Math.min(1.0, rawScore));
 
-                  colorArray[mIdx * 3] = 0.20 + 0.45 * score;
-                  colorArray[mIdx * 3 + 1] = 0.45 + 0.40 * score;
-                  colorArray[mIdx * 3 + 2] = 0.85 + 0.15 * score;
-                  sizeArray[mIdx] = dotR * (1.6 + 0.8 * score);
-                  alphaArray[mIdx] = matAlpha * (0.25 + 0.75 * score);
+                  const pPow = Math.pow(score, 1.4);
+                  colorArray[mIdx * 3] = 0.12 + 0.48 * pPow;
+                  colorArray[mIdx * 3 + 1] = 0.25 + 0.58 * pPow;
+                  colorArray[mIdx * 3 + 2] = 0.45 + 0.55 * score;
+                  sizeArray[mIdx] = dotR * (1.1 + 1.8 * score);
+                  alphaArray[mIdx] = matAlpha * (0.05 + 0.95 * pPow);
                 } else {
                   colorArray[mIdx * 3] = matR;
                   colorArray[mIdx * 3 + 1] = matG;
@@ -2038,8 +2980,8 @@
           lenSlider.value = currentLenIdx;
           T = POWERS[currentLenIdx];
           lenSliderLabel.textContent = T.toLocaleString();
-          headerDim.innerHTML = "Queries (rows) &middot; Keys (columns)";
-          startTime = performance.now();
+          headerDim.innerHTML = "Queries &middot; Keys";
+          refresh_attn_data();
           if (webglCanvas) {
             const isThree = (T >= 64 && threeAttn !== null);
             webglCanvas.style.display = isThree ? 'block' : 'none';
@@ -2054,8 +2996,8 @@
           dimSlider.value = currentDimIdx;
           d = POWERS[currentDimIdx];
           dimSliderLabel.textContent = d.toLocaleString();
-          headerDim.innerHTML = "Queries (rows) &middot; Keys (columns)";
-          startTime = performance.now();
+          headerDim.innerHTML = "Queries &middot; Keys";
+          refresh_attn_data();
         }
 
         lenSlider.addEventListener('input', (e) => {
@@ -2066,202 +3008,80 @@
           updateDim(parseInt(e.target.value, 10));
         });
 
-        const ATTN_PRESETS = {
-          "1x1": {
-            q: [['0.8']],
-            k: [['0.9']],
-            mul: [[['0.72']]],
-            sim: [['0.72']],
-            exp: [['2.05']],
-            sum: ['2.05'],
-            prob: [['1.00']]
-          },
-          "1x2": {
-            q: [['1.0', '1.0']],
-            k: [['1.0', '1.0']],
-            mul: [[['1.0', '1.0']]],
-            sim: [['2.0']],
-            exp: [['7.4']],
-            sum: ['7.4'],
-            prob: [['1.00']]
-          },
-          "1x4": {
-            q: [['1', '0', '1', '0']],
-            k: [['1', '1', '1', '0']],
-            mul: [[['1', '0', '1', '0']]],
-            sim: [['2']],
-            exp: [['7.4']],
-            sum: ['7.4'],
-            prob: [['1.00']]
-          },
-          "2x1": {
-            q: [['1.0'], ['0.5']],
-            k: [['1.0'], ['0.8']],
-            mul: [
-              [['1.0'], ['0.8']],
-              [['0.5'], ['0.4']]
-            ],
-            sim: [
-              ['1.0', '0.8'],
-              ['0.5', '0.4']
-            ],
-            exp: [
-              ['2.7', '2.2'],
-              ['1.6', '1.5']
-            ],
-            sum: ['4.9', '3.1'],
-            prob: [
-              ['0.55', '0.45'],
-              ['0.52', '0.48']
-            ]
-          },
-          "2x2": {
-            q: [
-              ['1.0', '1.0'],
-              ['0.0', '1.0']
-            ],
-            k: [
-              ['1.0', '1.0'],
-              ['2.0', '-1.0']
-            ],
-            mul: [
-              [['1.0', '1.0'], ['2.0', '-1.0']],
-              [['0.0', '1.0'], ['0.0', '-1.0']]
-            ],
-            sim: [
-              ['2.0', '1.0'],
-              ['1.0', '-1.0']
-            ],
-            exp: [
-              ['7.4', '2.7'],
-              ['2.7', '0.4']
-            ],
-            sum: ['10.1', '3.1'],
-            prob: [
-              ['0.73', '0.27'],
-              ['0.87', '0.13']
-            ]
-          },
-          "2x4": {
-            q: [
-              ['1', '1', '0', '0'],
-              ['0', '0', '1', '1']
-            ],
-            k: [
-              ['1', '1', '0', '1'],
-              ['0', '1', '1', '1']
-            ],
-            mul: [
-              [['1', '1', '0', '0'], ['0', '1', '0', '0']],
-              [['0', '0', '0', '1'], ['0', '0', '1', '1']]
-            ],
-            sim: [
-              ['2', '1'],
-              ['1', '2']
-            ],
-            exp: [
-              ['7.4', '2.7'],
-              ['2.7', '7.4']
-            ],
-            sum: ['10.1', '10.1'],
-            prob: [
-              ['0.73', '0.27'],
-              ['0.27', '0.73']
-            ]
-          },
-          "4x4": {
-            q: [
-              ['1', '1', '0', '0'],
-              ['0', '1', '1', '0'],
-              ['0', '0', '1', '1'],
-              ['1', '0', '0', '1']
-            ],
-            k: [
-              ['1', '1', '0', '0'],
-              ['0', '1', '1', '0'],
-              ['0', '0', '1', '1'],
-              ['1', '0', '0', '1']
-            ],
-            mul: [
-              [['1', '1', '0', '0'], ['0', '1', '0', '0'], ['0', '0', '0', '0'], ['1', '0', '0', '0']],
-              [['0', '1', '0', '0'], ['0', '1', '1', '0'], ['0', '0', '1', '0'], ['0', '0', '0', '0']],
-              [['0', '0', '0', '0'], ['0', '0', '1', '0'], ['0', '0', '1', '1'], ['0', '0', '0', '1']],
-              [['1', '0', '0', '0'], ['0', '0', '0', '0'], ['0', '0', '0', '1'], ['1', '0', '0', '1']]
-            ],
-            sim: [
-              ['2', '1', '0', '1'],
-              ['1', '2', '1', '0'],
-              ['0', '1', '2', '1'],
-              ['1', '0', '1', '2']
-            ],
-            exp: [
-              ['7.4', '2.7', '1.0', '2.7'],
-              ['2.7', '7.4', '2.7', '1.0'],
-              ['1.0', '2.7', '7.4', '2.7'],
-              ['2.7', '1.0', '2.7', '7.4']
-            ],
-            sum: ['13.8', '13.8', '13.8', '13.8'],
-            prob: [
-              ['0.54', '0.20', '0.06', '0.20'],
-              ['0.20', '0.54', '0.20', '0.06'],
-              ['0.06', '0.20', '0.54', '0.20'],
-              ['0.20', '0.06', '0.20', '0.54']
-            ]
-          }
-        };
-
-        function getData(T_len, d_dim) {
-          if (T_len >= 64) {
-            return { q: null, k: null, mul: null, sim: null, exp: null, sum: null, prob: null };
-          }
-          const key = `${T_len}x${d_dim}`;
-          if (ATTN_PRESETS[key]) return ATTN_PRESETS[key];
-
+        function generate_random_attn_data(T_len, d_dim) {
+          const T_eff = Math.min(T_len, 32);
+          const d_eff = Math.min(d_dim, 64);
+          const q = [];
+          const k = [];
           const qNums = [];
           const kNums = [];
-          for (let i = 0; i < T_len; i++) {
-            const row = [];
-            for (let m = 0; m < d_dim; m++) {
-              row.push(((i + m) % 2 === 0) ? 1 : 0);
-            }
-            qNums.push(row);
-          }
-          for (let j = 0; j < T_len; j++) {
-            const col = [];
-            for (let m = 0; m < d_dim; m++) {
-              col.push(((j * 2 + m) % 3 === 0) ? 1 : 0);
-            }
-            kNums.push(col);
-          }
-
-          const q = qNums.map(row => row.map(v => String(v)));
-          const k = kNums.map(col => col.map(v => String(v)));
-
           const mul = [];
           const sim = [];
           const exp = [];
           const sum = [];
           const prob = [];
 
-          for (let i = 0; i < T_len; i++) {
+          const scaleFactor = d_dim > 1 ? 1 / Math.sqrt(d_eff) : 1;
+
+          for (let i = 0; i < T_eff; i++) {
+            const rowStr = [];
+            const rowNum = [];
+            for (let m = 0; m < d_eff; m++) {
+              let v;
+              if (d_eff <= 2) {
+                v = rand_choice([1, 2, 0, 1, -1]);
+              } else if (d_eff <= 4) {
+                v = rand_choice([1, 0, 1, 2, 0, -1]);
+              } else if (d_eff <= 8) {
+                v = rand_choice([1, 0, 1, 0, 1, 2]);
+              } else {
+                v = rand_choice([-1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0]);
+              }
+              rowStr.push(typeof v === 'number' ? v.toFixed(1) : String(v));
+              rowNum.push(v);
+            }
+            q.push(rowStr);
+            qNums.push(rowNum);
+          }
+
+          for (let j = 0; j < T_eff; j++) {
+            const rowStr = [];
+            const rowNum = [];
+            for (let m = 0; m < d_eff; m++) {
+              let v;
+              if (d_eff <= 2) {
+                v = rand_choice([1, 2, 0, 1, -1]);
+              } else if (d_eff <= 4) {
+                v = rand_choice([1, 0, 1, 1, 0, 2]);
+              } else if (d_eff <= 8) {
+                v = rand_choice([1, 0, 0, 1, 1, 0]);
+              } else {
+                v = rand_choice([-1.0, -0.5, 0.0, 0.5, 1.0, 1.5]);
+              }
+              rowStr.push(typeof v === 'number' ? v.toFixed(1) : String(v));
+              rowNum.push(v);
+            }
+            k.push(rowStr);
+            kNums.push(rowNum);
+          }
+
+          for (let i = 0; i < T_eff; i++) {
             const mulRow = [];
             const simRow = [];
             const expRow = [];
             let rowSum = 0;
-            for (let j = 0; j < T_len; j++) {
-              let dot = 0;
-              const mulVec = [];
-              for (let m = 0; m < d_dim; m++) {
+            for (let j = 0; j < T_eff; j++) {
+              const pairMul = [];
+              let rawDot = 0;
+              for (let m = 0; m < d_eff; m++) {
                 const p = qNums[i][m] * kNums[j][m];
-                dot += p;
-                if (d_dim <= 8) mulVec.push(String(p));
+                pairMul.push(p.toFixed(1));
+                rawDot += p;
               }
-              if (d_dim >= 8 || dot === 0) {
-                dot = (i === j) ? 2.0 : Math.max(-0.5, 1.2 - 0.5 * Math.abs(i - j));
-              }
-              mulRow.push(mulVec);
-              simRow.push(dot.toFixed(d_dim <= 4 ? 0 : 1));
-              const ev = Math.exp(dot);
+              mulRow.push(pairMul);
+              const scaledDot = rawDot * scaleFactor;
+              simRow.push(scaledDot.toFixed(1));
+              const ev = Math.exp(Math.max(-4, Math.min(4, scaledDot)));
               expRow.push(ev.toFixed(1));
               rowSum += ev;
             }
@@ -2272,17 +3092,24 @@
 
             const probRow = [];
             let pSum = 0;
-            for (let j = 0; j < T_len; j++) {
-              const p = Math.exp(parseFloat(simRow[j])) / rowSum;
+            for (let j = 0; j < T_eff; j++) {
+              const p = Math.exp(Math.max(-4, Math.min(4, parseFloat(simRow[j])))) / rowSum;
               probRow.push(p);
               pSum += p;
             }
             const finalRow = probRow.map(p => (p / pSum).toFixed(2));
             prob.push(finalRow);
           }
-          const result = { q, k, mul, sim, exp, sum, prob };
-          ATTN_PRESETS[key] = result;
-          return result;
+          return { q, k, mul, sim, exp, sum, prob };
+        }
+
+        let current_attn_data = generate_random_attn_data(T, d);
+        let last_attn_elapsed = 0;
+
+        function refresh_attn_data() {
+          current_attn_data = generate_random_attn_data(T, d);
+          last_attn_elapsed = 0;
+          startTime = performance.now();
         }
 
         function subscript(n) {
@@ -2291,9 +3118,9 @@
         }
 
         function getGridGeometry(tCount, s, canvasW, canvasH) {
-          const centerY = 16 * s;
-          const maxMatW = Math.min(canvasW ? canvasW - 190 * s : 250 * s, 260 * s);
-          const maxMatH = Math.min(canvasH ? canvasH - 160 * s : 240 * s, 240 * s);
+          const centerY = 24 * s;
+          const maxMatW = Math.min(canvasW ? canvasW - 140 * s : 250 * s, 260 * s);
+          const maxMatH = Math.min(canvasH ? canvasH - 150 * s : 220 * s, 230 * s);
           const maxMat = Math.min(maxMatW, maxMatH);
           const T_calc = Math.min(tCount, 128);
 
@@ -2307,22 +3134,21 @@
             matH = 80 * s;
             cellR = 14 * s;
           } else if (tCount === 4) {
-            matW = 144 * s;
+            matW = 140 * s;
             matH = 120 * s;
             cellR = 9.5 * s;
           } else if (tCount === 8) {
-            matW = Math.min(maxMat, 192 * s);
+            matW = Math.min(maxMat, 168 * s);
             matH = matW;
             const step = matW / 8;
-            cellR = step * 0.35;
+            cellR = step * 0.38;
           } else if (tCount === 16) {
-            matW = Math.min(maxMat, 224 * s);
+            matW = Math.min(maxMat, 192 * s);
             matH = matW;
             const step = matW / 16;
-            cellR = Math.max(1.2, step * 0.34);
+            cellR = Math.max(3.8 * s, step * 0.40);
           } else {
-            // tCount >= 32
-            matW = Math.min(maxMat, 230 * s);
+            matW = Math.min(maxMat, 210 * s);
             matH = matW;
             const step = matW / T_calc;
             cellR = Math.max(0.7, step * 0.34);
@@ -2339,9 +3165,12 @@
           const matR = matW / 2 + (tCount <= 4 ? 14 * s : 9 * s);
           const matHBrack = matH + (tCount <= 4 ? 16 * s : 10 * s);
 
-          const leftQueryX = matL - (tCount <= 2 ? (d <= 2 ? 52 * s : 74 * s) : (tCount <= 4 ? (d <= 2 ? 48 * s : 68 * s) : 38 * s));
-          const topKeyY = (centerY - matH / 2) - (tCount <= 2 ? (d <= 2 ? 48 * s : 68 * s) : (tCount <= 4 ? (d <= 2 ? 44 * s : 64 * s) : 38 * s));
-          const rightSumX = matR + (tCount <= 2 ? 46 * s : (tCount <= 4 ? 42 * s : 36 * s));
+          const estKeyH = (d <= 1 ? 26 * s : (d <= 2 ? 50 * s : (d <= 4 ? 78 * s : (d <= 8 ? 86 * s : 96 * s)))) + 10 * s;
+          const estQueryW = (d <= 1 ? 26 * s : (d <= 2 ? 50 * s : (d <= 4 ? 78 * s : (d <= 8 ? 86 * s : 96 * s)))) + 10 * s;
+
+          const topKeyY = (centerY - matH / 2) - estKeyH / 2 - (tCount <= 2 ? 18 * s : 14 * s);
+          const leftQueryX = matL - estQueryW / 2 - (tCount <= 2 ? 22 * s : 18 * s);
+          const rightSumX = matR + (tCount <= 2 ? 44 * s : (tCount <= 4 ? 38 * s : 30 * s));
 
           return {
             matW,
@@ -2351,6 +3180,7 @@
             matTop: centerY - matH / 2 - 8 * s,
             matBot: centerY + matH / 2 + 8 * s,
             matHBrack,
+            matCenterY: centerY,
             colX,
             rowY,
             cellW: stepX * (tCount <= 4 ? 0.92 : 0.96),
@@ -2415,8 +3245,9 @@
           return { points, r, length, extentW, extentH };
         }
 
-        const TOTAL_DURATION = 14600;
+        const TOTAL_DURATION = 16600;
         let startTime = performance.now();
+        window.__setAttnTime = (t) => { startTime = performance.now() - t; };
 
         function render(ms) {
           ctx.clearRect(0, 0, width, height);
@@ -2426,16 +3257,29 @@
           const centerY = height / 2 + 14 * s;
 
           const geom = getGridGeometry(T, s, width, height);
-          const data = getData(T, d);
+          const data = current_attn_data;
           const isWebGL = (T >= 64 && threeAttn !== null);
-          const showNumbers = !isWebGL && (T <= 4 && d <= 4);
+          const showNumbers = !isWebGL && (T <= 8 && d <= 8);
 
-          // Bound vector circle radius by row/col step to prevent overlap at T >= 8
+          const isDepthMode = (d >= 8) || (T >= 4 && d >= 4);
+          const depthLen = isWebGL
+            ? Math.min(18 * s, Math.max(8 * s, (d >= 64 ? 14 : 10) * s))
+            : (d >= 256
+              ? Math.min(72 * s, Math.max(40 * s, geom.matW * 0.44))
+              : (d >= 64
+                ? Math.min(58 * s, Math.max(30 * s, geom.matW * 0.36))
+                : (d >= 16
+                  ? Math.min(48 * s, Math.max(22 * s, geom.matW * 0.32))
+                  : Math.min(40 * s, Math.max(16 * s, geom.matW * 0.28)))));
+          const depthCount = isWebGL
+            ? 6
+            : (d >= 256 ? 32 : (d >= 64 ? 24 : (d >= 16 ? 16 : Math.min(d, 12))));
+
           const maxQueryCircleR = geom.stepY ? (geom.stepY * 0.44) : (13 * s);
           const maxKeyCircleR = geom.stepX ? (geom.stepX * 0.44) : (13 * s);
 
-          const vecLenHoriz = d <= 1 ? 28 * s : (d <= 2 ? 56 * s : (d <= 4 ? 96 * s : (d <= 8 ? 104 * s : 116 * s)));
-          const vecLenVert = d <= 1 ? 28 * s : (d <= 2 ? 56 * s : (d <= 4 ? 96 * s : (d <= 8 ? 104 * s : 116 * s)));
+          const vecLenHoriz = d <= 1 ? 26 * s : (d <= 2 ? 50 * s : (d <= 4 ? 78 * s : (d <= 8 ? 86 * s : 96 * s)));
+          const vecLenVert = d <= 1 ? 26 * s : (d <= 2 ? 50 * s : (d <= 4 ? 78 * s : (d <= 8 ? 86 * s : 96 * s)));
 
           const layoutHoriz = getVectorLayout(d, false, vecLenHoriz, s, maxQueryCircleR);
           const layoutVert = getVectorLayout(d, true, vecLenVert, s, maxKeyCircleR);
@@ -2480,10 +3324,16 @@
               finalFill = magInfo.grad;
               finalStroke = magInfo.strokeColor;
               finalTextColor = magInfo.textColor;
+              if (magInfo.glowBlur > 0 && r >= 3.0) {
+                ctx.shadowBlur = magInfo.glowBlur;
+                ctx.shadowColor = magInfo.glowColor || finalStroke;
+              }
             }
 
             ctx.beginPath();
             ctx.arc(0, 0, Math.max(0.5, r), 0, Math.PI * 2);
+            ctx.fillStyle = '#0d1117';
+            ctx.fill();
             if (finalFill) {
               ctx.fillStyle = finalFill;
               ctx.fill();
@@ -2493,15 +3343,19 @@
               ctx.strokeStyle = finalStroke;
               ctx.stroke();
             }
-            if (showNumbers && text !== null && text !== undefined && r >= 5.5) {
+            const isMatrixCell = (category === 'sim' || category === 'exp' || category === 'sum' || category === 'prob' || category === 'binary');
+            const shouldShowNumber = isMatrixCell ? (!isWebGL && T <= 16) : showNumbers;
+            if (shouldShowNumber && text !== null && text !== undefined && r >= 2.4) {
               ctx.shadowBlur = 0;
-              const maxChars = String(text).length;
-              const fontSize = Math.min(8.5, Math.max(5.5, Math.floor((r * 1.25) / (maxChars * 0.65))));
+              const str = String(text);
+              const strVal = (r < 8.5 && str.startsWith('0.')) ? str.slice(1) : str;
+              const maxChars = strVal.length;
+              const fontSize = Math.min(r >= 18 ? 10.5 : 8.5, Math.max(3.5, Math.floor((r * 1.15) / Math.max(1, maxChars * 0.52))));
               ctx.font = `400 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
               ctx.fillStyle = finalTextColor;
-              ctx.fillText(text, 0, 0);
+              ctx.fillText(strVal, 0, 0);
             }
             ctx.restore();
           }
@@ -2509,10 +3363,118 @@
           function drawVector(baseX, baseY, layout, stroke, fill, labels = null, glow = 0, glowColor = null, alpha = 1, textColor = "#ffffff", scaleR = 1, category = 'vector') {
             if (alpha <= 0) return;
             const r = layout.r * scaleR;
-            for (let i = 0; i < d; i++) {
+            const ptCount = layout.points.length;
+            for (let i = 0; i < ptCount; i++) {
               const p = layout.points[i];
-              const rawVal = (labels && labels[i] !== undefined) ? labels[i] : null;
+              const rawVal = (labels && labels.length) ? labels[i % labels.length] : null;
               drawCircle(baseX + p.x, baseY + p.y, r, stroke, fill, rawVal, glow, glowColor, alpha, textColor, category);
+            }
+          }
+
+          function drawSlightDepthBar(x0, y0, x1, y1, dLen, alpha, color = '#58a6ff') {
+            if (alpha <= 0) return;
+            const unitX = -0.82;
+            const unitY = -0.57;
+            const bx0 = x0 + unitX * dLen;
+            const by0 = y0 + unitY * dLen;
+            const bx1 = x1 + unitX * dLen;
+            const by1 = y1 + unitY * dLen;
+
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.globalAlpha = alpha;
+
+            ctx.fillStyle = 'rgba(88, 166, 255, 0.12)';
+            ctx.beginPath();
+            ctx.moveTo(x0, y0);
+            ctx.lineTo(bx0, by0);
+            ctx.lineTo(bx1, by1);
+            ctx.lineTo(x1, y1);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.strokeStyle = 'rgba(88, 166, 255, 0.40)';
+            ctx.lineWidth = 0.85;
+            ctx.beginPath();
+            ctx.moveTo(bx0, by0);
+            ctx.lineTo(bx1, by1);
+            ctx.moveTo(x0, y0);
+            ctx.lineTo(bx0, by0);
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(bx1, by1);
+            ctx.stroke();
+
+            const ribCount = 6;
+            ctx.strokeStyle = 'rgba(88, 166, 255, 0.25)';
+            ctx.lineWidth = 0.65;
+            for (let r = 1; r < ribCount; r++) {
+              const rf = r / ribCount;
+              const fx = x0 + (x1 - x0) * rf;
+              const fy = y0 + (y1 - y0) * rf;
+              ctx.beginPath();
+              ctx.moveTo(fx, fy);
+              ctx.lineTo(fx + unitX * dLen, fy + unitY * dLen);
+              ctx.stroke();
+
+              ctx.beginPath();
+              ctx.arc(fx + unitX * dLen, fy + unitY * dLen, Math.max(0.6, 1.2 * s), 0, Math.PI * 2);
+              ctx.fillStyle = color;
+              ctx.fill();
+            }
+            ctx.restore();
+          }
+
+          function drawDepthVector(baseX, baseY, numPoints, dLen, stroke, fill, labels = null, alpha = 1, collapse = 0, scaleR = 1, category = 'vector') {
+            if (alpha <= 0) return;
+            const count = Math.min(numPoints, 32);
+            const unitX = -0.82;
+            const unitY = -0.57;
+            const curLen = dLen * (1 - Math.min(1, Math.max(0, collapse)));
+            const rBase = Math.min(geom.cellR * 0.85, Math.max(1.1, (isWebGL ? 1.8 : 4.0) * s)) * scaleR;
+
+            if (curLen > 2 && alpha > 0.08) {
+              ctx.save();
+              ctx.translate(centerX + baseX, centerY + baseY);
+              const rayColor = (category === 'mul')
+                ? `rgba(240, 136, 62, ${(0.42 * alpha * (1 - collapse * 0.8)).toFixed(3)})`
+                : `rgba(88, 166, 255, ${(0.32 * alpha * (1 - collapse * 0.8)).toFixed(3)})`;
+              ctx.strokeStyle = rayColor;
+              ctx.lineWidth = Math.max(0.75, 1.0 * s);
+              ctx.beginPath();
+              ctx.moveTo(0, 0);
+              ctx.lineTo(unitX * curLen, unitY * curLen);
+              ctx.stroke();
+
+              if (!isWebGL && d >= 64 && curLen > 18) {
+                const tickCount = 4;
+                ctx.strokeStyle = (category === 'mul')
+                  ? `rgba(240, 136, 62, ${(0.28 * alpha).toFixed(3)})`
+                  : `rgba(88, 166, 255, ${(0.24 * alpha).toFixed(3)})`;
+                ctx.lineWidth = 0.8;
+                for (let k = 1; k <= tickCount; k++) {
+                  const tf = k / (tickCount + 1);
+                  const tx = unitX * curLen * tf;
+                  const ty = unitY * curLen * tf;
+                  const perpX = -unitY * 3.5 * s;
+                  const perpY = unitX * 3.5 * s;
+                  ctx.beginPath();
+                  ctx.moveTo(tx - perpX, ty - perpY);
+                  ctx.lineTo(tx + perpX, ty + perpY);
+                  ctx.stroke();
+                }
+              }
+              ctx.restore();
+            }
+
+            for (let m = count - 1; m >= 0; m--) {
+              const f = count === 1 ? 0 : (m / (count - 1));
+              const dist = f * curLen;
+              const px = baseX + unitX * dist;
+              const py = baseY + unitY * dist;
+              const r = Math.max(0.6, rBase * (1.0 - (isWebGL ? 0.18 : 0.32) * f));
+              const rawVal = (labels && labels.length) ? labels[m % labels.length] : null;
+              const nodeAlpha = alpha * (1.0 - (isWebGL ? 0.15 : 0.22) * f);
+              drawCircle(px, py, r, stroke, fill, rawVal, 0, null, nodeAlpha, '#e6edf3', category);
             }
           }
 
@@ -2581,10 +3543,10 @@
           function drawMatrix(stroke, fill, cellValues, glow = 0, glowColor = null, alpha = 1, textColor = "#ffffff", rMult = 1, isFinalProb = false, category = 'default') {
             if (alpha <= 0) return;
             const bColor = glow > 5 ? glowColor : "#484f58";
-            drawBracket(geom.matL, 16 * s, geom.matHBrack, true, alpha, bColor, 7);
-            drawBracket(geom.matR, 16 * s, geom.matHBrack, false, alpha, bColor, 7);
+            drawBracket(geom.matL, geom.matCenterY, geom.matHBrack, true, alpha, bColor, 7);
+            drawBracket(geom.matR, geom.matCenterY, geom.matHBrack, false, alpha, bColor, 7);
 
-            if (isWebGL) return; // WebGL renders the dense matrix dots
+            if (isWebGL) return;
 
             const rCircle = geom.cellR * rMult;
             const cat = isFinalProb ? 'prob' : category;
@@ -2592,21 +3554,23 @@
               for (let j = 0; j < T; j++) {
                 const cx = geom.colX[j];
                 const cy = geom.rowY[i];
-                const rawVal = (cellValues && cellValues[i] && cellValues[i][j] !== undefined) ? cellValues[i][j] : null;
+                const valRow = (cellValues && cellValues.length) ? cellValues[i % cellValues.length] : null;
+                const rawVal = (valRow && valRow.length) ? valRow[j % valRow.length] : null;
 
                 drawCircle(cx, cy, rCircle, stroke, fill, rawVal, glow, glowColor, alpha, textColor, cat);
               }
             }
           }
 
-          const colBracketH = layoutVert.extentH + 10 * s;
-          const colBracketW = layoutVert.extentW;
-          const rowBracketH = layoutHoriz.extentH + 10 * s;
-          const rowBracketW = layoutHoriz.extentW;
+          const depthExtentW = Math.abs(-0.82) * depthLen + 10 * s;
+          const depthExtentH = Math.abs(-0.57) * depthLen + 10 * s;
+          const colBracketH = (isDepthMode ? depthExtentH : layoutVert.extentH) + 10 * s;
+          const colBracketW = isDepthMode ? depthExtentW : layoutVert.extentW;
+          const rowBracketH = (isDepthMode ? depthExtentH : layoutHoriz.extentH) + 10 * s;
+          const rowBracketW = isDepthMode ? depthExtentW : layoutHoriz.extentW;
 
-          // Initial positions for Phase 1
-          const initQX = (T === 1) ? -75 * s : -(geom.matW / 2 + (d <= 2 ? 65 * s : 88 * s));
-          const initKX = (T === 1) ? 75 * s : (geom.matW / 2 + (d <= 2 ? 65 * s : 88 * s));
+          const initQX = (T === 1) ? -75 * s : -(geom.matW / 2 + (d <= 2 ? 60 * s : 76 * s));
+          const initKX = (T === 1) ? 75 * s : (geom.matW / 2 + (d <= 2 ? 60 * s : 76 * s));
           const initKeyY = (geom.rowY[0] + geom.rowY[geom.rowY.length - 1]) / 2;
 
           function getInitKeyX(j) {
@@ -2615,14 +3579,12 @@
             return initKX - span / 2 + (j + 0.5) * (span / (geom.T_calc || T));
           }
 
-          // Static background queries (left) and keys (top) during calculation
           function drawStaticHeaders(alpha = 0.85) {
             if (alpha <= 0) return;
             drawGridOutline(alpha * 0.75);
 
-            // Queries left
-            const qHeaderY = geom.rowY[0] - rowBracketH / 2 - 12 * s;
-            drawLabel("Queries (rows)", geom.leftQueryX, qHeaderY, "#58a6ff", "center", null, alpha);
+            const qHeaderY = geom.rowY[0] - rowBracketH / 2 - 14 * s;
+            drawLabel("queries", geom.leftQueryX, qHeaderY, "#58a6ff", "center", null, alpha);
             if (T <= 2) {
               for (let i = 0; i < T; i++) {
                 const qy = geom.rowY[i];
@@ -2633,29 +3595,40 @@
                 drawBracket(geom.leftQueryX + rowBracketW / 2 + 4 * s, qy, rowBracketH, false, alpha);
                 if (!isWebGL) {
                   const qLabels = (data && data.q && data.q[i]) ? data.q[i] : null;
-                  drawVector(geom.leftQueryX, qy, layoutHoriz, '#58a6ff', 'rgba(88,166,255,0.15)', qLabels, 0, null, alpha, '#e6edf3', 1, 'vector');
+                  if (isDepthMode) {
+                    drawDepthVector(geom.leftQueryX + (0.82 * depthLen) / 2, qy + (0.57 * depthLen) / 2, d, depthLen, '#58a6ff', 'rgba(88,166,255,0.15)', qLabels, alpha, 0, 1, 'vector');
+                  } else {
+                    drawVector(geom.leftQueryX, qy, layoutHoriz, '#58a6ff', 'rgba(88,166,255,0.15)', qLabels, 0, null, alpha, '#e6edf3', 1, 'vector');
+                  }
                 }
               }
             } else {
               if (!isWebGL) {
                 for (let i = 0; i < T; i++) {
                   const qy = geom.rowY[i];
-                  if (T <= 4) {
+                  if (T <= 4 && !isDepthMode) {
                     drawLabel(`q${subscript(i + 1)}`, geom.leftQueryX - rowBracketW / 2 - 14 * s, qy, "#7d8590", "right", null, alpha);
                   }
                   const qLabels = (data && data.q && data.q[i]) ? data.q[i] : null;
-                  drawVector(geom.leftQueryX, qy, layoutHoriz, '#58a6ff', 'rgba(88,166,255,0.15)', qLabels, 0, null, alpha, '#e6edf3', 1, 'vector');
+                  if (isDepthMode) {
+                    drawDepthVector(geom.leftQueryX + (0.82 * depthLen) / 2, qy + (0.57 * depthLen) / 2, d, depthLen, '#58a6ff', 'rgba(88,166,255,0.15)', qLabels, alpha, 0, 1, 'vector');
+                  } else {
+                    drawVector(geom.leftQueryX, qy, layoutHoriz, '#58a6ff', 'rgba(88,166,255,0.15)', qLabels, 0, null, alpha, '#e6edf3', 1, 'vector');
+                  }
                 }
               }
               const topQ = geom.rowY[0] - rowBracketH / 2;
               const botQ = geom.rowY[geom.rowY.length - 1] + rowBracketH / 2;
               drawBracket(geom.leftQueryX - rowBracketW / 2 - 4 * s, (topQ + botQ) / 2, botQ - topQ, true, alpha);
               drawBracket(geom.leftQueryX + rowBracketW / 2 + 4 * s, (topQ + botQ) / 2, botQ - topQ, false, alpha);
+              if (isWebGL && isDepthMode) {
+                drawSlightDepthBar(geom.leftQueryX, geom.rowY[0], geom.leftQueryX, geom.rowY[geom.rowY.length - 1], depthLen, alpha);
+              }
             }
 
-            // Keys top
-            const kHeaderY = geom.topKeyY - colBracketH / 2 - 24 * s;
-            drawLabel("Keys (columns)", 0, kHeaderY, "#58a6ff", "center", null, alpha);
+            const kHeaderDist = (T <= 4) ? (24 * s) : (14 * s);
+            const kHeaderY = geom.topKeyY - colBracketH / 2 - kHeaderDist;
+            drawLabel("keys", 0, kHeaderY, "#58a6ff", "center", null, alpha);
             if (T <= 2) {
               for (let j = 0; j < T; j++) {
                 const kx = geom.colX[j];
@@ -2666,145 +3639,128 @@
                 drawBracket(kx + colBracketW / 2 + 4 * s, geom.topKeyY, colBracketH, false, alpha);
                 if (!isWebGL) {
                   const kLabels = (data && data.k && data.k[j]) ? data.k[j] : null;
-                  drawVector(kx, geom.topKeyY, layoutVert, '#58a6ff', 'rgba(88,166,255,0.15)', kLabels, 0, null, alpha, '#e6edf3', 1, 'vector');
+                  if (isDepthMode) {
+                    drawDepthVector(kx + (0.82 * depthLen) / 2, geom.topKeyY + (0.57 * depthLen) / 2, d, depthLen, '#58a6ff', 'rgba(88,166,255,0.15)', kLabels, alpha, 0, 1, 'vector');
+                  } else {
+                    drawVector(kx, geom.topKeyY, layoutVert, '#58a6ff', 'rgba(88,166,255,0.15)', kLabels, 0, null, alpha, '#e6edf3', 1, 'vector');
+                  }
                 }
               }
             } else {
               if (!isWebGL) {
                 for (let j = 0; j < T; j++) {
                   const kx = geom.colX[j];
-                  if (T <= 4) {
+                  if (T <= 4 && !isDepthMode) {
                     drawLabel(`k${subscript(j + 1)}`, kx, geom.topKeyY - colBracketH / 2 - 10 * s, "#7d8590", "center", null, alpha);
                   }
                   const kLabels = (data && data.k && data.k[j]) ? data.k[j] : null;
-                  drawVector(kx, geom.topKeyY, layoutVert, '#58a6ff', 'rgba(88,166,255,0.15)', kLabels, 0, null, alpha, '#e6edf3', 1, 'vector');
+                  if (isDepthMode) {
+                    drawDepthVector(kx + (0.82 * depthLen) / 2, geom.topKeyY + (0.57 * depthLen) / 2, d, depthLen, '#58a6ff', 'rgba(88,166,255,0.15)', kLabels, alpha, 0, 1, 'vector');
+                  } else {
+                    drawVector(kx, geom.topKeyY, layoutVert, '#58a6ff', 'rgba(88,166,255,0.15)', kLabels, 0, null, alpha, '#e6edf3', 1, 'vector');
+                  }
                 }
               }
               const leftK = geom.colX[0] - colBracketW / 2 - 4 * s;
               const rightK = geom.colX[geom.colX.length - 1] + colBracketW / 2 + 4 * s;
               drawBracket(leftK, geom.topKeyY, colBracketH, true, alpha);
               drawBracket(rightK, geom.topKeyY, colBracketH, false, alpha);
+              if (isWebGL && isDepthMode) {
+                drawSlightDepthBar(geom.colX[0], geom.topKeyY, geom.colX[geom.colX.length - 1], geom.topKeyY, depthLen, alpha);
+              }
             }
           }
 
-          // ==================== PHASE 1: 0 -> 1400ms (Initial Setup) ====================
-          if (ms < 1400) {
+          if (ms < 1200) {
             caption.style.opacity = '1';
-            caption.innerHTML = `Queries (rows) &amp; Keys (columns) &middot; ${T.toLocaleString()} &times; ${T.toLocaleString()} &middot; vec dim ${d.toLocaleString()}`;
+            caption.innerHTML = `vectors &middot; ${T.toLocaleString()} &middot; dim ${d.toLocaleString()}`;
 
-            const qHeaderY = geom.rowY[0] - rowBracketH / 2 - 12 * s;
-            const kHeaderY = geom.topKeyY - colBracketH / 2 - 24 * s;
-            drawLabel("Queries (rows)", initQX, qHeaderY, "#58a6ff");
-            drawLabel("Keys (columns)", initKX, kHeaderY, "#58a6ff");
+            const vecHeaderY = geom.rowY[0] - rowBracketH / 2 - 16 * s;
+            drawLabel("vectors", 0, vecHeaderY, "#58a6ff", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`);
 
             if (!isWebGL) {
-              if (T <= 2) {
+              if (T <= 4 && !isDepthMode) {
                 for (let i = 0; i < T; i++) {
-                  const qy = geom.rowY[i];
-                  if (T <= 4) {
-                    drawLabel(`q${subscript(i + 1)}`, initQX - rowBracketW / 2 - 14 * s, qy, "#7d8590", "right");
-                  }
-                  drawBracket(initQX - rowBracketW / 2 - 4 * s, qy, rowBracketH, true);
-                  drawBracket(initQX + rowBracketW / 2 + 4 * s, qy, rowBracketH, false);
-                  const qLabels = (data && data.q && data.q[i]) ? data.q[i] : null;
-                  drawVector(initQX, qy, layoutHoriz, '#58a6ff', 'rgba(88,166,255,0.15)', qLabels, 0, null, 1, '#e6edf3', 1, 'vector');
+                  const cy = geom.rowY[i];
+                  drawLabel(`v${subscript(i + 1)}`, -rowBracketW / 2 - 14 * s, cy, "#7d8590", "right");
+                  drawBracket(-rowBracketW / 2 - 4 * s, cy, rowBracketH, true);
+                  drawBracket(rowBracketW / 2 + 4 * s, cy, rowBracketH, false);
+                  const vLabels = (data && data.q && data.q[i]) ? data.q[i] : null;
+                  drawVector(0, cy, layoutHoriz, '#58a6ff', 'rgba(88,166,255,0.18)', vLabels, 0, null, 1, '#e6edf3', 1, 'vector');
                 }
               } else {
                 for (let i = 0; i < T; i++) {
-                  const qy = geom.rowY[i];
-                  if (T <= 4) {
-                    drawLabel(`q${subscript(i + 1)}`, initQX - rowBracketW / 2 - 14 * s, qy, "#7d8590", "right");
+                  const cy = geom.rowY[i];
+                  const vLabels = (data && data.q && data.q[i]) ? data.q[i] : null;
+                  if (isDepthMode) {
+                    drawDepthVector((0.82 * depthLen) / 2, cy + (0.57 * depthLen) / 2, d, depthLen, '#58a6ff', 'rgba(88,166,255,0.18)', vLabels, 1, 0, 1, 'vector');
+                  } else {
+                    drawVector(0, cy, layoutHoriz, '#58a6ff', 'rgba(88,166,255,0.18)', vLabels, 0, null, 1, '#e6edf3', 1, 'vector');
                   }
-                  const qLabels = (data && data.q && data.q[i]) ? data.q[i] : null;
-                  drawVector(initQX, qy, layoutHoriz, '#58a6ff', 'rgba(88,166,255,0.15)', qLabels, 0, null, 1, '#e6edf3', 1, 'vector');
                 }
-                const topQ = geom.rowY[0] - rowBracketH / 2;
-                const botQ = geom.rowY[T - 1] + rowBracketH / 2;
-                drawBracket(initQX - rowBracketW / 2 - 4 * s, (topQ + botQ) / 2, botQ - topQ, true);
-                drawBracket(initQX + rowBracketW / 2 + 4 * s, (topQ + botQ) / 2, botQ - topQ, false);
-              }
-
-              if (T <= 2) {
-                for (let j = 0; j < T; j++) {
-                  const kx = getInitKeyX(j);
-                  const ky = (T === 1) ? geom.rowY[0] : initKeyY;
-                  if (T <= 4) {
-                    drawLabel(`k${subscript(j + 1)}`, kx, ky - colBracketH / 2 - 10 * s, "#7d8590", "center");
-                  }
-                  drawBracket(kx - colBracketW / 2 - 4 * s, ky, colBracketH, true);
-                  drawBracket(kx + colBracketW / 2 + 4 * s, ky, colBracketH, false);
-                  const kLabels = (data && data.k && data.k[j]) ? data.k[j] : null;
-                  drawVector(kx, ky, layoutVert, '#58a6ff', 'rgba(88,166,255,0.15)', kLabels, 0, null, 1, '#e6edf3', 1, 'vector');
-                }
-              } else {
-                const ky = initKeyY;
-                for (let j = 0; j < T; j++) {
-                  const kx = getInitKeyX(j);
-                  if (T <= 4) {
-                    drawLabel(`k${subscript(j + 1)}`, kx, ky - colBracketH / 2 - 10 * s, "#7d8590", "center");
-                  }
-                  const kLabels = (data && data.k && data.k[j]) ? data.k[j] : null;
-                  drawVector(kx, ky, layoutVert, '#58a6ff', 'rgba(88,166,255,0.15)', kLabels, 0, null, 1, '#e6edf3', 1, 'vector');
-                }
-                const leftK = getInitKeyX(0) - colBracketW / 2 - 4 * s;
-                const rightK = getInitKeyX(T - 1) + colBracketW / 2 + 4 * s;
-                drawBracket(leftK, ky, colBracketH, true);
-                drawBracket(rightK, ky, colBracketH, false);
+                const topV = geom.rowY[0] - rowBracketH / 2;
+                const botV = geom.rowY[T - 1] + rowBracketH / 2;
+                drawBracket(-rowBracketW / 2 - 4 * s, (topV + botV) / 2, botV - topV, true);
+                drawBracket(rowBracketW / 2 + 4 * s, (topV + botV) / 2, botV - topV, false);
               }
             } else {
-              // WebGL brackets
-              const topQ = geom.rowY[0] - rowBracketH / 2;
-              const botQ = geom.rowY[geom.rowY.length - 1] + rowBracketH / 2;
-              drawBracket(initQX - rowBracketW / 2 - 4 * s, (topQ + botQ) / 2, botQ - topQ, true);
-              drawBracket(initQX + rowBracketW / 2 + 4 * s, (topQ + botQ) / 2, botQ - topQ, false);
+              const topV = geom.rowY[0] - rowBracketH / 2;
+              const botV = geom.rowY[geom.rowY.length - 1] + rowBracketH / 2;
+              drawBracket(-rowBracketW / 2 - 4 * s, (topV + botV) / 2, botV - topV, true);
+              drawBracket(rowBracketW / 2 + 4 * s, (topV + botV) / 2, botV - topV, false);
 
-              const leftK = getInitKeyX(0) - colBracketW / 2 - 4 * s;
-              const rightK = getInitKeyX(geom.T_calc - 1) + colBracketW / 2 + 4 * s;
-              drawBracket(leftK, initKeyY, colBracketH, true);
-              drawBracket(rightK, initKeyY, colBracketH, false);
+              if (isDepthMode) {
+                drawSlightDepthBar(0, geom.rowY[0], 0, geom.rowY[geom.rowY.length - 1], depthLen, 1);
+              }
 
               threeAttn.renderFrame(T, d, ms, geom, width, height, s);
             }
             return;
           }
 
-          // ==================== PHASE 2: 1400 -> 3200ms (Queries -> rows left, Keys -> columns top) ====================
-          if (ms >= 1400 && ms < 3200) {
-            caption.innerHTML = 'Queries &rarr; rows (left), Keys &rarr; columns (top)';
-            const p = (ms - 1400) / 1800;
+          if (ms >= 1200 && ms < 2800) {
+            caption.innerHTML = 'vectors &rarr; separate into <span style="color:#58a6ff;">queries</span> (rows) &amp; <span style="color:#58a6ff;">keys</span> (columns)';
+
+            const p = (ms - 1200) / 1600;
             const ease = p * p * (3 - 2 * p);
 
             drawGridOutline(ease * 0.85);
 
-            const curQX = initQX + (geom.leftQueryX - initQX) * ease;
-            const qHeaderY = geom.rowY[0] - rowBracketH / 2 - 12 * s;
-            drawLabel("Queries (rows)", curQX, qHeaderY, "#58a6ff", "center", null, 1 - ease * 0.3);
+            const vecHeaderY = geom.rowY[0] - rowBracketH / 2 - 16 * s;
+            drawLabel("vectors", 0, vecHeaderY, "#58a6ff", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, Math.max(0, 1 - ease * 2.0));
 
-            const kyStart = (T === 1) ? geom.rowY[0] : initKeyY;
-            const curKY = kyStart + (geom.topKeyY - kyStart) * ease;
-            const headerKeyX = initKX * (1 - ease);
-            drawLabel("Keys (columns)", headerKeyX, curKY - colBracketH / 2 - 20 * s, "#58a6ff", "center");
+            const curQX = 0 + (geom.leftQueryX - 0) * ease;
+            const qHeaderY = geom.rowY[0] - rowBracketH / 2 - 14 * s;
+            drawLabel("queries", curQX, qHeaderY, "#58a6ff", "center", null, ease);
+
+            const curKY = (geom.matCenterY) + (geom.topKeyY - geom.matCenterY) * ease;
+            const kHeaderDist = (T <= 4) ? (24 * s) : (14 * s);
+            const kHeaderY = curKY - colBracketH / 2 - kHeaderDist;
+            drawLabel("keys", 0, kHeaderY, "#58a6ff", "center", null, ease);
+
+            const subAlpha = ease >= 0.70 ? (ease - 0.70) / 0.30 : 0;
 
             if (!isWebGL) {
-              if (T <= 2) {
+              if (T <= 4 && !isDepthMode) {
                 for (let i = 0; i < T; i++) {
                   const qy = geom.rowY[i];
-                  if (T <= 4) {
-                    drawLabel(`q${subscript(i + 1)}`, curQX - rowBracketW / 2 - 14 * s, qy, "#7d8590", "right");
+                  if (subAlpha > 0) {
+                    drawLabel(`q${subscript(i + 1)}`, curQX - rowBracketW / 2 - 14 * s, qy, "#7d8590", "right", null, subAlpha);
                   }
                   drawBracket(curQX - rowBracketW / 2 - 4 * s, qy, rowBracketH, true);
                   drawBracket(curQX + rowBracketW / 2 + 4 * s, qy, rowBracketH, false);
                   const qLabels = (data && data.q && data.q[i]) ? data.q[i] : null;
-                  drawVector(curQX, qy, layoutHoriz, '#58a6ff', 'rgba(88,166,255,0.15)', qLabels, 0, null, 1, '#e6edf3', 1, 'vector');
+                  drawVector(curQX, qy, layoutHoriz, '#58a6ff', 'rgba(88,166,255,0.18)', qLabels, 0, null, 1, '#e6edf3', 1, 'vector');
                 }
               } else {
                 for (let i = 0; i < T; i++) {
                   const qy = geom.rowY[i];
-                  if (T <= 4) {
-                    drawLabel(`q${subscript(i + 1)}`, curQX - rowBracketW / 2 - 14 * s, qy, "#7d8590", "right");
-                  }
                   const qLabels = (data && data.q && data.q[i]) ? data.q[i] : null;
-                  drawVector(curQX, qy, layoutHoriz, '#58a6ff', 'rgba(88,166,255,0.15)', qLabels, 0, null, 1, '#e6edf3', 1, 'vector');
+                  if (isDepthMode) {
+                    drawDepthVector(curQX + (0.82 * depthLen) / 2, qy + (0.57 * depthLen) / 2, d, depthLen, '#58a6ff', 'rgba(88,166,255,0.18)', qLabels, 1, 0, 1, 'vector');
+                  } else {
+                    drawVector(curQX, qy, layoutHoriz, '#58a6ff', 'rgba(88,166,255,0.18)', qLabels, 0, null, 1, '#e6edf3', 1, 'vector');
+                  }
                 }
                 const topQ = geom.rowY[0] - rowBracketH / 2;
                 const botQ = geom.rowY[T - 1] + rowBracketH / 2;
@@ -2812,34 +3768,48 @@
                 drawBracket(curQX + rowBracketW / 2 + 4 * s, (topQ + botQ) / 2, botQ - topQ, false);
               }
 
-              if (T <= 2) {
-                for (let j = 0; j < T; j++) {
-                  const startKX = getInitKeyX(j);
-                  const curKX = startKX + (geom.colX[j] - startKX) * ease;
-                  if (T <= 4) {
-                    drawLabel(`k${subscript(j + 1)}`, curKX, curKY - colBracketH / 2 - 10 * s, "#7d8590", "center");
-                  }
-                  drawBracket(curKX - colBracketW / 2 - 4 * s, curKY, colBracketH, true);
-                  drawBracket(curKX + colBracketW / 2 + 4 * s, curKY, colBracketH, false);
-                  const kLabels = (data && data.k && data.k[j]) ? data.k[j] : null;
-                  drawVector(curKX, curKY, layoutVert, '#58a6ff', 'rgba(88,166,255,0.15)', kLabels, 0, null, 1, '#e6edf3', 1, 'vector');
+              for (let j = 0; j < T; j++) {
+                const kx = 0 + (geom.colX[j] - 0) * ease;
+                const ky = geom.rowY[j] + (geom.topKeyY - geom.rowY[j]) * ease;
+
+                if (T <= 4 && !isDepthMode && subAlpha > 0) {
+                  drawLabel(`k${subscript(j + 1)}`, kx, ky - colBracketH / 2 - 10 * s, "#7d8590", "center", null, subAlpha);
                 }
-              } else {
-                for (let j = 0; j < T; j++) {
-                  const startKX = getInitKeyX(j);
-                  const curKX = startKX + (geom.colX[j] - startKX) * ease;
-                  if (T <= 4) {
-                    drawLabel(`k${subscript(j + 1)}`, curKX, curKY - colBracketH / 2 - 10 * s, "#7d8590", "center");
+
+                if (ease < 0.45) {
+                  const bAlpha = 1 - ease / 0.45;
+                  drawBracket(kx - rowBracketW / 2 - 4 * s, ky, rowBracketH, true, bAlpha);
+                  drawBracket(kx + rowBracketW / 2 + 4 * s, ky, rowBracketH, false, bAlpha);
+                } else {
+                  const bAlpha = (ease - 0.45) / 0.55;
+                  if (T <= 2) {
+                    drawBracket(kx - colBracketW / 2 - 4 * s, ky, colBracketH, true, bAlpha);
+                    drawBracket(kx + colBracketW / 2 + 4 * s, ky, colBracketH, false, bAlpha);
                   }
-                  const kLabels = (data && data.k && data.k[j]) ? data.k[j] : null;
-                  drawVector(curKX, curKY, layoutVert, '#58a6ff', 'rgba(88,166,255,0.15)', kLabels, 0, null, 1, '#e6edf3', 1, 'vector');
                 }
-                const leftStart = getInitKeyX(0) - colBracketW / 2 - 4 * s;
-                const leftEnd = geom.colX[0] - colBracketW / 2 - 4 * s;
-                const rightStart = getInitKeyX(T - 1) + colBracketW / 2 + 4 * s;
-                const rightEnd = geom.colX[T - 1] + colBracketW / 2 + 4 * s;
-                drawBracket(leftStart + (leftEnd - leftStart) * ease, curKY, colBracketH, true);
-                drawBracket(rightStart + (rightEnd - rightStart) * ease, curKY, colBracketH, false);
+
+                const kLabels = (data && data.k && data.k[j]) ? data.k[j] : null;
+                if (isDepthMode) {
+                  drawDepthVector(kx + (0.82 * depthLen) / 2 * ease, ky + (0.57 * depthLen) / 2, d, depthLen, '#58a6ff', 'rgba(88,166,255,0.18)', kLabels, 1, 0, 1, 'vector');
+                } else {
+                  const rKey = layoutVert.r;
+                  for (let m = 0; m < d; m++) {
+                    const ptH = layoutHoriz.points[m];
+                    const ptV = layoutVert.points[m];
+                    const px = kx + ptH.x * (1 - ease) + ptV.x * ease;
+                    const py = ky + ptH.y * (1 - ease) + ptV.y * ease;
+                    const lbl = (kLabels && kLabels[m] !== undefined) ? kLabels[m] : null;
+                    drawCircle(px, py, rKey, '#58a6ff', 'rgba(88,166,255,0.18)', lbl, 0, null, 1, '#e6edf3', 'vector');
+                  }
+                }
+              }
+
+              if (T > 2 && ease >= 0.45) {
+                const bAlpha = (ease - 0.45) / 0.55;
+                const leftK = (0 + (geom.colX[0] - 0) * ease) - colBracketW / 2 - 4 * s;
+                const rightK = (0 + (geom.colX[T - 1] - 0) * ease) + colBracketW / 2 + 4 * s;
+                drawBracket(leftK, curKY, colBracketH, true, bAlpha);
+                drawBracket(rightK, curKY, colBracketH, false, bAlpha);
               }
             } else {
               const topQ = geom.rowY[0] - rowBracketH / 2;
@@ -2847,38 +3817,65 @@
               drawBracket(curQX - rowBracketW / 2 - 4 * s, (topQ + botQ) / 2, botQ - topQ, true);
               drawBracket(curQX + rowBracketW / 2 + 4 * s, (topQ + botQ) / 2, botQ - topQ, false);
 
-              const leftStart = getInitKeyX(0) - colBracketW / 2 - 4 * s;
-              const leftEnd = geom.colX[0] - colBracketW / 2 - 4 * s;
-              const rightStart = getInitKeyX(geom.T_calc - 1) + colBracketW / 2 + 4 * s;
-              const rightEnd = geom.colX[geom.colX.length - 1] + colBracketW / 2 + 4 * s;
-              drawBracket(leftStart + (leftEnd - leftStart) * ease, curKY, colBracketH, true);
-              drawBracket(rightStart + (rightEnd - rightStart) * ease, curKY, colBracketH, false);
+              const leftK = (0 + (geom.colX[0] - 0) * ease) - colBracketW / 2 - 4 * s;
+              const rightK = (0 + (geom.colX[geom.T_calc - 1] - 0) * ease) + colBracketW / 2 + 4 * s;
+              drawBracket(leftK, curKY, colBracketH, true, ease);
+              drawBracket(rightK, curKY, colBracketH, false, ease);
+
+              if (isDepthMode) {
+                drawSlightDepthBar(curQX, geom.rowY[0], curQX, geom.rowY[geom.rowY.length - 1], depthLen, 1);
+                drawSlightDepthBar(0 + (geom.colX[0] - 0) * ease, curKY, 0 + (geom.colX[geom.T_calc - 1] - 0) * ease, curKY, depthLen, ease);
+              }
 
               threeAttn.renderFrame(T, d, ms, geom, width, height, s);
             }
             return;
           }
 
-          // ==================== PHASE 3: 3200 -> 5200ms (Dot Product Step 1: Pairwise Multiply) ====================
-          if (ms >= 3200 && ms < 5200) {
-            caption.innerHTML = '<span class="caption-op mul">Dot Product</span>: <span class="caption-op mul">&times; multiply</span> rows &amp; columns pairwise';
-            drawStaticHeaders(0.85);
+          if (ms >= 2800 && ms < 3600) {
+            caption.innerHTML = `Q (rows) &amp; K (columns) &middot; ${T.toLocaleString()} &times; ${T.toLocaleString()} &middot; dim ${d.toLocaleString()}`;
+            drawStaticHeaders(1.0);
+            if (isWebGL) {
+              threeAttn.renderFrame(T, d, ms, geom, width, height, s);
+            }
+            return;
+          }
 
-            const p = (ms - 3200) / 2000;
-            const moveProg = Math.min(1, p / 0.65);
-            const easeMove = moveProg * moveProg * (3 - 2 * moveProg);
+          if (ms >= 3600 && ms < 5600) {
+            const p = (ms - 3600) / 2000;
+            const outerAlpha = Math.max(0, 1 - p / 0.45) * 0.85;
+            if (outerAlpha > 0) {
+              drawStaticHeaders(outerAlpha);
+            } else {
+              drawGridOutline(0.75);
+            }
 
-            const isContact = p >= 0.65;
-            const contactPhase = isContact ? (p - 0.65) / 0.35 : 0;
-            const flash = Math.sin(contactPhase * Math.PI);
+            const isApproach = p < 0.50;
+            const isContact = p >= 0.50 && p < 0.68;
+            const isCollapse = p >= 0.68;
+
+            const approachProg = Math.min(1, p / 0.50);
+            const easeApproach = approachProg * approachProg * (3 - 2 * approachProg);
+
+            const contactProg = isContact ? (p - 0.50) / 0.18 : 0;
+            const flash = isContact ? Math.sin(contactProg * Math.PI) : 0;
+
+            const collapseProg = isCollapse ? (p - 0.68) / 0.32 : 0;
+            const easeCollapse = collapseProg * collapseProg * (3 - 2 * collapseProg);
+
+            if (isApproach || isContact) {
+              caption.innerHTML = '<span class="caption-op mul">Dot Product</span>: <span class="caption-op mul">&times; multiply</span> pairwise';
+            } else {
+              caption.innerHTML = '<span class="caption-op mul">Dot Product</span>: <span class="caption-op add">&sum; sum</span> &rarr; similarity scores';
+            }
 
             ctx.save();
             ctx.translate(centerX, centerY);
             ctx.lineWidth = 1.2;
 
             const maxColX = geom.colX[geom.colX.length - 1];
-            const guideEndX = geom.leftQueryX + (maxColX + 16 * s - geom.leftQueryX) * easeMove;
-            ctx.strokeStyle = "rgba(88, 166, 255, 0.35)";
+            const guideEndX = geom.leftQueryX + (maxColX + 16 * s - geom.leftQueryX) * easeApproach;
+            ctx.strokeStyle = `rgba(88, 166, 255, ${(0.35 * Math.max(0, 1 - (isCollapse ? easeCollapse : 0) * 1.5)).toFixed(3)})`;
             const rowCount = geom.T_calc || T;
             const lineStep = rowCount > 16 ? Math.ceil(rowCount / 16) : 1;
             ctx.beginPath();
@@ -2888,7 +3885,7 @@
             }
 
             const maxRowY = geom.rowY[geom.rowY.length - 1];
-            const guideEndY = geom.topKeyY + (maxRowY + 14 * s - geom.topKeyY) * easeMove;
+            const guideEndY = geom.topKeyY + (maxRowY + 14 * s - geom.topKeyY) * easeApproach;
             for (let j = 0; j < rowCount; j += lineStep) {
               ctx.moveTo(geom.colX[j], geom.topKeyY + colBracketH / 2);
               ctx.lineTo(geom.colX[j], guideEndY);
@@ -2896,36 +3893,115 @@
             ctx.stroke();
             ctx.restore();
 
-            if (!isWebGL && isContact) {
-              const orangeBg = `rgba(240, 136, 62, ${0.18 + 0.35 * flash})`;
+            if (!isWebGL) {
+              const orangeBg = `rgba(240, 136, 62, ${0.20 + 0.35 * flash})`;
               const scale = 1 + 0.18 * flash;
               for (let i = 0; i < T; i++) {
                 for (let j = 0; j < T; j++) {
                   const cx = geom.colX[j];
                   const cy = geom.rowY[i];
-                  const mulLabels = (showNumbers && data && data.mul && data.mul[i] && data.mul[i][j]) ? data.mul[i][j] : null;
-                  if (d === 1 || !showNumbers) {
-                    const mulVal = mulLabels ? mulLabels[0] : null;
-                    drawCircle(cx, cy, geom.cellR * scale, '#f0883e', orangeBg, mulVal, 0, null, 1, '#e6edf3', 'mul');
-                  } else if (d <= 4) {
-                    drawVector(cx, cy, cellLayout, '#f0883e', orangeBg, mulLabels, 0, null, 1, '#e6edf3', scale, 'mul');
+                  const qLabels = (data && data.q) ? data.q[i % data.q.length] : null;
+                  const kLabels = (data && data.k) ? data.k[j % data.k.length] : null;
+                  const mulRow = (data && data.mul) ? data.mul[i % data.mul.length] : null;
+                  const mulLabels = mulRow ? mulRow[j % mulRow.length] : null;
+                  const simRow = (data && data.sim) ? data.sim[i % data.sim.length] : null;
+                  const simVal = simRow ? simRow[j % simRow.length] : null;
+
+                  if (isApproach) {
+                    const qx = geom.leftQueryX + (cx - geom.leftQueryX) * easeApproach;
+                    const ky = geom.topKeyY + (cy - geom.topKeyY) * easeApproach;
+                    const vAlpha = 0.5 + 0.5 * easeApproach;
+                    if (isDepthMode) {
+                      drawDepthVector(qx + (0.82 * depthLen) / 2 * (1 - easeApproach), cy + (0.57 * depthLen) / 2 * (1 - easeApproach), d, depthLen, '#58a6ff', 'rgba(88,166,255,0.18)', qLabels, vAlpha, 0, 1, 'vector');
+                      drawDepthVector(cx + (0.82 * depthLen) / 2 * (1 - easeApproach), ky + (0.57 * depthLen) / 2 * (1 - easeApproach), d, depthLen, '#388bfd', 'rgba(56,139,253,0.18)', kLabels, vAlpha, 0, 1, 'vector');
+                    } else if (d === 1) {
+                      const qv = (qLabels && qLabels.length) ? qLabels[0] : null;
+                      const kv = (kLabels && kLabels.length) ? kLabels[0] : null;
+                      drawCircle(qx, cy, geom.cellR, '#58a6ff', 'rgba(88,166,255,0.18)', qv, 0, null, vAlpha, '#e6edf3', 'vector');
+                      drawCircle(cx, ky, geom.cellR, '#388bfd', 'rgba(56,139,253,0.18)', kv, 0, null, vAlpha, '#e6edf3', 'vector');
+                    } else if (d <= 8) {
+                      drawVector(qx, cy, cellLayout, '#58a6ff', 'rgba(88,166,255,0.18)', qLabels, 0, null, vAlpha, '#e6edf3', 1, 'vector');
+                      drawVector(cx, ky, cellLayout, '#388bfd', 'rgba(56,139,253,0.18)', kLabels, 0, null, vAlpha, '#e6edf3', 1, 'vector');
+                    } else {
+                      const qv = (qLabels && qLabels.length) ? qLabels[0] : null;
+                      const kv = (kLabels && kLabels.length) ? kLabels[0] : null;
+                      drawCircle(qx, cy, geom.cellR, '#58a6ff', 'rgba(88,166,255,0.18)', qv, 0, null, vAlpha, '#e6edf3', 'vector');
+                      drawCircle(cx, ky, geom.cellR, '#388bfd', 'rgba(56,139,253,0.18)', kv, 0, null, vAlpha, '#e6edf3', 'vector');
+                    }
+                  } else if (isContact) {
+                    if (isDepthMode) {
+                      drawDepthVector(cx, cy, d, depthLen, '#f0883e', orangeBg, mulLabels, 1, 0, scale, 'mul');
+                    } else if (d === 1) {
+                      const mulVal = (mulLabels && mulLabels.length) ? mulLabels[0] : simVal;
+                      drawCircle(cx, cy, geom.cellR * scale, '#f0883e', orangeBg, mulVal, 0, null, 1, '#e6edf3', 'mul');
+                    } else if (d <= 8) {
+                      drawVector(cx, cy, cellLayout, '#f0883e', orangeBg, mulLabels, 0, null, 1, '#e6edf3', scale, 'mul');
+                    } else {
+                      drawCircle(cx, cy, geom.cellR * scale, '#f0883e', orangeBg, simVal, 0, null, 1, '#e6edf3', 'mul');
+                    }
                   } else {
-                    drawCircle(cx, cy, geom.cellR * scale, '#f0883e', orangeBg, null, 0, null, 1, '#e6edf3', 'mul');
+                    if (isDepthMode) {
+                      if (easeCollapse >= 0.85) {
+                        const finalR = geom.cellR * (1 + 0.18 * Math.sin(((easeCollapse - 0.85) / 0.15) * Math.PI));
+                        drawCircle(cx, cy, finalR, '#3fb950', 'rgba(63, 185, 80, 0.28)', simVal, 0, null, 1, '#e6edf3', 'sim');
+                      } else {
+                        drawDepthVector(cx, cy, d, depthLen, '#f0883e', orangeBg, mulLabels, 1, easeCollapse, 1, 'mul');
+                      }
+                    } else if (d === 1) {
+                      drawCircle(cx, cy, geom.cellR, '#f0883e', orangeBg, simVal, 0, null, 1, '#e6edf3', 'mul');
+                    } else if (d <= 8) {
+                      const factor = 1 - easeCollapse;
+                      for (let m = 0; m < d; m++) {
+                        const pt = cellLayout.points[m];
+                        const mVal = (mulLabels && mulLabels.length) ? mulLabels[m % mulLabels.length] : null;
+                        drawCircle(cx + pt.x * factor, cy + pt.y * factor, cellLayout.r, '#f0883e', orangeBg, mVal, 0, null, 1, '#e6edf3', 'mul');
+                      }
+                    } else {
+                      drawCircle(cx, cy, geom.cellR, '#f0883e', orangeBg, simVal, 0, null, 1, '#e6edf3', 'mul');
+                    }
                   }
                 }
               }
             } else if (isWebGL) {
+              if (isDepthMode) {
+                if (isApproach) {
+                  const qx = geom.leftQueryX + (0 - geom.leftQueryX) * easeApproach;
+                  const ky = geom.topKeyY + (geom.matCenterY - geom.topKeyY) * easeApproach;
+                  drawSlightDepthBar(qx, geom.rowY[0], qx, geom.rowY[geom.rowY.length - 1], depthLen, 0.85);
+                  drawSlightDepthBar(geom.colX[0], ky, geom.colX[geom.colX.length - 1], ky, depthLen, 0.85);
+                } else if (depthLen > 2) {
+                  const collapse = isCollapse ? easeCollapse : 0;
+                  const curD = depthLen * (1 - collapse);
+                  const ribAlpha = (1 - collapse) * 0.35;
+                  if (ribAlpha > 0.05 && curD > 1.5) {
+                    ctx.save();
+                    ctx.translate(centerX, centerY);
+                    ctx.strokeStyle = isContact ? `rgba(240, 136, 62, ${ribAlpha.toFixed(3)})` : `rgba(88, 166, 255, ${ribAlpha.toFixed(3)})`;
+                    ctx.lineWidth = 0.75;
+                    const step = Math.max(1, Math.floor(geom.T_calc / 12));
+                    for (let i = 0; i < geom.T_calc; i += step) {
+                      for (let j = 0; j < geom.T_calc; j += step) {
+                        const cx = geom.colX[j];
+                        const cy = geom.rowY[i];
+                        ctx.beginPath();
+                        ctx.moveTo(cx, cy);
+                        ctx.lineTo(cx - 0.82 * curD, cy - 0.57 * curD);
+                        ctx.stroke();
+                      }
+                    }
+                    ctx.restore();
+                  }
+                }
+              }
               threeAttn.renderFrame(T, d, ms, geom, width, height, s);
             }
             return;
           }
 
-          // ==================== PHASE 4: 5200 -> 7200ms (Dot Product Step 2: Sum into Similarity Matrix) ====================
-          if (ms >= 5200 && ms < 7200) {
-            caption.innerHTML = '<span class="caption-op add">Dot Product (Q &middot; K<sup>T</sup>)</span>: <span class="caption-op add">+ sum</span> &rarr; similarity scores';
-            drawStaticHeaders(0.4);
+          if (ms >= 5600 && ms < 7600) {
+            caption.innerHTML = '<span class="caption-op add">Dot Product</span>: <span class="caption-op add">+ sum</span> &rarr; similarity scores';
 
-            const p = (ms - 5200) / 2000;
+            const p = (ms - 5600) / 2000;
             const coalesceProg = Math.min(1, p / 0.72);
             const easeCoal = coalesceProg * coalesceProg * (3 - 2 * coalesceProg);
 
@@ -2934,32 +4010,35 @@
             const flash = Math.sin(mergePhase * Math.PI);
 
             const bColor = flash > 0.2 ? '#3fb950' : '#484f58';
-            drawBracket(geom.matL, 16 * s, geom.matHBrack, true, 1, bColor, 7);
-            drawBracket(geom.matR, 16 * s, geom.matHBrack, false, 1, bColor, 7);
+            drawBracket(geom.matL, geom.matCenterY, geom.matHBrack, true, 1, bColor, 7);
+            drawBracket(geom.matR, geom.matCenterY, geom.matHBrack, false, 1, bColor, 7);
 
             if (!isWebGL) {
               for (let i = 0; i < T; i++) {
                 for (let j = 0; j < T; j++) {
                   const cx = geom.colX[j];
                   const cy = geom.rowY[i];
-                  if (isMerged) {
-                    const simVal = (showNumbers && data && data.sim && data.sim[i]) ? data.sim[i][j] : (i === j ? '2.0' : '1.0');
+                  const simRow = (data && data.sim) ? data.sim[i % data.sim.length] : null;
+                  const simVal = simRow ? simRow[j % simRow.length] : (i === j ? '2.0' : '1.0');
+                  if (isMerged || isDepthMode) {
                     const rFinal = geom.cellR * (1 + 0.20 * flash);
                     const greenBg = `rgba(63, 185, 80, ${0.18 + 0.35 * flash})`;
                     drawCircle(cx, cy, rFinal, '#3fb950', greenBg, simVal, 0, null, 1, '#e6edf3', 'sim');
                   } else {
                     const factor = 1 - easeCoal;
-                    const mulLabels = (showNumbers && factor > 0.55 && data && data.mul && data.mul[i] && data.mul[i][j]) ? data.mul[i][j] : null;
-                    if (d === 1 || !showNumbers) {
-                      const mulVal = mulLabels ? mulLabels[0] : null;
+                    const mulRow = (data && data.mul) ? data.mul[i % data.mul.length] : null;
+                    const mulLabels = mulRow ? mulRow[j % mulRow.length] : null;
+                    if (d === 1) {
+                      const mulVal = (mulLabels && mulLabels.length) ? mulLabels[0] : simVal;
                       drawCircle(cx, cy, geom.cellR, '#f0883e', 'rgba(240, 136, 62, 0.20)', mulVal, 0, null, 1, '#e6edf3', 'mul');
-                    } else if (d <= 4) {
+                    } else if (d <= 8) {
                       for (let m = 0; m < d; m++) {
                         const pt = cellLayout.points[m];
-                        drawCircle(cx + pt.x * factor, cy + pt.y * factor, cellLayout.r, '#f0883e', 'rgba(240, 136, 62, 0.20)', mulLabels ? mulLabels[m] : null, 0, null, 1, '#e6edf3', 'mul');
+                        const mVal = (mulLabels && mulLabels.length) ? mulLabels[m % mulLabels.length] : null;
+                        drawCircle(cx + pt.x * factor, cy + pt.y * factor, cellLayout.r, '#f0883e', 'rgba(240, 136, 62, 0.20)', mVal, 0, null, 1, '#e6edf3', 'mul');
                       }
                     } else {
-                      drawCircle(cx, cy, geom.cellR * (0.8 + 0.2 * (1 - factor)), '#f0883e', 'rgba(240, 136, 62, 0.20)', null, 0, null, 1, '#e6edf3', 'mul');
+                      drawCircle(cx, cy, geom.cellR * (0.8 + 0.2 * (1 - factor)), '#f0883e', 'rgba(240, 136, 62, 0.20)', simVal, 0, null, 1, '#e6edf3', 'mul');
                     }
                   }
                 }
@@ -2970,12 +4049,10 @@
             return;
           }
 
-          // ==================== PHASE 5: 7200 -> 8600ms (Softmax Step 1: Elementwise Exp) ====================
-          if (ms >= 7200 && ms < 8600) {
+          if (ms >= 7600 && ms < 9000) {
             caption.innerHTML = '<span class="caption-op exp">Softmax</span> (step 1): <span class="caption-op exp">exp</span> elementwise on each row';
-            drawStaticHeaders(0.25);
 
-            const p = (ms - 7200) / 1400;
+            const p = (ms - 7600) / 1400;
             const flash = Math.sin(p * Math.PI);
             const rMult = 1 + 0.14 * flash;
             const redBg = `rgba(248, 81, 73, ${0.15 + 0.30 * flash})`;
@@ -2989,12 +4066,10 @@
             return;
           }
 
-          // ==================== PHASE 6: 8600 -> 10200ms (Softmax Step 2: Row Sums to Right) ====================
-          if (ms >= 8600 && ms < 10200) {
+          if (ms >= 9000 && ms < 10600) {
             caption.innerHTML = '<span class="caption-op exp">Softmax</span> (step 2): <span class="caption-op add">+ sum</span> each row &rarr; denominators';
-            drawStaticHeaders(0.25);
 
-            const p = (ms - 8600) / 1600;
+            const p = (ms - 9000) / 1600;
             const sumProg = Math.min(1, p / 0.72);
             const easeSum = sumProg * sumProg * (3 - 2 * sumProg);
 
@@ -3012,7 +4087,7 @@
             if (!isWebGL) {
               for (let i = 0; i < T; i++) {
                 const cy = geom.rowY[i];
-                const rowSumVal = (showNumbers && data && data.sum) ? data.sum[i] : '2.0';
+                const rowSumVal = (data && data.sum) ? data.sum[i % data.sum.length] : '2.0';
                 if (isSummed) {
                   const rSum = geom.cellR * (1 + 0.22 * flash);
                   const greenBg = `rgba(63, 185, 80, ${0.18 + 0.35 * flash})`;
@@ -3025,12 +4100,14 @@
                 } else {
                   if (T === 1) {
                     const curX = geom.colX[0] + (geom.rightSumX - geom.colX[0]) * easeSum;
-                    drawCircle(curX, cy, geom.cellR, '#f85149', 'rgba(248, 81, 73, 0.20)', (showNumbers && expVals) ? expVals[0][0] : null, 0, null, 0.85, '#e6edf3', 'exp');
+                    const val0 = (expVals && expVals[0]) ? expVals[0][0] : null;
+                    drawCircle(curX, cy, geom.cellR, '#f85149', 'rgba(248, 81, 73, 0.20)', val0, 0, null, 0.85, '#e6edf3', 'exp');
                   } else {
                     for (let j = 0; j < T; j++) {
                       const curX = geom.colX[j] + (geom.rightSumX - geom.colX[j]) * easeSum;
-                      const showNums = showNumbers && (T <= 2) && ((geom.colX[1] - geom.colX[0]) * (1 - easeSum) > 16 * s);
-                      drawCircle(curX, cy, geom.cellR * 0.9, '#f85149', 'rgba(248, 81, 73, 0.20)', (showNums && expVals) ? expVals[i][j] : null, 0, null, 0.85, '#e6edf3', 'exp');
+                      const valRow = expVals ? expVals[i % expVals.length] : null;
+                      const valIJ = valRow ? valRow[j % valRow.length] : null;
+                      drawCircle(curX, cy, geom.cellR * 0.9, '#f85149', 'rgba(248, 81, 73, 0.20)', valIJ, 0, null, 0.85, '#e6edf3', 'exp');
                     }
                   }
                 }
@@ -3041,12 +4118,10 @@
             return;
           }
 
-          // ==================== PHASE 7: 10200 -> 11800ms (Softmax Step 3: Divide by Row Sum) ====================
-          if (ms >= 10200 && ms < 11800) {
+          if (ms >= 10600 && ms < 12200) {
             caption.innerHTML = '<span class="caption-op exp">Softmax</span> (step 3): <span class="caption-op div">&divide; divide</span> each row by its sum';
-            drawStaticHeaders(0.2);
 
-            const p = (ms - 10200) / 1600;
+            const p = (ms - 10600) / 1600;
             const isDivided = p >= 0.40;
             const flash = Math.sin(p * Math.PI);
 
@@ -3071,7 +4146,7 @@
               const sumAlpha = Math.max(0, 1 - Math.max(0, (p - 0.45) / 0.55));
               if (sumAlpha > 0) {
                 for (let i = 0; i < T; i++) {
-                  const sVal = (showNumbers && data && data.sum) ? data.sum[i] : null;
+                  const sVal = (data && data.sum) ? data.sum[i % data.sum.length] : null;
                   drawCircle(geom.rightSumX, geom.rowY[i], geom.cellR, '#3fb950', 'rgba(63, 185, 80, 0.18)', sVal, 0, null, sumAlpha, '#e6edf3', 'sum');
                 }
               }
@@ -3087,42 +4162,56 @@
             return;
           }
 
-          // ==================== PHASE 8: 11800 -> 13600ms (Attention Matrix Output) ====================
-          if (ms >= 11800 && ms < 13600) {
-            caption.innerHTML = '= Attention Matrix A = <span class="caption-op exp">softmax</span>(Q &middot; K<sup>T</sup>) <span style="color:#3fb950; font-weight:400;">(row sum = 1.0)</span>';
-            drawStaticHeaders(0.4);
+          if (ms >= 12200 && ms < 15600) {
+            caption.style.opacity = '1';
+
+            const labelFade = Math.min(1, (ms - 12200) / 350);
+            const labelY = geom.matTop - 14 * s;
+            drawLabel("Attention Matrix", 0, labelY, "#58a6ff", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, labelFade);
+
+            let greenAlpha = 1.0;
+            if (ms >= 13400) {
+              greenAlpha = Math.max(0, 1 - (ms - 13400) / 800);
+            }
+
+            if (greenAlpha > 0.05) {
+              caption.innerHTML = `= Attention Matrix A = <span class="caption-op exp">softmax</span>(Q &middot; K<sup>T</sup>) <span style="color:rgba(63, 185, 80, ${greenAlpha.toFixed(2)}); font-weight:400;">(row sum = 1.0)</span>`;
+            } else {
+              caption.innerHTML = '= Attention Matrix A = <span class="caption-op exp">softmax</span>(Q &middot; K<sup>T</sup>)';
+            }
 
             const probVals = data ? data.prob : null;
 
-            // Draw clean green line across each row
-            ctx.save();
-            ctx.translate(centerX, centerY);
-            ctx.lineWidth = 1.0;
-            ctx.strokeStyle = "rgba(63, 185, 80, 0.70)";
-            const xLineStart = geom.colX[0] - geom.cellW / 2;
-            const xLineEnd = (T <= 4) ? (geom.matR + 12 * s) : (geom.colX[T - 1] + geom.cellW / 2);
-            for (let i = 0; i < T; i++) {
-              ctx.beginPath();
-              ctx.moveTo(xLineStart, geom.rowY[i]);
-              ctx.lineTo(xLineEnd, geom.rowY[i]);
-              ctx.stroke();
-            }
-            ctx.restore();
-
-            drawMatrix('#58a6ff', 'rgba(88, 166, 255, 0.18)', probVals, 0, null, 1, '#e6edf3', 1, true, 'prob');
-
-            if (T <= 4) {
+            if (greenAlpha > 0) {
+              ctx.save();
+              ctx.translate(centerX, centerY);
+              ctx.lineWidth = 1.0;
+              ctx.strokeStyle = `rgba(63, 185, 80, ${(0.70 * greenAlpha).toFixed(3)})`;
+              const xLineStart = geom.colX[0] - geom.cellW / 2;
+              const xLineEnd = (T <= 4) ? (geom.matR + 12 * s) : (geom.colX[T - 1] + geom.cellW / 2);
               for (let i = 0; i < T; i++) {
-                drawLabel("row sum = 1.0", geom.matR + 16 * s, geom.rowY[i], "#3fb950", "left", `400 ${Math.round(9.5 * s)}px ui-monospace`);
+                ctx.beginPath();
+                ctx.moveTo(xLineStart, geom.rowY[i]);
+                ctx.lineTo(xLineEnd, geom.rowY[i]);
+                ctx.stroke();
               }
-            } else {
-              drawLabel("row sum = 1.0", geom.matR + 16 * s, geom.rowY[0] - 12 * s, "#3fb950", "left", `400 ${Math.round(9.5 * s)}px ui-monospace`);
-              if (!isWebGL) {
+              ctx.restore();
+
+              if (T <= 4) {
                 for (let i = 0; i < T; i++) {
-                  drawCircle(geom.rightSumX, geom.rowY[i], Math.min(geom.cellR * 0.75, 4 * s), '#3fb950', 'rgba(63, 185, 80, 0.3)', null, 0, null, 0.8, '#e6edf3');
+                  drawLabel("row sum = 1.0", geom.matR + 16 * s, geom.rowY[i], "#3fb950", "left", `400 ${Math.round(9.5 * s)}px ui-monospace`, greenAlpha);
+                }
+              } else {
+                drawLabel("row sum = 1.0", geom.matR + 16 * s, geom.rowY[0] - 12 * s, "#3fb950", "left", `400 ${Math.round(9.5 * s)}px ui-monospace`, greenAlpha);
+                if (!isWebGL) {
+                  for (let i = 0; i < T; i++) {
+                    drawCircle(geom.rightSumX, geom.rowY[i], Math.min(geom.cellR * 0.75, 4 * s), '#3fb950', 'rgba(63, 185, 80, 0.3)', null, 0, null, 0.8 * greenAlpha, '#e6edf3');
+                  }
                 }
               }
             }
+
+            drawMatrix('#58a6ff', 'rgba(88, 166, 255, 0.18)', probVals, 0, null, 1, '#e6edf3', 1, true, 'prob');
 
             if (isWebGL) {
               threeAttn.renderFrame(T, d, ms, geom, width, height, s);
@@ -3130,43 +4219,16 @@
             return;
           }
 
-          // ==================== PHASE 9: 13600 -> 14600ms (Fade out and loop) ====================
-          if (ms >= 13600) {
-            const fade = Math.max(0, 1 - (ms - 13600) / 1000);
+          if (ms >= 15600) {
+            const fade = Math.max(0, 1 - (ms - 15600) / 1000);
             caption.style.opacity = `${fade}`;
-            drawStaticHeaders(0.4 * fade);
+
+            const labelY = geom.matTop - 14 * s;
+            drawLabel("Attention Matrix", 0, labelY, "#58a6ff", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, fade);
 
             const probVals = data ? data.prob : null;
 
-            // Draw clean green line across each row with fade
-            ctx.save();
-            ctx.translate(centerX, centerY);
-            ctx.lineWidth = 1.0;
-            ctx.strokeStyle = `rgba(63, 185, 80, ${(0.70 * fade).toFixed(3)})`;
-            const xLineStart = geom.colX[0] - geom.cellW / 2;
-            const xLineEnd = (T <= 4) ? (geom.matR + 12 * s) : (geom.colX[T - 1] + geom.cellW / 2);
-            for (let i = 0; i < T; i++) {
-              ctx.beginPath();
-              ctx.moveTo(xLineStart, geom.rowY[i]);
-              ctx.lineTo(xLineEnd, geom.rowY[i]);
-              ctx.stroke();
-            }
-            ctx.restore();
-
             drawMatrix('#58a6ff', 'rgba(88, 166, 255, 0.18)', probVals, 0, null, fade, '#e6edf3', 1, true, 'prob');
-
-            if (T <= 4) {
-              for (let i = 0; i < T; i++) {
-                drawLabel("row sum = 1.0", geom.matR + 16 * s, geom.rowY[i], "#3fb950", "left", `400 ${Math.round(9.5 * s)}px ui-monospace`, fade);
-              }
-            } else {
-              drawLabel("row sum = 1.0", geom.matR + 16 * s, geom.rowY[0] - 12 * s, "#3fb950", "left", `400 ${Math.round(9.5 * s)}px ui-monospace`, fade);
-              if (!isWebGL) {
-                for (let i = 0; i < T; i++) {
-                  drawCircle(geom.rightSumX, geom.rowY[i], Math.min(geom.cellR * 0.75, 4 * s), '#3fb950', 'rgba(63, 185, 80, 0.3)', null, 0, null, 0.8 * fade, '#e6edf3');
-                }
-              }
-            }
 
             if (isWebGL) {
               threeAttn.renderFrame(T, d, ms, geom, width, height, s);
@@ -3175,18 +4237,20 @@
         }
 
         function animLoop(now) {
-          const elapsed = (now - startTime) % TOTAL_DURATION;
+          const elapsed = typeof window.__freezeAttnMs === 'number' ? window.__freezeAttnMs : ((now - startTime) % TOTAL_DURATION);
+          if (elapsed < last_attn_elapsed) {
+            current_attn_data = generate_random_attn_data(T, d);
+          }
+          last_attn_elapsed = elapsed;
           render(elapsed);
           requestAnimationFrame(animLoop);
         }
         requestAnimationFrame(animLoop);
 
         canvasStage.addEventListener('click', () => {
-          startTime = performance.now();
+          refresh_attn_data();
         });
       })();
-
-      nextProblem();
     })();
   </script>
 </body>

@@ -1,4 +1,4 @@
-# learn-attention (wip)
+## Learn Attention (wip)
 
 Sharing how [attention](https://lucidrains.github.io/learn-attention/) appears in my mind's eye, for students and those interested in understanding transformers
 

@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>learn-attention</title>
+  <title>Attention</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -270,9 +272,151 @@
       display: none;
     }
 
+    .canvas-stage.full-attn-stage {
+      position: relative;
+      height: 540px;
+    }
+
+    .canvas-stage.full-attn-stage canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    #full-attn-webgl-canvas {
+      pointer-events: none;
+      display: none;
+    }
+
+    .full-attn-math-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: fit-content;
+      max-width: 92%;
+      margin: 0.5rem auto 0.75rem auto;
+      padding: 0.2rem 0.5rem;
+      font-size: 1.05rem;
+      color: #c9d1d9;
+      user-select: none;
+    }
+
+    #full-attn-katex .katex {
+      font-size: 1.05em;
+    }
+
+    #full-attn-katex .math-part {
+      display: inline-block;
+      transition: color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+      border-radius: 4px;
+      padding: 1px 4px;
+    }
+
+    #full-attn-katex .math-hl-orange,
+    #full-attn-katex .math-hl-qk {
+      color: #f0883e !important;
+      background: rgba(240, 136, 62, 0.20);
+      box-shadow: 0 0 8px rgba(240, 136, 62, 0.45);
+      font-weight: 600;
+      animation: math-flash-orange 0.45s ease-out;
+    }
+
+    #full-attn-katex .math-hl-green,
+    #full-attn-katex .math-hl-val {
+      color: #3fb950 !important;
+      background: rgba(63, 185, 80, 0.20);
+      box-shadow: 0 0 8px rgba(63, 185, 80, 0.45);
+      font-weight: 600;
+      animation: math-flash-green 0.45s ease-out;
+    }
+
+    #full-attn-katex .math-hl-softmax-red {
+      color: #f85149 !important;
+      background: rgba(248, 81, 73, 0.18);
+      box-shadow: 0 0 8px rgba(248, 81, 73, 0.35);
+      font-weight: 600;
+      animation: math-flash-red 0.45s ease-out;
+    }
+
+    #full-attn-katex .math-hl-softmax-purple {
+      color: #a371f7 !important;
+      background: rgba(163, 113, 247, 0.18);
+      box-shadow: 0 0 8px rgba(163, 113, 247, 0.35);
+      font-weight: 600;
+      animation: math-flash-purple 0.45s ease-out;
+    }
+
+    @keyframes math-flash-orange {
+      0% {
+        box-shadow: 0 0 2px rgba(240, 136, 62, 0.2);
+        background: rgba(240, 136, 62, 0.10);
+      }
+      35% {
+        box-shadow: 0 0 16px rgba(240, 136, 62, 0.85), 0 0 4px #f0883e;
+        background: rgba(240, 136, 62, 0.38);
+      }
+      100% {
+        box-shadow: 0 0 8px rgba(240, 136, 62, 0.45);
+        background: rgba(240, 136, 62, 0.20);
+      }
+    }
+
+    @keyframes math-flash-green {
+      0% {
+        box-shadow: 0 0 2px rgba(63, 185, 80, 0.2);
+        background: rgba(63, 185, 80, 0.10);
+      }
+      35% {
+        box-shadow: 0 0 16px rgba(63, 185, 80, 0.85), 0 0 4px #3fb950;
+        background: rgba(63, 185, 80, 0.38);
+      }
+      100% {
+        box-shadow: 0 0 8px rgba(63, 185, 80, 0.45);
+        background: rgba(63, 185, 80, 0.20);
+      }
+    }
+
+    @keyframes math-flash-red {
+      0% {
+        box-shadow: 0 0 2px rgba(248, 81, 73, 0.2);
+        background: rgba(248, 81, 73, 0.10);
+      }
+      35% {
+        box-shadow: 0 0 16px rgba(248, 81, 73, 0.85), 0 0 4px #f85149;
+        background: rgba(248, 81, 73, 0.38);
+      }
+      100% {
+        box-shadow: 0 0 8px rgba(248, 81, 73, 0.35);
+        background: rgba(248, 81, 73, 0.18);
+      }
+    }
+
+    @keyframes math-flash-purple {
+      0% {
+        box-shadow: 0 0 2px rgba(163, 113, 247, 0.2);
+        background: rgba(163, 113, 247, 0.10);
+      }
+      35% {
+        box-shadow: 0 0 16px rgba(163, 113, 247, 0.85), 0 0 4px #a371f7;
+        background: rgba(163, 113, 247, 0.38);
+      }
+      100% {
+        box-shadow: 0 0 8px rgba(163, 113, 247, 0.35);
+        background: rgba(163, 113, 247, 0.18);
+      }
+    }
+
     @media (max-width: 520px) {
       .canvas-stage.attn-stage {
         height: 340px;
+      }
+      .canvas-stage.full-attn-stage {
+        height: 500px;
+      }
+      .full-attn-math-wrap {
+        font-size: 0.95rem;
       }
     }
 
@@ -297,12 +441,17 @@
     .caption-op.add { color: #3fb950; }
     .caption-op.exp { color: #f85149; }
     .caption-op.div { color: #a371f7; }
-    #attn-caption {
+    .caption-op.val { color: #58a6ff; }
+    .caption-op.out { color: #79c0ff; }
+
+    #attn-caption,
+    #full-attn-caption {
       font-size: 0.8rem;
       white-space: normal;
       height: auto;
       min-height: 1.4rem;
-      justify-content: center;
+      display: block;
+      line-height: 1.4;
       text-align: center;
       padding: 0 0.5rem;
     }
@@ -1207,7 +1356,7 @@
           <span>dimension (power of 2)</span>
           <span class="slider-val" id="slider-label">4</span>
         </div>
-        <input type="range" id="dim-slider" min="0" max="12" value="0" step="1" />
+        <input type="range" id="dim-slider" min="0" max="6" value="0" step="1" />
       </div>
 
       <div class="canvas-stage" id="canvas-stage" title="Click to replay">
@@ -1253,7 +1402,7 @@
           <span>dimension (power of 2)</span>
           <span class="slider-val" id="softmax-slider-label">4</span>
         </div>
-        <input type="range" id="softmax-dim-slider" min="0" max="12" value="0" step="1" />
+        <input type="range" id="softmax-dim-slider" min="0" max="6" value="0" step="1" />
       </div>
 
       <div class="canvas-stage" id="softmax-canvas-stage" title="Click to replay">
@@ -1299,7 +1448,7 @@
           <span>vector dimension</span>
           <span class="slider-val" id="attn-dim-slider-label">2</span>
         </div>
-        <input type="range" id="attn-dim-slider" min="0" max="10" value="1" step="1" />
+        <input type="range" id="attn-dim-slider" min="0" max="8" value="1" step="1" />
       </div>
 
       <div class="slider-row">
@@ -1340,6 +1489,43 @@
           <div>solved: <span id="attn-stat-solved">0</span></div>
         </div>
       </div>
+    </div>
+
+    <!-- Final Attention Panel (without a quiz) -->
+    <div class="dot-card" id="full-attn-card">
+      <div class="dot-header">
+        <div class="header-left">
+          <span>Attention</span>
+        </div>
+        <span id="full-attn-header-dim">Q, K, V &middot; 2 vec &middot; dim 2</span>
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-labels">
+          <span>vector dimension</span>
+          <span class="slider-val" id="full-attn-dim-slider-label">2</span>
+        </div>
+        <input type="range" id="full-attn-dim-slider" min="0" max="8" value="1" step="1" />
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-labels">
+          <span>number of vectors (context length)</span>
+          <span class="slider-val" id="full-attn-len-slider-label">2</span>
+        </div>
+        <input type="range" id="full-attn-len-slider" min="0" max="8" value="1" step="1" />
+      </div>
+
+      <div class="full-attn-math-wrap">
+        <div id="full-attn-katex"></div>
+      </div>
+
+      <div class="canvas-stage full-attn-stage" id="full-attn-canvas-stage" title="Click to replay">
+        <canvas id="full-attn-canvas"></canvas>
+        <canvas id="full-attn-webgl-canvas"></canvas>
+      </div>
+
+      <div class="stage-caption" id="full-attn-caption">vectors &middot; 2 &middot; dim 2</div>
     </div>
   </div>
 
@@ -2881,7 +3067,7 @@
       }
 
       (function initDotCanvasAnimation() {
-        const POWERS = [4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384];
+        const POWERS = [4, 8, 16, 32, 64, 128, 256];
         let currentPowerIdx = 0;
         let N = POWERS[currentPowerIdx];
 
@@ -3338,7 +3524,7 @@
       })();
 
       (function initSoftmaxCanvasAnimation() {
-        const POWERS = [4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384];
+        const POWERS = [4, 8, 16, 32, 64, 128, 256];
         let currentPowerIdx = 0;
         let N = POWERS[currentPowerIdx];
 
@@ -3896,11 +4082,12 @@
       })();
 
       (function initAttnCanvasAnimation() {
-        const POWERS = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024];
+        const LEN_POWERS = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024];
+        const DIM_POWERS = [1, 2, 4, 8, 16, 32, 64, 128, 256];
         let currentLenIdx = 1;
         let currentDimIdx = 1;
-        let T = POWERS[currentLenIdx];
-        let d = POWERS[currentDimIdx];
+        let T = LEN_POWERS[currentLenIdx];
+        let d = DIM_POWERS[currentDimIdx];
 
         const lenSlider = document.getElementById('attn-len-slider');
         const lenSliderLabel = document.getElementById('attn-len-slider-label');
@@ -4259,9 +4446,9 @@
         resize();
 
         function updateLen(idx) {
-          currentLenIdx = Math.max(0, Math.min(POWERS.length - 1, idx));
+          currentLenIdx = Math.max(0, Math.min(LEN_POWERS.length - 1, idx));
           lenSlider.value = currentLenIdx;
-          T = POWERS[currentLenIdx];
+          T = LEN_POWERS[currentLenIdx];
           lenSliderLabel.textContent = T.toLocaleString();
           headerDim.innerHTML = "Queries &middot; Keys";
           refresh_attn_data();
@@ -4275,9 +4462,9 @@
         }
 
         function updateDim(idx) {
-          currentDimIdx = Math.max(0, Math.min(POWERS.length - 1, idx));
+          currentDimIdx = Math.max(0, Math.min(DIM_POWERS.length - 1, idx));
           dimSlider.value = currentDimIdx;
-          d = POWERS[currentDimIdx];
+          d = DIM_POWERS[currentDimIdx];
           dimSliderLabel.textContent = d.toLocaleString();
           headerDim.innerHTML = "Queries &middot; Keys";
           refresh_attn_data();
@@ -5152,7 +5339,7 @@
               caption.innerHTML = '<span class="caption-op mul">Dot Product</span>: <span class="caption-op add">&sum; sum</span> &rarr; similarity scores';
             }
 
-            const labelY = geom.matTop - 14 * s;
+            const labelY = geom.matTop - 30 * s;
             const labelFade = Math.min(1, (ms - 3600) / 300);
             drawLabel("dot product", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, labelFade);
 
@@ -5288,7 +5475,7 @@
           if (ms >= 5600 && ms < 7600) {
             caption.innerHTML = '<span class="caption-op add">Dot Product</span>: <span class="caption-op add">+ sum</span> &rarr; similarity scores';
 
-            const labelY = geom.matTop - 14 * s;
+            const labelY = geom.matTop - 30 * s;
             drawLabel("dot product", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
 
             const p = (ms - 5600) / 2000;
@@ -5342,7 +5529,7 @@
           if (ms >= 7600 && ms < 9000) {
             caption.innerHTML = '<span class="caption-op exp">Softmax</span> (step 1): <span class="caption-op exp">exp</span> elementwise on each row';
 
-            const labelY = geom.matTop - 14 * s;
+            const labelY = geom.matTop - 30 * s;
             drawLabel("softmax", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
 
             const p = (ms - 7600) / 1400;
@@ -5362,7 +5549,7 @@
           if (ms >= 9000 && ms < 10600) {
             caption.innerHTML = '<span class="caption-op exp">Softmax</span> (step 2): <span class="caption-op add">+ sum</span> each row &rarr; denominators';
 
-            const labelY = geom.matTop - 14 * s;
+            const labelY = geom.matTop - 30 * s;
             drawLabel("softmax", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
 
             const p = (ms - 9000) / 1600;
@@ -5417,7 +5604,7 @@
           if (ms >= 10600 && ms < 12200) {
             caption.innerHTML = '<span class="caption-op exp">Softmax</span> (step 3): <span class="caption-op div">&divide; divide</span> each row by its sum';
 
-            const labelY = geom.matTop - 14 * s;
+            const labelY = geom.matTop - 30 * s;
             drawLabel("softmax", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
 
             const p = (ms - 10600) / 1600;
@@ -5465,7 +5652,7 @@
             caption.style.opacity = '1';
 
             const labelFade = Math.min(1, (ms - 12200) / 350);
-            const labelY = geom.matTop - 14 * s;
+            const labelY = geom.matTop - 30 * s;
             drawLabel("Attention Matrix", 0, labelY, "#58a6ff", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, labelFade);
 
             let greenAlpha = 1.0;
@@ -5482,13 +5669,15 @@
             const probVals = data ? data.prob : null;
 
             if (greenAlpha > 0) {
+              const numRows = Math.min(T, geom.rowY.length);
+              const numCols = Math.min(T, geom.colX.length);
               ctx.save();
               ctx.translate(centerX, centerY);
               ctx.lineWidth = 1.0;
               ctx.strokeStyle = `rgba(63, 185, 80, ${(0.70 * greenAlpha).toFixed(3)})`;
               const xLineStart = geom.colX[0] - geom.cellW / 2;
-              const xLineEnd = (T <= 4) ? (geom.matR + 12 * s) : (geom.colX[T - 1] + geom.cellW / 2);
-              for (let i = 0; i < T; i++) {
+              const xLineEnd = (T <= 4) ? (geom.matR + 12 * s) : (geom.colX[numCols - 1] + geom.cellW / 2);
+              for (let i = 0; i < numRows; i++) {
                 ctx.beginPath();
                 ctx.moveTo(xLineStart, geom.rowY[i]);
                 ctx.lineTo(xLineEnd, geom.rowY[i]);
@@ -5497,13 +5686,13 @@
               ctx.restore();
 
               if (T <= 4) {
-                for (let i = 0; i < T; i++) {
+                for (let i = 0; i < numRows; i++) {
                   drawLabel("row sum = 1.0", geom.matR + 16 * s, geom.rowY[i], "#3fb950", "left", `400 ${Math.round(9.5 * s)}px ui-monospace`, greenAlpha);
                 }
               } else {
                 drawLabel("row sum = 1.0", geom.matR + 16 * s, geom.rowY[0] - 12 * s, "#3fb950", "left", `400 ${Math.round(9.5 * s)}px ui-monospace`, greenAlpha);
                 if (!isWebGL) {
-                  for (let i = 0; i < T; i++) {
+                  for (let i = 0; i < numRows; i++) {
                     drawCircle(geom.rightSumX, geom.rowY[i], Math.min(geom.cellR * 0.75, 4 * s), '#3fb950', 'rgba(63, 185, 80, 0.3)', null, 0, null, 0.8 * greenAlpha, '#e6edf3');
                   }
                 }
@@ -5522,7 +5711,7 @@
             const fade = Math.max(0, 1 - (ms - 15600) / 1000);
             caption.style.opacity = `${fade}`;
 
-            const labelY = geom.matTop - 14 * s;
+            const labelY = geom.matTop - 30 * s;
             drawLabel("Attention Matrix", 0, labelY, "#58a6ff", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, fade);
 
             const probVals = data ? data.prob : null;
@@ -5549,6 +5738,1941 @@
         canvasStage.addEventListener('click', () => {
           refresh_attn_data();
         });
+      })();
+
+// ==========================================
+      // Full Attention Panel Controller (Attention)
+      // Attention(Q, K, V) = softmax(Q K^T) V
+      // ==========================================
+      (() => {
+        const exists = v => v !== null && v !== undefined;
+        const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+        const lerp = (a, b, t) => a + (b - a) * t;
+        const easeInOut = t => t * t * (3 - 2 * t);
+        const cubicBezier = (p0, p1, p2, p3, t) => {
+          const u = 1 - t;
+          return u * u * u * p0 + 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t * p3;
+        };
+
+        const dimSlider = document.getElementById('full-attn-dim-slider');
+        const dimLabel = document.getElementById('full-attn-dim-slider-label');
+        const lenSlider = document.getElementById('full-attn-len-slider');
+        const lenLabel = document.getElementById('full-attn-len-slider-label');
+        const headerDim = document.getElementById('full-attn-header-dim');
+        const canvasStage = document.getElementById('full-attn-canvas-stage');
+        const canvas = document.getElementById('full-attn-canvas');
+        const webglCanvas = document.getElementById('full-attn-webgl-canvas');
+        const caption = document.getElementById('full-attn-caption');
+        const katexEl = document.getElementById('full-attn-katex');
+
+        if (!canvasStage || !canvas || !dimSlider || !lenSlider) return;
+
+        const ctx = canvas.getContext('2d');
+        const dpr = window.devicePixelRatio || 1;
+        const LEN_POWERS = [1, 2, 4, 8, 16, 32, 64, 128, 256];
+        const DIM_POWERS = [1, 2, 4, 8, 16, 32, 64, 128, 256];
+
+        let currentDimIdx = 1;
+        let currentLenIdx = 1;
+        let d = DIM_POWERS[currentDimIdx];
+        let T = LEN_POWERS[currentLenIdx];
+        let width = 0;
+        let height = 0;
+
+        if (window.katex && katexEl) {
+          katex.render(
+            '\\operatorname{Attention}(Q, K, V) = \\htmlId{eq-softmax}{\\operatorname{softmax}}(\\htmlId{eq-qk}{Q K^T}) \\htmlId{eq-val}{V}',
+            katexEl,
+            { displayMode: false, throwOnError: false, trust: true }
+          );
+          ['eq-softmax', 'eq-qk', 'eq-val'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('math-part');
+          });
+        }
+
+        let activeMathHl = null;
+        const MATH_HIGHLIGHTS = {
+          'qk-orange': ['eq-qk', 'math-hl-orange'],
+          'qk-green': ['eq-qk', 'math-hl-green'],
+          'qk': ['eq-qk', 'math-hl-orange'],
+          'softmax-red': ['eq-softmax', 'math-hl-softmax-red'],
+          'softmax-purple': ['eq-softmax', 'math-hl-softmax-purple'],
+          'val-orange': ['eq-val', 'math-hl-orange'],
+          'val-green': ['eq-val', 'math-hl-green'],
+          'val': ['eq-val', 'math-hl-orange']
+        };
+        const HL_CLASSES = ['math-hl-orange', 'math-hl-green', 'math-hl-softmax-red', 'math-hl-softmax-purple', 'math-hl-qk', 'math-hl-val'];
+
+        function updateMathHighlight(part) {
+          if (activeMathHl === part) return;
+          activeMathHl = part;
+          ['eq-softmax', 'eq-qk', 'eq-val'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.remove(...HL_CLASSES);
+          });
+          if (part && MATH_HIGHLIGHTS[part]) {
+            const [id, cls] = MATH_HIGHLIGHTS[part];
+            const el = document.getElementById(id);
+            if (el) {
+              el.classList.add('math-part', cls);
+            }
+          }
+        }
+
+        function syncWebglDisplay() {
+          if (!webglCanvas) return;
+          const isThree = (T >= 64 && threeFullAttn !== null);
+          webglCanvas.style.display = isThree ? 'block' : 'none';
+          if (isThree && width && height && threeFullAttn) {
+            threeFullAttn.resize(width, height);
+          }
+        }
+
+        function updateDim(idx) {
+          currentDimIdx = clamp(idx, 0, DIM_POWERS.length - 1);
+          d = DIM_POWERS[currentDimIdx];
+          dimSlider.value = currentDimIdx;
+          dimLabel.textContent = d.toLocaleString();
+          updateHeader();
+          refresh_full_attn_data();
+          syncWebglDisplay();
+        }
+
+        function updateLen(idx) {
+          currentLenIdx = clamp(idx, 0, LEN_POWERS.length - 1);
+          T = LEN_POWERS[currentLenIdx];
+          lenSlider.value = currentLenIdx;
+          lenLabel.textContent = T.toLocaleString();
+          updateHeader();
+          refresh_full_attn_data();
+          syncWebglDisplay();
+        }
+
+        function updateHeader() {
+          if (headerDim) {
+            headerDim.innerHTML = `Q, K, V &middot; ${T.toLocaleString()} vec &middot; dim ${d.toLocaleString()}`;
+          }
+        }
+
+        dimSlider.addEventListener('input', e => updateDim(parseInt(e.target.value, 10)));
+        lenSlider.addEventListener('input', e => updateLen(parseInt(e.target.value, 10)));
+
+        function createThreeFullAttnRenderer(canvasEl) {
+          if (!window.THREE || !canvasEl) return null;
+
+          const renderer = new THREE.WebGLRenderer({
+            canvas: canvasEl,
+            alpha: true,
+            antialias: true,
+            powerPreference: 'high-performance'
+          });
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+          const scene = new THREE.Scene();
+          const camera = new THREE.OrthographicCamera(-1, 1, -1, 1, 0.1, 1000);
+          camera.position.z = 10;
+
+          const MAX_INSTANCES = 16384 + 128 * 4;
+          const baseGeo = new THREE.PlaneGeometry(1, 1);
+          const geo = new THREE.InstancedBufferGeometry();
+          geo.index = baseGeo.index;
+          geo.attributes.position = baseGeo.attributes.position;
+          geo.attributes.uv = baseGeo.attributes.uv;
+
+          const posArray = new Float32Array(MAX_INSTANCES * 3);
+          const colorArray = new Float32Array(MAX_INSTANCES * 3);
+          const sizeArray = new Float32Array(MAX_INSTANCES);
+          const alphaArray = new Float32Array(MAX_INSTANCES);
+
+          const posAttr = new THREE.InstancedBufferAttribute(posArray, 3);
+          const colorAttr = new THREE.InstancedBufferAttribute(colorArray, 3);
+          const sizeAttr = new THREE.InstancedBufferAttribute(sizeArray, 1);
+          const alphaAttr = new THREE.InstancedBufferAttribute(alphaArray, 1);
+
+          posAttr.setUsage(THREE.DynamicDrawUsage);
+          colorAttr.setUsage(THREE.DynamicDrawUsage);
+          sizeAttr.setUsage(THREE.DynamicDrawUsage);
+          alphaAttr.setUsage(THREE.DynamicDrawUsage);
+
+          geo.setAttribute('a_instancePos', posAttr);
+          geo.setAttribute('a_color', colorAttr);
+          geo.setAttribute('a_size', sizeAttr);
+          geo.setAttribute('a_alpha', alphaAttr);
+
+          const mat = new THREE.ShaderMaterial({
+            vertexShader: `
+              attribute vec3 a_instancePos;
+              attribute vec3 a_color;
+              attribute float a_size;
+              attribute float a_alpha;
+              varying vec3 v_color;
+              varying float v_alpha;
+              varying vec2 v_uv;
+
+              void main() {
+                v_color = a_color;
+                v_alpha = a_alpha;
+                v_uv = uv;
+                vec3 transformed = position * a_size + a_instancePos;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(transformed, 1.0);
+              }
+            `,
+            fragmentShader: `
+              varying vec3 v_color;
+              varying float v_alpha;
+              varying vec2 v_uv;
+
+              void main() {
+                vec2 p = v_uv - vec2(0.5);
+                float dist = length(p);
+                if (dist > 0.5) discard;
+                float edge = smoothstep(0.5, 0.40, dist);
+                float core = smoothstep(0.38, 0.0, dist) * 0.45;
+                vec3 col = v_color + vec3(core);
+                gl_FragColor = vec4(col, v_alpha * edge);
+              }
+            `,
+            side: THREE.DoubleSide,
+            transparent: true,
+            depthWrite: false,
+            depthTest: false,
+            blending: THREE.NormalBlending
+          });
+
+          const mesh = new THREE.Mesh(geo, mat);
+          mesh.frustumCulled = false;
+          scene.add(mesh);
+
+          function resize(w, h) {
+            renderer.setSize(w, h, false);
+            camera.left = -w / 2;
+            camera.right = w / 2;
+            camera.top = -h / 2;
+            camera.bottom = h / 2;
+            camera.updateProjectionMatrix();
+          }
+
+          function renderFrame(T_val, d_val, ms, geom, w, h, s) {
+            camera.position.set(0, -10 * s, 10);
+            camera.lookAt(0, -10 * s, 0);
+            camera.updateMatrixWorld();
+
+            const T_vis = Math.min(T_val, 128);
+            geo.instanceCount = 4 * T_vis + T_vis * T_vis;
+
+            const stepX = geom.matW / T_vis;
+            const dotR = Math.max(1.1, stepX * 0.36);
+
+            let qX = 0, qAlpha = 1.0;
+            let kAlpha = 1.0;
+            let vY = geom.topValY, vAlpha = 1.0;
+            let outX = geom.rightOutX, outAlpha = 0.0;
+            let outR = 0.47, outG = 0.75, outB = 1.0;
+            let matR = 0, matG = 0, matB = 0, matAlpha = 0, matScale = 1.0;
+
+            if (ms < 1200) {
+              qX = 0; kAlpha = 0; vAlpha = 0;
+            } else if (ms < 2800) {
+              const ease = easeInOut((ms - 1200) / 1600);
+              qX = lerp(0, geom.leftQueryX, ease);
+              kAlpha = ease; vAlpha = ease;
+            } else if (ms < 3600) {
+              qX = geom.leftQueryX; vY = geom.topValY;
+            } else if (ms < 5600) {
+              const p = (ms - 3600) / 2000;
+              qX = geom.leftQueryX;
+              const qkAlpha = Math.max(0, 1.0 - p / 0.45);
+              qAlpha = qkAlpha; kAlpha = qkAlpha;
+              const pVal = clamp((p - 0.15) / 0.50, 0, 1);
+              vY = lerp(geom.topValY, geom.valParkedY, easeInOut(pVal));
+              if (p >= 0.65) {
+                matR = 0.94; matG = 0.53; matB = 0.24; matAlpha = 0.85; matScale = 1.15;
+              }
+            } else if (ms < 7600) {
+              qAlpha = 0; kAlpha = 0; vY = geom.valParkedY;
+              matR = 0.25; matG = 0.73; matB = 0.31; matAlpha = 0.90;
+            } else if (ms < 9000) {
+              qAlpha = 0; kAlpha = 0; vY = geom.valParkedY;
+              matR = 0.97; matG = 0.32; matB = 0.29; matAlpha = 0.90;
+            } else if (ms < 10600) {
+              qAlpha = 0; kAlpha = 0; vY = geom.valParkedY;
+              matR = 0.97; matG = 0.32; matB = 0.29; matAlpha = 0.80;
+            } else if (ms < 12200) {
+              qAlpha = 0; kAlpha = 0; vY = geom.valParkedY;
+              matR = 0.64; matG = 0.44; matB = 0.97; matAlpha = 0.90;
+            } else if (ms < 14000) {
+              qAlpha = 0; kAlpha = 0; vY = geom.valParkedY;
+              matR = 0.35; matG = 0.65; matB = 1.0; matAlpha = 0.90;
+            } else if (ms < 17200) {
+              qAlpha = 0; kAlpha = 0;
+              const p = (ms - 14000) / 3200;
+              if (p < 0.45) {
+                const ease = easeInOut(p / 0.45);
+                vY = lerp(geom.valParkedY, geom.matCenterY, ease);
+                matR = 0.64; matG = 0.44; matB = 0.97; matAlpha = 0.85;
+              } else if (p < 0.70) {
+                vAlpha = 0;
+                matR = 0.94; matG = 0.53; matB = 0.24; matAlpha = 1.0; matScale = 1.25;
+              } else {
+                vAlpha = 0;
+                matR = 0.47; matG = 0.75; matB = 1.0; matAlpha = 0.85;
+              }
+            } else if (ms < 20200) {
+              qAlpha = 0; kAlpha = 0; vAlpha = 0;
+              const p = (ms - 17200) / 3000;
+              if (p < 0.70) {
+                matR = 0.47; matG = 0.75; matB = 1.0;
+                matAlpha = Math.max(0, 1 - p / 0.70);
+              } else {
+                matAlpha = 0;
+                outAlpha = 1.0;
+                if (p < 0.88) {
+                  outR = 0.25; outG = 0.73; outB = 0.31;
+                }
+              }
+            } else {
+              qAlpha = 0; kAlpha = 0; vAlpha = 0; matAlpha = 0;
+              outAlpha = 1.0;
+              const p = (ms - 20200) / 4800;
+              outX = lerp(geom.rightOutX, 0, easeInOut(p));
+            }
+
+            const isDepthMode = (d_val >= 8) || (T_val >= 4 && d_val >= 2);
+            if (isDepthMode) {
+              qAlpha = 0;
+              kAlpha = 0;
+              vAlpha = 0;
+              outAlpha = 0;
+            }
+
+            for (let i = 0; i < T_vis; i++) {
+              posArray[i * 3] = qX;
+              posArray[i * 3 + 1] = geom.rowY[i];
+              posArray[i * 3 + 2] = 0;
+              colorArray[i * 3] = 0.35;
+              colorArray[i * 3 + 1] = 0.65;
+              colorArray[i * 3 + 2] = 1.0;
+              sizeArray[i] = dotR * 2.1;
+              alphaArray[i] = qAlpha;
+            }
+
+            for (let j = 0; j < T_vis; j++) {
+              const idx = T_vis + j;
+              let kCurX = geom.colX[j], kCurY = geom.topKeyY;
+              if (ms < 1200) {
+                kCurX = 0; kCurY = geom.rowY[j];
+              } else if (ms < 2800) {
+                const ease = easeInOut((ms - 1200) / 1600);
+                kCurX = lerp(0, geom.colX[j], ease);
+                kCurY = lerp(geom.rowY[j], geom.topKeyY, ease);
+              }
+              posArray[idx * 3] = kCurX;
+              posArray[idx * 3 + 1] = kCurY;
+              posArray[idx * 3 + 2] = 0;
+              colorArray[idx * 3] = 0.35;
+              colorArray[idx * 3 + 1] = 0.65;
+              colorArray[idx * 3 + 2] = 1.0;
+              sizeArray[idx] = dotR * 2.1;
+              alphaArray[idx] = kAlpha;
+            }
+
+            for (let j = 0; j < T_vis; j++) {
+              const idx = 2 * T_vis + j;
+              let vCurX = geom.colX[j], vCurY = vY;
+              if (ms < 1200) {
+                vCurX = 0; vCurY = geom.rowY[j];
+              } else if (ms < 2800) {
+                const ease = easeInOut((ms - 1200) / 1600);
+                vCurX = lerp(0, geom.colX[j], ease);
+                vCurY = lerp(geom.rowY[j], geom.topValY, ease);
+              }
+              posArray[idx * 3] = vCurX;
+              posArray[idx * 3 + 1] = vCurY;
+              posArray[idx * 3 + 2] = 0;
+              colorArray[idx * 3] = 0.35;
+              colorArray[idx * 3 + 1] = 0.65;
+              colorArray[idx * 3 + 2] = 1.0;
+              sizeArray[idx] = dotR * 2.1;
+              alphaArray[idx] = vAlpha;
+            }
+
+            for (let i = 0; i < T_vis; i++) {
+              const idx = 3 * T_vis + i;
+              posArray[idx * 3] = outX;
+              posArray[idx * 3 + 1] = geom.rowY[i];
+              posArray[idx * 3 + 2] = 0;
+              colorArray[idx * 3] = outR;
+              colorArray[idx * 3 + 1] = outG;
+              colorArray[idx * 3 + 2] = outB;
+              sizeArray[idx] = dotR * 2.4;
+              alphaArray[idx] = outAlpha;
+            }
+
+            const baseOffset = 4 * T_vis;
+            for (let i = 0; i < T_vis; i++) {
+              const cy = geom.rowY[i];
+              for (let j = 0; j < T_vis; j++) {
+                const mIdx = baseOffset + i * T_vis + j;
+                posArray[mIdx * 3] = geom.colX[j];
+                posArray[mIdx * 3 + 1] = cy;
+                posArray[mIdx * 3 + 2] = 0;
+                colorArray[mIdx * 3] = matR;
+                colorArray[mIdx * 3 + 1] = matG;
+                colorArray[mIdx * 3 + 2] = matB;
+                sizeArray[mIdx] = dotR * 2.0 * matScale;
+                alphaArray[mIdx] = matAlpha;
+              }
+            }
+
+            posAttr.needsUpdate = true;
+            colorAttr.needsUpdate = true;
+            sizeAttr.needsUpdate = true;
+            alphaAttr.needsUpdate = true;
+
+            renderer.render(scene, camera);
+          }
+
+          return { resize, renderFrame };
+        }
+
+        let threeFullAttn = null;
+        try {
+          threeFullAttn = createThreeFullAttnRenderer(webglCanvas);
+        } catch (e) {
+          console.warn("Three.js Full Attention WebGL init failed:", e);
+        }
+
+        function resize() {
+          const rect = canvasStage.getBoundingClientRect();
+          width = rect.width;
+          height = rect.height;
+          canvas.width = width * dpr;
+          canvas.height = height * dpr;
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          syncWebglDisplay();
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        function formatVal(v, maxDec = 1) {
+          if (typeof v !== 'number') return String(v);
+          if (Math.abs(v - Math.round(v)) < 1e-4) return String(Math.round(v));
+          return v.toFixed(maxDec);
+        }
+
+        function generate_random_full_attn_data(T_len, d_dim) {
+          const T_eff = Math.min(T_len, 32);
+          const d_eff = Math.min(d_dim, 64);
+          const q = [], k = [], v = [];
+          const qNums = [], kNums = [], vNums = [];
+          const mul = [], sim = [], exp = [], sum = [], prob = [], probNums = [];
+          const broadcast = [], broadcastNums = [], out = [], outNums = [];
+
+          for (let i = 0; i < T_eff; i++) {
+            const rowStr = [], rowNum = [];
+            for (let m = 0; m < d_eff; m++) {
+              const val = Math.random() * 2 - 1;
+              rowStr.push(formatVal(val, 1));
+              rowNum.push(val);
+            }
+            q.push(rowStr);
+            qNums.push(rowNum);
+          }
+
+          for (let j = 0; j < T_eff; j++) {
+            const rowStrK = [], rowNumK = [];
+            const rowStrV = [], rowNumV = [];
+            for (let m = 0; m < d_eff; m++) {
+              const valK = Math.random() * 2 - 1;
+              const valV = Math.random() * 2 - 1;
+              rowStrK.push(formatVal(valK, 1));
+              rowNumK.push(valK);
+              rowStrV.push(formatVal(valV, 1));
+              rowNumV.push(valV);
+            }
+            k.push(rowStrK);
+            kNums.push(rowNumK);
+            v.push(rowStrV);
+            vNums.push(rowNumV);
+          }
+
+          for (let i = 0; i < T_eff; i++) {
+            const mulRow = [], simRow = [], expRow = [];
+            let rowSum = 0;
+            for (let j = 0; j < T_eff; j++) {
+              const pairMul = [];
+              let rawDot = 0;
+              for (let m = 0; m < d_eff; m++) {
+                const p = qNums[i][m] * kNums[j][m];
+                pairMul.push(formatVal(p, 1));
+                rawDot += p;
+              }
+              mulRow.push(pairMul);
+              simRow.push(formatVal(rawDot, 1));
+              const ev = Math.exp(clamp(rawDot, -4, 4));
+              expRow.push(ev.toFixed(1));
+              rowSum += ev;
+            }
+            mul.push(mulRow);
+            sim.push(simRow);
+            exp.push(expRow);
+            sum.push(formatVal(rowSum, 1));
+
+            const probRowStr = [], probRowNums = [];
+            for (let j = 0; j < T_eff; j++) {
+              const p = Math.exp(clamp(parseFloat(simRow[j]), -4, 4)) / rowSum;
+              probRowNums.push(p);
+              probRowStr.push(p.toFixed(2));
+            }
+            prob.push(probRowStr);
+            probNums.push(probRowNums);
+          }
+
+          for (let i = 0; i < T_eff; i++) {
+            const bRow = [], bNumRow = [];
+            const oNumRow = new Array(d_eff).fill(0);
+            for (let j = 0; j < T_eff; j++) {
+              const a_ij = probNums[i][j];
+              const cellVecStr = [], cellVecNum = [];
+              for (let m = 0; m < d_eff; m++) {
+                const prod = a_ij * vNums[j][m];
+                cellVecNum.push(prod);
+                cellVecStr.push(formatVal(prod, 1));
+                oNumRow[m] += prod;
+              }
+              bRow.push(cellVecStr);
+              bNumRow.push(cellVecNum);
+            }
+            broadcast.push(bRow);
+            broadcastNums.push(bNumRow);
+            outNums.push(oNumRow);
+            out.push(oNumRow.map(n => formatVal(n, 1)));
+          }
+
+          return { q, k, v, mul, sim, exp, sum, prob, probNums, broadcast, broadcastNums, out, outNums };
+        }
+
+        let current_full_attn_data = generate_random_full_attn_data(T, d);
+        let last_full_attn_elapsed = 0;
+
+        function refresh_full_attn_data() {
+          current_full_attn_data = generate_random_full_attn_data(T, d);
+          last_full_attn_elapsed = 0;
+          startTime = performance.now();
+        }
+
+        function subscript(n) {
+          const subs = ["\u2080", "\u2081", "\u2082", "\u2083", "\u2084", "\u2085", "\u2086", "\u2087", "\u2088", "\u2089"];
+          return String(n).split('').map(c => subs[parseInt(c, 10)] || c).join('');
+        }
+
+        function getFullAttentionGeometry(tCount, s, canvasW, canvasH) {
+          const actualCanvasH = canvasH || 540;
+          const centerY_canvas = actualCanvasH / 2 + 10 * s;
+
+          const maxMatW = Math.min(canvasW ? canvasW - 140 * s : 250 * s, 250 * s);
+          const maxMatH = Math.min(actualCanvasH ? actualCanvasH - 220 * s : 200 * s, 200 * s);
+          const maxMat = Math.min(maxMatW, maxMatH);
+          const T_calc = Math.min(tCount, 128);
+
+          let matW, matH, cellR;
+          if (tCount === 1) {
+            matW = 54 * s; matH = 54 * s; cellR = 17 * s;
+          } else if (tCount === 2) {
+            matW = 92 * s; matH = 76 * s; cellR = 13.5 * s;
+          } else if (tCount === 4) {
+            matW = 132 * s; matH = 112 * s; cellR = 9.0 * s;
+          } else if (tCount === 8) {
+            matW = Math.min(maxMat, 160 * s); matH = matW;
+            cellR = (matW / 8) * 0.38;
+          } else if (tCount === 16) {
+            matW = Math.min(maxMat, 184 * s); matH = matW;
+            cellR = Math.max(3.8 * s, (matW / 16) * 0.40);
+          } else {
+            matW = Math.min(maxMat, 200 * s); matH = matW;
+            cellR = Math.max(0.7, (matW / T_calc) * 0.34);
+          }
+
+          const stepX = matW / T_calc;
+          const stepY = matH / T_calc;
+
+          const isDepthMode = (d >= 8) || (tCount >= 4 && d >= 2);
+          const depthLen = d >= 256 ? clamp(matW * 0.42, 38 * s, 68 * s)
+            : (d >= 64 ? clamp(matW * 0.34, 28 * s, 54 * s)
+            : (d >= 16 ? clamp(matW * 0.30, 22 * s, 44 * s)
+            : clamp(matW * 0.26, 16 * s, 36 * s)));
+
+          const maxKeyCircleR = stepX ? (stepX * 0.44) : (13 * s);
+          const vecLenVert = d <= 1 ? 26 * s : (d <= 2 ? 50 * s : (d <= 4 ? 74 * s : (d <= 8 ? 80 * s : 88 * s)));
+
+          let colBracketH;
+          if (isDepthMode) {
+            colBracketH = Math.abs(-0.57) * depthLen + 10 * s;
+          } else if (d === 1) {
+            colBracketH = 2 * Math.min(13 * s, maxKeyCircleR) + 10 * s;
+          } else {
+            const spacing = vecLenVert / d;
+            const targetR = d <= 2 ? 12 * s : (d <= 4 ? 9.5 * s : 5.0 * s);
+            const r = Math.max(1.5, Math.min(Math.min(targetR, maxKeyCircleR), (spacing * 0.84) / 2));
+            colBracketH = vecLenVert + 2 * r + 10 * s;
+          }
+
+          const vLabelH = (tCount <= 4 && !isDepthMode ? 22 * s : 14 * s);
+          const kLabelH = (tCount <= 4 && !isDepthMode ? 22 * s : 14 * s);
+          const gapValKey = (tCount <= 2 ? 22 * s : 18 * s);
+          const gapKeyMat = (tCount <= 2 ? 20 * s : 16 * s);
+          const loopbackArea = 40 * s;
+
+          const stackH = vLabelH + colBracketH + gapValKey + kLabelH + colBracketH + gapKeyMat + matH;
+          const freeH = actualCanvasH - stackH - loopbackArea;
+          const topMargin = clamp(freeH * 0.45, 22 * s, 48 * s);
+
+          const Y_val_top = topMargin;
+          const Y_val_center = Y_val_top + vLabelH + colBracketH / 2;
+          const Y_val_bot = Y_val_center + colBracketH / 2;
+
+          const Y_key_top = Y_val_bot + gapValKey;
+          const Y_key_center = Y_key_top + kLabelH + colBracketH / 2;
+          const Y_key_bot = Y_key_center + colBracketH / 2;
+
+          const Y_mat_top = Y_key_bot + gapKeyMat;
+          const Y_mat_center = Y_mat_top + matH / 2;
+          const Y_mat_bot = Y_mat_top + matH;
+
+          const colX = [];
+          const rowY = [];
+          for (let j = 0; j < T_calc; j++) colX.push(-matW / 2 + (j + 0.5) * stepX);
+          for (let i = 0; i < T_calc; i++) rowY.push(Y_mat_top + (i + 0.5) * stepY - centerY_canvas);
+
+          const matL = -matW / 2 - (tCount <= 4 ? 14 * s : 9 * s);
+          const matR = matW / 2 + (tCount <= 4 ? 14 * s : 9 * s);
+          const matHBrack = matH + (tCount <= 4 ? 16 * s : 10 * s);
+
+          const estQueryW = (isDepthMode ? Math.abs(-0.82) * depthLen + 10 * s : colBracketH) + 8 * s;
+          const topKeyY = Y_key_center - centerY_canvas;
+          const topValY = Y_val_center - centerY_canvas;
+          const matCenterY = Y_mat_center - centerY_canvas;
+
+          // Stop short of the Attention Matrix label so values never collides with it
+          const stopShort = (tCount <= 2 ? 26 * s : 20 * s);
+          const valParkedY = topKeyY - stopShort;
+
+          const leftQueryX = matL - estQueryW / 2 - (tCount <= 2 ? 22 * s : 18 * s);
+          const rightSumX = matR + (tCount <= 2 ? 46 * s : (tCount <= 4 ? 40 * s : 32 * s));
+          const rightOutX = matR + estQueryW / 2 + (tCount <= 2 ? 28 * s : 22 * s);
+
+          return { matW, matH, matL, matR, matTop: Y_mat_top - centerY_canvas, matBot: Y_mat_bot - centerY_canvas, matHBrack, matCenterY, colX, rowY, cellW: stepX * (tCount <= 4 ? 0.92 : 0.96), cellH: stepY * (tCount <= 4 ? 0.88 : 0.96), cellR, stepX, stepY, T_calc, leftQueryX, topKeyY, topValY, valParkedY, rightSumX, rightOutX };
+        }
+
+        function getVectorLayout(count, isVertical, length, s = 1, maxCircleR = 999) {
+          const points = [];
+          if (count === 1) {
+            const r = Math.min(13.0 * s, maxCircleR);
+            return { points: [{ x: 0, y: 0, r }], r, length: 2 * r, extentW: 2 * r, extentH: 2 * r };
+          }
+          if (count <= 8) {
+            const spacing = length / count;
+            const targetR = count <= 2 ? 12.0 * s : (count <= 4 ? 10.0 * s : 5.5 * s);
+            const r = Math.max(1.5, Math.min(Math.min(targetR, maxCircleR), (spacing * 0.84) / 2));
+            const start = -length / 2 + spacing / 2;
+            for (let i = 0; i < count; i++) {
+              const offset = start + i * spacing;
+              points.push({ x: isVertical ? 0 : offset, y: isVertical ? offset : 0, r });
+            }
+            return { points, r, length, extentW: isVertical ? 2 * r : length + 2 * r, extentH: isVertical ? length + 2 * r : 2 * r };
+          }
+          const maxPts = Math.min(count, 48);
+          const spacing = length / maxPts;
+          const r = Math.max(0.6, Math.min(Math.min(1.8, maxCircleR), (spacing * 0.8) / 2));
+          const start = -length / 2 + spacing / 2;
+          for (let i = 0; i < count; i++) {
+            const idx = i % 48;
+            const lane = Math.floor(i / 48);
+            const offset = start + idx * spacing;
+            const laneOffset = (lane - (Math.ceil(count / 48) - 1) / 2) * (r * 2.4);
+            points.push({ x: isVertical ? laneOffset : offset, y: isVertical ? offset : laneOffset, r });
+          }
+          return { points, r, length, extentW: isVertical ? 20 * s : length + 2 * r, extentH: isVertical ? length + 2 * r : 20 * s };
+        }
+
+        const TOTAL_DURATION = 25000;
+        let startTime = performance.now();
+
+        function render(ms) {
+          ctx.clearRect(0, 0, width, height);
+          const s = clamp((width - 24) / 460, 0.70, 1.0);
+          const centerX = width / 2;
+          const centerY = height / 2 + 10 * s;
+
+          const geom = getFullAttentionGeometry(T, s, width, height);
+          const data = current_full_attn_data;
+          const isWebGL = (T >= 64 && threeFullAttn !== null);
+          const showNumbers = !isWebGL && (T <= 8 && d <= 8);
+          const isDepthMode = (d >= 8) || (T >= 4 && d >= 2);
+          const depthLen = d >= 256 ? clamp(geom.matW * 0.44, 40 * s, 72 * s)
+            : (d >= 64 ? clamp(geom.matW * 0.36, 30 * s, 58 * s)
+            : (d >= 16 ? clamp(geom.matW * 0.32, 22 * s, 48 * s)
+            : clamp(geom.matW * 0.28, 16 * s, 40 * s)));
+
+          const maxQueryCircleR = geom.stepY ? (geom.stepY * 0.44) : (13 * s);
+          const maxKeyCircleR = geom.stepX ? (geom.stepX * 0.44) : (13 * s);
+          const vecLenHoriz = d <= 1 ? 26 * s : (d <= 2 ? 50 * s : (d <= 4 ? 78 * s : (d <= 8 ? 86 * s : 96 * s)));
+          const vecLenVert = vecLenHoriz;
+          const layoutHoriz = getVectorLayout(d, false, vecLenHoriz, s, maxQueryCircleR);
+          const layoutVert = getVectorLayout(d, true, vecLenVert, s, maxKeyCircleR);
+          const cellVecLen = Math.min(vecLenHoriz * 0.65, (geom.stepX ? geom.stepX * 0.72 : 36 * s));
+          const cellLayout = getVectorLayout(d, false, cellVecLen, s, geom.cellR * 0.68);
+
+          const colBracketH = (isDepthMode ? (Math.abs(-0.57) * depthLen + 10 * s) : layoutVert.extentH) + 10 * s;
+          const colBracketW = (isDepthMode ? (Math.abs(-0.82) * depthLen + 10 * s) : layoutVert.extentW) + 8 * s;
+          const rowBracketH = (isDepthMode ? (Math.abs(-0.57) * depthLen + 10 * s) : layoutHoriz.extentH) + 8 * s;
+          const rowBracketW = (isDepthMode ? (Math.abs(-0.82) * depthLen + 10 * s) : layoutHoriz.extentW) + 10 * s;
+
+          function drawBracket(x, y, h, isLeft, alpha = 1, color = "#484f58", wing = 5) {
+            if (alpha <= 0) return;
+            ctx.save();
+            ctx.translate(centerX + x, centerY + y);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.0;
+            ctx.globalAlpha = alpha;
+            ctx.beginPath();
+            if (isLeft) { ctx.moveTo(wing, -h / 2); ctx.lineTo(0, -h / 2); ctx.lineTo(0, h / 2); ctx.lineTo(wing, h / 2); }
+            else { ctx.moveTo(-wing, -h / 2); ctx.lineTo(0, -h / 2); ctx.lineTo(0, h / 2); ctx.lineTo(-wing, h / 2); }
+            ctx.stroke();
+            ctx.restore();
+          }
+
+          function drawBrackets(x, y, w, h, alpha = 1, color = "#484f58", wing = 5) {
+            drawBracket(x - w / 2 - 4 * s, y, h, true, alpha, color, wing);
+            drawBracket(x + w / 2 + 4 * s, y, h, false, alpha, color, wing);
+          }
+
+          function drawCircle(x, y, r, stroke, fill, text = null, glow = 0, glowColor = null, alpha = 1, textColor = "#e6edf3", category = 'default') {
+            if (alpha <= 0) return;
+            ctx.save();
+            ctx.translate(centerX + x, centerY + y);
+            ctx.globalAlpha = alpha;
+
+            let finalFill = fill;
+            let finalStroke = stroke;
+            let finalTextColor = textColor;
+
+            if (exists(text)) {
+              const magInfo = createMagnitudeGradient(ctx, 0, 0, r, text, stroke, alpha, category);
+              finalFill = magInfo.grad;
+              finalStroke = magInfo.strokeColor;
+              finalTextColor = magInfo.textColor;
+              if (magInfo.glowBlur > 0 && r >= 3.0) {
+                ctx.shadowBlur = magInfo.glowBlur;
+                ctx.shadowColor = magInfo.glowColor || finalStroke;
+              }
+            }
+
+            ctx.beginPath();
+            ctx.arc(0, 0, Math.max(0.5, r), 0, Math.PI * 2);
+            ctx.fillStyle = '#0d1117';
+            ctx.fill();
+            if (finalFill) {
+              ctx.fillStyle = finalFill;
+              ctx.fill();
+            }
+            if (finalStroke) {
+              ctx.lineWidth = 0.75;
+              ctx.strokeStyle = finalStroke;
+              ctx.stroke();
+            }
+
+            const isMatrixCell = (category === 'sim' || category === 'exp' || category === 'sum' || category === 'prob' || category === 'binary');
+            const shouldShowNumber = isMatrixCell ? (!isWebGL && T <= 16) : showNumbers;
+            if (shouldShowNumber && exists(text) && r >= 4.5 * s) {
+              ctx.shadowBlur = 0;
+              let strVal = String(text);
+              if (strVal.endsWith('.0')) strVal = strVal.slice(0, -2);
+              if (r < 10 * s && strVal.startsWith('0.')) strVal = strVal.slice(1);
+              else if (r < 10 * s && strVal.startsWith('-0.')) strVal = '-' + strVal.slice(2);
+              const maxChars = Math.max(1, strVal.length);
+              const maxFontByW = (2 * r * 0.54) / (maxChars * 0.58);
+              const maxFontByH = r * 0.72;
+              let fontSize = Math.max(2.8, Math.min(r >= 18 ? 10.0 : 8.0, Math.floor(Math.min(maxFontByW, maxFontByH))));
+              ctx.font = `400 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
+              const measuredW = ctx.measureText(strVal).width;
+              const allowedW = 2 * r * 0.54;
+              if (measuredW > allowedW) {
+                fontSize = Math.max(2.5, Math.floor(fontSize * (allowedW / measuredW)));
+                ctx.font = `400 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
+              }
+              ctx.save();
+              ctx.beginPath();
+              ctx.arc(0, 0, Math.max(0.5, r - 0.5), 0, Math.PI * 2);
+              ctx.clip();
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillStyle = finalTextColor;
+              ctx.fillText(strVal, 0, 0.4);
+              ctx.restore();
+            }
+            ctx.restore();
+          }
+
+          function drawVector(baseX, baseY, layout, stroke, fill, labels = null, glow = 0, glowColor = null, alpha = 1, textColor = "#ffffff", scaleR = 1, category = 'vector') {
+            if (alpha <= 0) return;
+            const r = layout.r * scaleR;
+            for (let i = 0; i < layout.points.length; i++) {
+              const p = layout.points[i];
+              const rawVal = (labels && labels.length) ? labels[i % labels.length] : null;
+              drawCircle(baseX + p.x, baseY + p.y, r, stroke, fill, rawVal, glow, glowColor, alpha, textColor, category);
+            }
+          }
+
+          function drawSlightDepthBar(x0, y0, x1, y1, dLen, alpha = 1, color = '#58a6ff') {
+            if (alpha <= 0.01) return;
+            const unitX = -0.82;
+            const unitY = -0.57;
+            const bx0 = x0 + unitX * dLen;
+            const by0 = y0 + unitY * dLen;
+            const bx1 = x1 + unitX * dLen;
+            const by1 = y1 + unitY * dLen;
+
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.globalAlpha = alpha;
+
+            ctx.fillStyle = color === '#79c0ff' ? 'rgba(121, 192, 255, 0.12)' : 'rgba(88, 166, 255, 0.12)';
+            ctx.beginPath();
+            ctx.moveTo(x0, y0);
+            ctx.lineTo(bx0, by0);
+            ctx.lineTo(bx1, by1);
+            ctx.lineTo(x1, y1);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.strokeStyle = color === '#79c0ff' ? 'rgba(121, 192, 255, 0.40)' : 'rgba(88, 166, 255, 0.40)';
+            ctx.lineWidth = 0.85;
+            ctx.beginPath();
+            ctx.moveTo(bx0, by0);
+            ctx.lineTo(bx1, by1);
+            ctx.moveTo(x0, y0);
+            ctx.lineTo(bx0, by0);
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(bx1, by1);
+            ctx.stroke();
+
+            const ribCount = 6;
+            ctx.strokeStyle = color === '#79c0ff' ? 'rgba(121, 192, 255, 0.25)' : 'rgba(88, 166, 255, 0.25)';
+            ctx.lineWidth = 0.65;
+            for (let r = 1; r < ribCount; r++) {
+              const rf = r / ribCount;
+              const fx = lerp(x0, x1, rf);
+              const fy = lerp(y0, y1, rf);
+              ctx.beginPath();
+              ctx.moveTo(fx, fy);
+              ctx.lineTo(fx + unitX * dLen, fy + unitY * dLen);
+              ctx.stroke();
+
+              ctx.beginPath();
+              ctx.arc(fx + unitX * dLen, fy + unitY * dLen, Math.max(0.6, 1.2 * s), 0, Math.PI * 2);
+              ctx.fillStyle = color;
+              ctx.fill();
+            }
+            ctx.restore();
+          }
+
+          function drawDepthVector(baseX, baseY, numPoints, dLen, stroke, fill, labels = null, alpha = 1, collapse = 0, scaleR = 1, category = 'vector') {
+            if (alpha <= 0) return;
+            const count = clamp(numPoints, 1, 32);
+            const unitX = -0.82;
+            const unitY = -0.57;
+            const curLen = dLen * (1 - clamp(collapse, 0, 1));
+            const rBase = Math.min(geom.cellR * 0.85, Math.max(1.1, (isWebGL ? 1.8 : 4.0) * s)) * scaleR;
+
+            if (curLen > 2 && alpha > 0.08) {
+              ctx.save();
+              ctx.translate(centerX + baseX, centerY + baseY);
+              const rayColor = (category === 'mul')
+                ? `rgba(240, 136, 62, ${(0.42 * alpha * (1 - collapse * 0.8)).toFixed(3)})`
+                : `rgba(88, 166, 255, ${(0.32 * alpha * (1 - collapse * 0.8)).toFixed(3)})`;
+              ctx.strokeStyle = rayColor;
+              ctx.lineWidth = Math.max(0.75, 1.0 * s);
+              ctx.beginPath();
+              ctx.moveTo(0, 0);
+              ctx.lineTo(unitX * curLen, unitY * curLen);
+              ctx.stroke();
+
+              if (!isWebGL && d >= 64 && curLen > 18) {
+                const tickCount = 4;
+                ctx.strokeStyle = (category === 'mul')
+                  ? `rgba(240, 136, 62, ${(0.28 * alpha).toFixed(3)})`
+                  : `rgba(88, 166, 255, ${(0.24 * alpha).toFixed(3)})`;
+                ctx.lineWidth = 0.8;
+                for (let k = 1; k <= tickCount; k++) {
+                  const tf = k / (tickCount + 1);
+                  const tx = unitX * curLen * tf;
+                  const ty = unitY * curLen * tf;
+                  const perpX = -unitY * 3.5 * s;
+                  const perpY = unitX * 3.5 * s;
+                  ctx.beginPath();
+                  ctx.moveTo(tx - perpX, ty - perpY);
+                  ctx.lineTo(tx + perpX, ty + perpY);
+                  ctx.stroke();
+                }
+              }
+              ctx.restore();
+            }
+
+            for (let m = count - 1; m >= 0; m--) {
+              const f = count === 1 ? 0 : (m / (count - 1));
+              const dist = f * curLen;
+              const px = baseX + unitX * dist;
+              const py = baseY + unitY * dist;
+              const r = Math.max(0.6, rBase * (1.0 - (isWebGL ? 0.18 : 0.32) * f));
+              const rawVal = (labels && labels.length) ? labels[m % labels.length] : null;
+              const nodeAlpha = alpha * (1.0 - (isWebGL ? 0.15 : 0.22) * f);
+              drawCircle(px, py, r, stroke, fill, rawVal, 0, null, nodeAlpha, '#e6edf3', category);
+            }
+          }
+
+          function drawLabel(text, x, y, color = "#7d8590", align = "center", font = null, alpha = 1) {
+            if (alpha <= 0) return;
+            ctx.save();
+            ctx.translate(centerX + x, centerY + y);
+            ctx.globalAlpha = alpha;
+            ctx.font = font || `400 ${Math.round(10.5 * s)}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+            ctx.fillStyle = color;
+            ctx.textAlign = align;
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, 0, 0);
+            ctx.restore();
+          }
+
+          function drawGridOutline(alpha) {
+            if (alpha <= 0) return;
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.globalAlpha = alpha;
+            ctx.strokeStyle = "rgba(48, 54, 61, 0.7)";
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 3]);
+            const drawCount = geom.T_calc || T;
+            if (drawCount <= 8) {
+              for (let i = 0; i < drawCount; i++) {
+                for (let j = 0; j < drawCount; j++) {
+                  ctx.strokeRect(geom.colX[j] - geom.cellW / 2, geom.rowY[i] - geom.cellH / 2, geom.cellW, geom.cellH);
+                }
+              }
+            } else if (drawCount <= 16) {
+              const x0 = geom.colX[0] - geom.cellW / 2;
+              const x1 = geom.colX[drawCount - 1] + geom.cellW / 2;
+              const y0 = geom.rowY[0] - geom.cellH / 2;
+              const y1 = geom.rowY[drawCount - 1] + geom.cellH / 2;
+              ctx.beginPath();
+              for (let i = 0; i < drawCount; i++) {
+                ctx.moveTo(x0, geom.rowY[i]);
+                ctx.lineTo(x1, geom.rowY[i]);
+              }
+              for (let j = 0; j < drawCount; j++) {
+                ctx.moveTo(geom.colX[j], y0);
+                ctx.lineTo(geom.colX[j], y1);
+              }
+              ctx.stroke();
+            } else {
+              const x0 = geom.colX[0] - geom.cellW / 2;
+              const x1 = geom.colX[drawCount - 1] + geom.cellW / 2;
+              const y0 = geom.rowY[0] - geom.cellH / 2;
+              const y1 = geom.rowY[drawCount - 1] + geom.cellH / 2;
+              ctx.strokeRect(x0, y0, x1 - x0, y1 - y0);
+              ctx.beginPath();
+              ctx.moveTo((x0 + x1) / 2, y0);
+              ctx.lineTo((x0 + x1) / 2, y1);
+              ctx.moveTo(x0, (y0 + y1) / 2);
+              ctx.lineTo(x1, (y0 + y1) / 2);
+              ctx.stroke();
+            }
+            ctx.setLineDash([]);
+            ctx.restore();
+          }
+
+          function drawMatrix(stroke, fill, cellValues, glow = 0, glowColor = null, alpha = 1, textColor = "#ffffff", rMult = 1, isFinalProb = false, category = 'default') {
+            if (alpha <= 0) return;
+            const bColor = glow > 5 ? glowColor : "#484f58";
+            drawBracket(geom.matL, geom.matCenterY, geom.matHBrack, true, alpha, bColor, 7);
+            drawBracket(geom.matR, geom.matCenterY, geom.matHBrack, false, alpha, bColor, 7);
+
+            if (isWebGL) return;
+
+            const rCircle = geom.cellR * rMult;
+            const cat = isFinalProb ? 'prob' : category;
+            for (let i = 0; i < T; i++) {
+              for (let j = 0; j < T; j++) {
+                const valRow = (cellValues && cellValues.length) ? cellValues[i % cellValues.length] : null;
+                const rawVal = (valRow && valRow.length) ? valRow[j % valRow.length] : null;
+                drawCircle(geom.colX[j], geom.rowY[i], rCircle, stroke, fill, rawVal, glow, glowColor, alpha, textColor, cat);
+              }
+            }
+          }
+
+          function drawValuesAtPosition(yPos, alpha = 1.0, isHorizontal = false, scaleR = 1.0, textColor = "#ffffff") {
+            if (alpha <= 0.01) return;
+            const vHeaderY = yPos - colBracketH / 2 - (T <= 4 ? 22 * s : 16 * s);
+            drawLabel("values", 0, vHeaderY, "#58a6ff", "center", null, alpha);
+
+            const numCols = Math.min(T, geom.colX.length);
+            for (let j = 0; j < numCols; j++) {
+              const vx = geom.colX[j];
+              const vLabels = (data && data.v && data.v[j]) ? data.v[j] : null;
+              if (T <= 4 && !isDepthMode) {
+                drawLabel(`v${subscript(j + 1)}`, vx, yPos - colBracketH / 2 - 10 * s, "#7d8590", "center", null, alpha);
+              }
+              if (isDepthMode) {
+                drawDepthVector(vx + (0.82 * depthLen) / 2, yPos + (0.57 * depthLen) / 2, d, depthLen, '#58a6ff', 'rgba(88, 166, 255, 0.18)', vLabels, alpha, 0, scaleR, 'vector');
+              } else if (!isWebGL) {
+                drawVector(vx, yPos, isHorizontal ? layoutHoriz : layoutVert, '#58a6ff', 'rgba(88, 166, 255, 0.18)', vLabels, 0, null, alpha, textColor, scaleR, 'vector');
+              }
+              if (T <= 2) {
+                drawBrackets(vx, yPos, colBracketW, colBracketH, alpha);
+              }
+            }
+            if (T > 2) {
+              const leftV = geom.colX[0] - colBracketW / 2 - 4 * s;
+              const rightV = geom.colX[numCols - 1] + colBracketW / 2 + 4 * s;
+              drawBracket(leftV, yPos, colBracketH, true, alpha);
+              drawBracket(rightV, yPos, colBracketH, false, alpha);
+            }
+            if (isWebGL && isDepthMode) {
+              drawSlightDepthBar(geom.colX[0], yPos, geom.colX[numCols - 1], yPos, depthLen, alpha);
+            }
+          }
+
+          function drawStaticHeaders(alpha = 0.85) {
+            if (alpha <= 0) return;
+            drawGridOutline(alpha * 0.75);
+
+            const qHeaderY = geom.rowY[0] - rowBracketH / 2 - 14 * s;
+            drawLabel("queries", geom.leftQueryX, qHeaderY, "#58a6ff", "center", null, alpha);
+            if (T <= 2) {
+              for (let i = 0; i < T; i++) {
+                const qy = geom.rowY[i];
+                if (T <= 4) {
+                  drawLabel(`q${subscript(i + 1)}`, geom.leftQueryX - rowBracketW / 2 - 14 * s, qy, "#7d8590", "right", null, alpha);
+                }
+                drawBrackets(geom.leftQueryX, qy, rowBracketW, rowBracketH, alpha);
+                const qLabels = (data && data.q && data.q[i]) ? data.q[i] : null;
+                if (isDepthMode) {
+                  drawDepthVector(geom.leftQueryX + (0.82 * depthLen) / 2, qy + (0.57 * depthLen) / 2, d, depthLen, '#58a6ff', 'rgba(88,166,255,0.15)', qLabels, alpha, 0, 1, 'vector');
+                } else if (!isWebGL) {
+                  drawVector(geom.leftQueryX, qy, layoutHoriz, '#58a6ff', 'rgba(88,166,255,0.15)', qLabels, 0, null, alpha, '#e6edf3', 1, 'vector');
+                }
+              }
+            } else {
+              const numRows = Math.min(T, geom.rowY.length);
+              if (isDepthMode) {
+                for (let i = 0; i < numRows; i++) {
+                  const qy = geom.rowY[i];
+                  const qLabels = (data && data.q && data.q[i]) ? data.q[i] : null;
+                  drawDepthVector(geom.leftQueryX + (0.82 * depthLen) / 2, qy + (0.57 * depthLen) / 2, d, depthLen, '#58a6ff', 'rgba(88,166,255,0.15)', qLabels, alpha, 0, 1, 'vector');
+                }
+              } else if (!isWebGL) {
+                for (let i = 0; i < numRows; i++) {
+                  const qy = geom.rowY[i];
+                  if (T <= 4) drawLabel(`q${subscript(i + 1)}`, geom.leftQueryX - rowBracketW / 2 - 14 * s, qy, "#7d8590", "right", null, alpha);
+                  const qLabels = (data && data.q && data.q[i]) ? data.q[i] : null;
+                  drawVector(geom.leftQueryX, qy, layoutHoriz, '#58a6ff', 'rgba(88,166,255,0.15)', qLabels, 0, null, alpha, '#e6edf3', 1, 'vector');
+                }
+              }
+              const topQ = geom.rowY[0] - rowBracketH / 2;
+              const botQ = geom.rowY[numRows - 1] + rowBracketH / 2;
+              drawBracket(geom.leftQueryX - rowBracketW / 2 - 4 * s, (topQ + botQ) / 2, botQ - topQ, true, alpha);
+              drawBracket(geom.leftQueryX + rowBracketW / 2 + 4 * s, (topQ + botQ) / 2, botQ - topQ, false, alpha);
+            }
+
+            const kHeaderDist = (T <= 4) ? (20 * s) : (14 * s);
+            const kHeaderY = geom.topKeyY - colBracketH / 2 - kHeaderDist;
+            drawLabel("keys", 0, kHeaderY, "#58a6ff", "center", null, alpha);
+            if (T <= 2) {
+              for (let j = 0; j < T; j++) {
+                const kx = geom.colX[j];
+                if (T <= 4) {
+                  drawLabel(`k${subscript(j + 1)}`, kx, geom.topKeyY - colBracketH / 2 - 10 * s, "#7d8590", "center", null, alpha);
+                }
+                drawBrackets(kx, geom.topKeyY, colBracketW, colBracketH, alpha);
+                const kLabels = (data && data.k && data.k[j]) ? data.k[j] : null;
+                if (isDepthMode) {
+                  drawDepthVector(kx + (0.82 * depthLen) / 2, geom.topKeyY + (0.57 * depthLen) / 2, d, depthLen, '#58a6ff', 'rgba(88,166,255,0.15)', kLabels, alpha, 0, 1, 'vector');
+                } else if (!isWebGL) {
+                  drawVector(kx, geom.topKeyY, layoutVert, '#58a6ff', 'rgba(88,166,255,0.15)', kLabels, 0, null, alpha, '#e6edf3', 1, 'vector');
+                }
+              }
+            } else {
+              const numCols = Math.min(T, geom.colX.length);
+              if (isDepthMode) {
+                for (let j = 0; j < numCols; j++) {
+                  const kx = geom.colX[j];
+                  const kLabels = (data && data.k && data.k[j]) ? data.k[j] : null;
+                  drawDepthVector(kx + (0.82 * depthLen) / 2, geom.topKeyY + (0.57 * depthLen) / 2, d, depthLen, '#58a6ff', 'rgba(88,166,255,0.15)', kLabels, alpha, 0, 1, 'vector');
+                }
+              } else if (!isWebGL) {
+                for (let j = 0; j < numCols; j++) {
+                  const kx = geom.colX[j];
+                  if (T <= 4) drawLabel(`k${subscript(j + 1)}`, kx, geom.topKeyY - colBracketH / 2 - 10 * s, "#7d8590", "center", null, alpha);
+                  const kLabels = (data && data.k && data.k[j]) ? data.k[j] : null;
+                  drawVector(kx, geom.topKeyY, layoutVert, '#58a6ff', 'rgba(88,166,255,0.15)', kLabels, 0, null, alpha, '#e6edf3', 1, 'vector');
+                }
+              }
+              const leftK = geom.colX[0] - colBracketW / 2 - 4 * s;
+              const rightK = geom.colX[numCols - 1] + colBracketW / 2 + 4 * s;
+              drawBracket(leftK, geom.topKeyY, colBracketH, true, alpha);
+              drawBracket(rightK, geom.topKeyY, colBracketH, false, alpha);
+            }
+            if (isWebGL && isDepthMode) {
+              const numRows = Math.min(T, geom.rowY.length);
+              const numCols = Math.min(T, geom.colX.length);
+              drawSlightDepthBar(geom.leftQueryX, geom.rowY[0], geom.leftQueryX, geom.rowY[numRows - 1], depthLen, alpha);
+              drawSlightDepthBar(geom.colX[0], geom.topKeyY, geom.colX[numCols - 1], geom.topKeyY, depthLen, alpha);
+            }
+          }
+
+          // ==========================================
+          // PHASE 1: Initial Vectors (0 to 1200ms)
+          // ==========================================
+          if (ms < 1200) {
+            updateMathHighlight(null);
+            caption.style.opacity = '1';
+            caption.innerHTML = `vectors &middot; ${T.toLocaleString()} &middot; dim ${d.toLocaleString()}`;
+
+            const vecHeaderY = geom.rowY[0] - rowBracketH / 2 - 16 * s;
+            drawLabel("vectors", 0, vecHeaderY, "#58a6ff", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`);
+
+            const numRows = Math.min(T, geom.rowY.length);
+            if (isDepthMode) {
+              for (let i = 0; i < numRows; i++) {
+                const cy = geom.rowY[i];
+                const vLabels = (data && data.q && data.q[i]) ? data.q[i] : null;
+                drawDepthVector((0.82 * depthLen) / 2, cy + (0.57 * depthLen) / 2, d, depthLen, '#58a6ff', 'rgba(88,166,255,0.18)', vLabels, 1, 0, 1, 'vector');
+              }
+              const topV = geom.rowY[0] - rowBracketH / 2;
+              const botV = geom.rowY[numRows - 1] + rowBracketH / 2;
+              drawBracket(-rowBracketW / 2 - 4 * s, (topV + botV) / 2, botV - topV, true);
+              drawBracket(rowBracketW / 2 + 4 * s, (topV + botV) / 2, botV - topV, false);
+              if (isWebGL) {
+                drawSlightDepthBar(0, geom.rowY[0], 0, geom.rowY[numRows - 1], depthLen, 1);
+              }
+            } else if (!isWebGL) {
+              if (T <= 4) {
+                for (let i = 0; i < T; i++) {
+                  const cy = geom.rowY[i];
+                  drawLabel(`v${subscript(i + 1)}`, -rowBracketW / 2 - 14 * s, cy, "#7d8590", "right");
+                  drawBrackets(0, cy, rowBracketW, rowBracketH);
+                  const vLabels = (data && data.q && data.q[i]) ? data.q[i] : null;
+                  drawVector(0, cy, layoutHoriz, '#58a6ff', 'rgba(88,166,255,0.18)', vLabels, 0, null, 1, '#e6edf3', 1, 'vector');
+                }
+              } else {
+                for (let i = 0; i < numRows; i++) {
+                  const cy = geom.rowY[i];
+                  const vLabels = (data && data.q && data.q[i]) ? data.q[i] : null;
+                  drawVector(0, cy, layoutHoriz, '#58a6ff', 'rgba(88,166,255,0.18)', vLabels, 0, null, 1, '#e6edf3', 1, 'vector');
+                }
+                const topV = geom.rowY[0] - rowBracketH / 2;
+                const botV = geom.rowY[numRows - 1] + rowBracketH / 2;
+                drawBracket(-rowBracketW / 2 - 4 * s, (topV + botV) / 2, botV - topV, true);
+                drawBracket(rowBracketW / 2 + 4 * s, (topV + botV) / 2, botV - topV, false);
+              }
+            } else {
+              const topV = geom.rowY[0] - rowBracketH / 2;
+              const botV = geom.rowY[numRows - 1] + rowBracketH / 2;
+              drawBracket(-rowBracketW / 2 - 4 * s, (topV + botV) / 2, botV - topV, true);
+              drawBracket(rowBracketW / 2 + 4 * s, (topV + botV) / 2, botV - topV, false);
+            }
+            if (isWebGL) {
+              threeFullAttn.renderFrame(T, d, ms, geom, width, height, s);
+            }
+            return;
+          }
+
+          // ==========================================
+          // PHASE 2: Separate Q, K, V (1200 to 2800ms)
+          // ==========================================
+          if (ms >= 1200 && ms < 2800) {
+            updateMathHighlight(null);
+            caption.innerHTML = 'vectors &rarr; separate into <span style="color:#58a6ff;">queries</span> (rows), <span style="color:#58a6ff;">keys</span> &amp; <span style="color:#58a6ff;">values</span> (columns)';
+
+            const ease = easeInOut((ms - 1200) / 1600);
+            drawGridOutline(ease * 0.85);
+
+            const vecHeaderY = geom.rowY[0] - rowBracketH / 2 - 16 * s;
+            drawLabel("vectors", 0, vecHeaderY, "#58a6ff", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, Math.max(0, 1 - ease * 2.0));
+
+            const curQX = lerp(0, geom.leftQueryX, ease);
+            const qHeaderY = geom.rowY[0] - rowBracketH / 2 - 14 * s;
+            drawLabel("queries", curQX, qHeaderY, "#58a6ff", "center", null, ease);
+
+            const curKY = lerp(geom.matCenterY, geom.topKeyY, ease);
+            const kHeaderDist = (T <= 4) ? (20 * s) : (14 * s);
+            drawLabel("keys", 0, curKY - colBracketH / 2 - kHeaderDist, "#58a6ff", "center", null, ease);
+
+            const curVY = lerp(geom.matCenterY, geom.topValY, ease);
+            drawValuesAtPosition(curVY, ease);
+
+            const subAlpha = ease >= 0.70 ? (ease - 0.70) / 0.30 : 0;
+            const numRows = Math.min(T, geom.rowY.length);
+            const numCols = Math.min(T, geom.colX.length);
+
+            if (isDepthMode) {
+              for (let i = 0; i < numRows; i++) {
+                const qy = geom.rowY[i];
+                const qLabels = (data && data.q && data.q[i]) ? data.q[i] : null;
+                drawDepthVector(curQX + (0.82 * depthLen) / 2, qy + (0.57 * depthLen) / 2, d, depthLen, '#58a6ff', 'rgba(88,166,255,0.18)', qLabels, 1, 0, 1, 'vector');
+              }
+              const topQ = geom.rowY[0] - rowBracketH / 2;
+              const botQ = geom.rowY[numRows - 1] + rowBracketH / 2;
+              drawBracket(curQX - rowBracketW / 2 - 4 * s, (topQ + botQ) / 2, botQ - topQ, true);
+              drawBracket(curQX + rowBracketW / 2 + 4 * s, (topQ + botQ) / 2, botQ - topQ, false);
+
+              for (let j = 0; j < numCols; j++) {
+                const kx = lerp(0, geom.colX[j], ease);
+                const ky = lerp(geom.rowY[j], geom.topKeyY, ease);
+                const kLabels = (data && data.k && data.k[j]) ? data.k[j] : null;
+                drawDepthVector(kx + (0.82 * depthLen) / 2 * ease, ky + (0.57 * depthLen) / 2, d, depthLen, '#58a6ff', 'rgba(88,166,255,0.18)', kLabels, 1, 0, 1, 'vector');
+              }
+              const leftK = lerp(0, geom.colX[0], ease) - colBracketW / 2 - 4 * s;
+              const rightK = lerp(0, geom.colX[numCols - 1], ease) + colBracketW / 2 + 4 * s;
+              drawBracket(leftK, curKY, colBracketH, true, ease);
+              drawBracket(rightK, curKY, colBracketH, false, ease);
+
+              if (isWebGL) {
+                drawSlightDepthBar(curQX, geom.rowY[0], curQX, geom.rowY[numRows - 1], depthLen, ease);
+                drawSlightDepthBar(leftK, curKY, rightK, curKY, depthLen, ease);
+              }
+            } else if (!isWebGL) {
+              if (T <= 4) {
+                for (let i = 0; i < T; i++) {
+                  const qy = geom.rowY[i];
+                  if (subAlpha > 0) {
+                    drawLabel(`q${subscript(i + 1)}`, curQX - rowBracketW / 2 - 14 * s, qy, "#7d8590", "right", null, subAlpha);
+                  }
+                  drawBrackets(curQX, qy, rowBracketW, rowBracketH);
+                  const qLabels = (data && data.q && data.q[i]) ? data.q[i] : null;
+                  drawVector(curQX, qy, layoutHoriz, '#58a6ff', 'rgba(88,166,255,0.18)', qLabels, 0, null, 1, '#e6edf3', 1, 'vector');
+                }
+              } else {
+                for (let i = 0; i < numRows; i++) {
+                  const qy = geom.rowY[i];
+                  const qLabels = (data && data.q && data.q[i]) ? data.q[i] : null;
+                  drawVector(curQX, qy, layoutHoriz, '#58a6ff', 'rgba(88,166,255,0.18)', qLabels, 0, null, 1, '#e6edf3', 1, 'vector');
+                }
+                const topQ = geom.rowY[0] - rowBracketH / 2;
+                const botQ = geom.rowY[numRows - 1] + rowBracketH / 2;
+                drawBracket(curQX - rowBracketW / 2 - 4 * s, (topQ + botQ) / 2, botQ - topQ, true);
+                drawBracket(curQX + rowBracketW / 2 + 4 * s, (topQ + botQ) / 2, botQ - topQ, false);
+              }
+
+              for (let j = 0; j < numCols; j++) {
+                const kx = lerp(0, geom.colX[j], ease);
+                const ky = lerp(geom.rowY[j], geom.topKeyY, ease);
+
+                if (T <= 4 && subAlpha > 0) {
+                  drawLabel(`k${subscript(j + 1)}`, kx, ky - colBracketH / 2 - 10 * s, "#7d8590", "center", null, subAlpha);
+                }
+
+                if (ease < 0.45) {
+                  drawBrackets(kx, ky, rowBracketW, rowBracketH, 1 - ease / 0.45);
+                } else if (T <= 2) {
+                  drawBrackets(kx, ky, colBracketW, colBracketH, (ease - 0.45) / 0.55);
+                }
+
+                const kLabels = (data && data.k && data.k[j]) ? data.k[j] : null;
+                const rKey = layoutVert.r;
+                for (let m = 0; m < d; m++) {
+                  const ptH = layoutHoriz.points[m];
+                  const ptV = layoutVert.points[m];
+                  const px = kx + ptH.x * (1 - ease) + ptV.x * ease;
+                  const py = ky + ptH.y * (1 - ease) + ptV.y * ease;
+                  const lbl = (kLabels && kLabels[m] !== undefined) ? kLabels[m] : null;
+                  drawCircle(px, py, rKey, '#58a6ff', 'rgba(88,166,255,0.18)', lbl, 0, null, 1, '#e6edf3', 'vector');
+                }
+              }
+
+              if (T > 2 && ease >= 0.45) {
+                const bAlpha = (ease - 0.45) / 0.55;
+                const leftK = lerp(0, geom.colX[0], ease) - colBracketW / 2 - 4 * s;
+                const rightK = lerp(0, geom.colX[numCols - 1], ease) + colBracketW / 2 + 4 * s;
+                drawBracket(leftK, curKY, colBracketH, true, bAlpha);
+                drawBracket(rightK, curKY, colBracketH, false, bAlpha);
+              }
+            } else {
+              const topQ = geom.rowY[0] - rowBracketH / 2;
+              const botQ = geom.rowY[numRows - 1] + rowBracketH / 2;
+              drawBracket(curQX - rowBracketW / 2 - 4 * s, (topQ + botQ) / 2, botQ - topQ, true);
+              drawBracket(curQX + rowBracketW / 2 + 4 * s, (topQ + botQ) / 2, botQ - topQ, false);
+
+              const leftK = lerp(0, geom.colX[0], ease) - colBracketW / 2 - 4 * s;
+              const rightK = lerp(0, geom.colX[numCols - 1], ease) + colBracketW / 2 + 4 * s;
+              drawBracket(leftK, curKY, colBracketH, true, ease);
+              drawBracket(rightK, curKY, colBracketH, false, ease);
+            }
+
+            if (isWebGL) {
+              threeFullAttn.renderFrame(T, d, ms, geom, width, height, s);
+            }
+            return;
+          }
+
+          // ==========================================
+          // PHASE 3: Static Q, K, V (2800 to 3600ms)
+          // ==========================================
+          if (ms >= 2800 && ms < 3600) {
+            updateMathHighlight(null);
+            caption.innerHTML = `<span style="color:#58a6ff;">queries</span> Q (rows), <span style="color:#58a6ff;">keys</span> K &amp; <span style="color:#58a6ff;">values</span> V (columns)`;
+            drawStaticHeaders(1.0);
+            drawValuesAtPosition(geom.topValY, 1.0);
+            if (isWebGL) {
+              threeFullAttn.renderFrame(T, d, ms, geom, width, height, s);
+            }
+            return;
+          }
+
+          // ==========================================
+          // PHASE 4: Dot Product Calculation (3600 to 5600ms)
+          // ==========================================
+          if (ms >= 3600 && ms < 5600) {
+            const p = (ms - 3600) / 2000;
+            updateMathHighlight(p < 0.68 ? 'qk-orange' : 'qk-green');
+            const outerAlpha = Math.max(0, 1 - p / 0.45) * 0.85;
+            if (outerAlpha > 0) {
+              drawStaticHeaders(outerAlpha);
+            } else {
+              drawGridOutline(0.75);
+            }
+
+            const pValSlide = clamp((p - 0.15) / 0.50, 0, 1);
+            const curVY = lerp(geom.topValY, geom.valParkedY, easeInOut(pValSlide));
+            drawValuesAtPosition(curVY, 1.0);
+
+            const isApproach = p < 0.50;
+            const isContact = p >= 0.50 && p < 0.68;
+            const isCollapse = p >= 0.68;
+
+            const easeApproach = easeInOut(Math.min(1, p / 0.50));
+            const contactProg = isContact ? (p - 0.50) / 0.18 : 0;
+            const flash = isContact ? Math.sin(contactProg * Math.PI) : 0;
+            const easeCollapse = isCollapse ? easeInOut((p - 0.68) / 0.32) : 0;
+
+            if (isApproach || isContact) {
+              caption.innerHTML = '<span class="caption-op mul">Dot Product</span>: <span class="caption-op mul">&times; multiply</span> pairwise';
+            } else {
+              caption.innerHTML = '<span class="caption-op mul">Dot Product</span>: <span class="caption-op add">&sum; sum</span> &rarr; similarity scores';
+            }
+
+            const labelY = geom.matTop - 30 * s;
+            drawLabel("dot product", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, Math.min(1, (ms - 3600) / 300));
+
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.lineWidth = 1.2;
+
+            const maxColX = geom.colX[geom.colX.length - 1];
+            const guideEndX = lerp(geom.leftQueryX, maxColX + 16 * s, easeApproach);
+            ctx.strokeStyle = `rgba(88, 166, 255, ${(0.35 * Math.max(0, 1 - (isCollapse ? easeCollapse : 0) * 1.5)).toFixed(3)})`;
+            const rowCount = geom.T_calc || T;
+            const lineStep = rowCount > 16 ? Math.ceil(rowCount / 16) : 1;
+            ctx.beginPath();
+            for (let i = 0; i < rowCount; i += lineStep) {
+              ctx.moveTo(geom.leftQueryX + rowBracketW / 2 + 4 * s, geom.rowY[i]);
+              ctx.lineTo(guideEndX, geom.rowY[i]);
+            }
+
+            const maxRowY = geom.rowY[geom.rowY.length - 1];
+            const guideEndY = lerp(geom.topKeyY, maxRowY + 14 * s, easeApproach);
+            for (let j = 0; j < rowCount; j += lineStep) {
+              ctx.moveTo(geom.colX[j], geom.topKeyY + colBracketH / 2);
+              ctx.lineTo(geom.colX[j], guideEndY);
+            }
+            ctx.stroke();
+            ctx.restore();
+
+            if (!isWebGL) {
+              const orangeBg = `rgba(240, 136, 62, ${0.20 + 0.35 * flash})`;
+              const scale = 1 + 0.18 * flash;
+              for (let i = 0; i < T; i++) {
+                for (let j = 0; j < T; j++) {
+                  const cx = geom.colX[j];
+                  const cy = geom.rowY[i];
+                  const qLabels = (data && data.q) ? data.q[i % data.q.length] : null;
+                  const kLabels = (data && data.k) ? data.k[j % data.k.length] : null;
+                  const mulRow = (data && data.mul) ? data.mul[i % data.mul.length] : null;
+                  const mulLabels = mulRow ? mulRow[j % mulRow.length] : null;
+                  const simRow = (data && data.sim) ? data.sim[i % data.sim.length] : null;
+                  const simVal = simRow ? simRow[j % simRow.length] : null;
+
+                  if (isApproach) {
+                    const qx = lerp(geom.leftQueryX, cx, easeApproach);
+                    const ky = lerp(geom.topKeyY, cy, easeApproach);
+                    const vAlpha = 0.5 + 0.5 * easeApproach;
+                    if (isDepthMode) {
+                      drawDepthVector(qx + (0.82 * depthLen) / 2 * (1 - easeApproach), cy + (0.57 * depthLen) / 2 * (1 - easeApproach), d, depthLen, '#58a6ff', 'rgba(88,166,255,0.18)', qLabels, vAlpha, 0, 1, 'vector');
+                      drawDepthVector(cx + (0.82 * depthLen) / 2 * (1 - easeApproach), ky + (0.57 * depthLen) / 2 * (1 - easeApproach), d, depthLen, '#388bfd', 'rgba(56,139,253,0.18)', kLabels, vAlpha, 0, 1, 'vector');
+                    } else if (d === 1) {
+                      const qv = (qLabels && qLabels.length) ? qLabels[0] : null;
+                      const kv = (kLabels && kLabels.length) ? kLabels[0] : null;
+                      drawCircle(qx, cy, geom.cellR, '#58a6ff', 'rgba(88,166,255,0.18)', qv, 0, null, vAlpha, '#e6edf3', 'vector');
+                      drawCircle(cx, ky, geom.cellR, '#388bfd', 'rgba(56,139,253,0.18)', kv, 0, null, vAlpha, '#e6edf3', 'vector');
+                    } else if (d <= 8) {
+                      drawVector(qx, cy, cellLayout, '#58a6ff', 'rgba(88,166,255,0.18)', qLabels, 0, null, vAlpha, '#e6edf3', 1, 'vector');
+                      drawVector(cx, ky, cellLayout, '#388bfd', 'rgba(56,139,253,0.18)', kLabels, 0, null, vAlpha, '#e6edf3', 1, 'vector');
+                    } else {
+                      const qv = (qLabels && qLabels.length) ? qLabels[0] : null;
+                      const kv = (kLabels && kLabels.length) ? kLabels[0] : null;
+                      drawCircle(qx, cy, geom.cellR, '#58a6ff', 'rgba(88,166,255,0.18)', qv, 0, null, vAlpha, '#e6edf3', 'vector');
+                      drawCircle(cx, ky, geom.cellR, '#388bfd', 'rgba(56,139,253,0.18)', kv, 0, null, vAlpha, '#e6edf3', 'vector');
+                    }
+                  } else if (isContact) {
+                    if (isDepthMode) {
+                      drawDepthVector(cx, cy, d, depthLen, '#f0883e', orangeBg, mulLabels, 1, 0, scale, 'mul');
+                    } else if (d === 1) {
+                      const mulVal = (mulLabels && mulLabels.length) ? mulLabels[0] : simVal;
+                      drawCircle(cx, cy, geom.cellR * scale, '#f0883e', orangeBg, mulVal, 0, null, 1, '#e6edf3', 'mul');
+                    } else if (d <= 8) {
+                      drawVector(cx, cy, cellLayout, '#f0883e', orangeBg, mulLabels, 0, null, 1, '#e6edf3', scale, 'mul');
+                    } else {
+                      drawCircle(cx, cy, geom.cellR * scale, '#f0883e', orangeBg, simVal, 0, null, 1, '#e6edf3', 'mul');
+                    }
+                  } else {
+                    if (isDepthMode) {
+                      if (easeCollapse >= 0.85) {
+                        const finalR = geom.cellR * (1 + 0.18 * Math.sin(((easeCollapse - 0.85) / 0.15) * Math.PI));
+                        drawCircle(cx, cy, finalR, '#3fb950', 'rgba(63, 185, 80, 0.28)', simVal, 0, null, 1, '#e6edf3', 'sim');
+                      } else {
+                        drawDepthVector(cx, cy, d, depthLen, '#f0883e', orangeBg, mulLabels, 1, easeCollapse, 1, 'mul');
+                      }
+                    } else if (d === 1) {
+                      drawCircle(cx, cy, geom.cellR, '#f0883e', orangeBg, simVal, 0, null, 1, '#e6edf3', 'mul');
+                    } else if (d <= 8) {
+                      const factor = 1 - easeCollapse;
+                      for (let m = 0; m < d; m++) {
+                        const pt = cellLayout.points[m];
+                        const mVal = (mulLabels && mulLabels.length) ? mulLabels[m % mulLabels.length] : null;
+                        drawCircle(cx + pt.x * factor, cy + pt.y * factor, cellLayout.r, '#f0883e', orangeBg, mVal, 0, null, 1, '#e6edf3', 'mul');
+                      }
+                    } else {
+                      drawCircle(cx, cy, geom.cellR, '#f0883e', orangeBg, simVal, 0, null, 1, '#e6edf3', 'mul');
+                    }
+                  }
+                }
+              }
+            } else {
+              threeFullAttn.renderFrame(T, d, ms, geom, width, height, s);
+            }
+            return;
+          }
+
+          // ==========================================
+          // PHASE 5: Coalesce Similarity Matrix (5600 to 7600ms)
+          // ==========================================
+          if (ms >= 5600 && ms < 7600) {
+            updateMathHighlight('qk-green');
+            caption.innerHTML = '<span class="caption-op add">Dot Product</span>: <span class="caption-op add">+ sum</span> &rarr; similarity scores';
+
+            const labelY = geom.matTop - 30 * s;
+            drawLabel("dot product", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
+            drawValuesAtPosition(geom.valParkedY, 1.0);
+
+            const p = (ms - 5600) / 2000;
+            const easeCoal = easeInOut(Math.min(1, p / 0.72));
+            const isMerged = p >= 0.72;
+            const flash = isMerged ? Math.sin(((p - 0.72) / 0.28) * Math.PI) : 0;
+
+            const bColor = flash > 0.2 ? '#3fb950' : '#484f58';
+            drawBracket(geom.matL, geom.matCenterY, geom.matHBrack, true, 1, bColor, 7);
+            drawBracket(geom.matR, geom.matCenterY, geom.matHBrack, false, 1, bColor, 7);
+
+            if (!isWebGL) {
+              for (let i = 0; i < T; i++) {
+                for (let j = 0; j < T; j++) {
+                  const cx = geom.colX[j];
+                  const cy = geom.rowY[i];
+                  const simRow = (data && data.sim) ? data.sim[i % data.sim.length] : null;
+                  const simVal = simRow ? simRow[j % simRow.length] : (i === j ? '2.0' : '1.0');
+                  if (isMerged || isDepthMode) {
+                    const rFinal = geom.cellR * (1 + 0.20 * flash);
+                    const greenBg = `rgba(63, 185, 80, ${0.18 + 0.35 * flash})`;
+                    drawCircle(cx, cy, rFinal, '#3fb950', greenBg, simVal, 0, null, 1, '#e6edf3', 'sim');
+                  } else {
+                    const factor = 1 - easeCoal;
+                    const mulRow = (data && data.mul) ? data.mul[i % data.mul.length] : null;
+                    const mulLabels = mulRow ? mulRow[j % mulRow.length] : null;
+                    if (d === 1) {
+                      const mulVal = (mulLabels && mulLabels.length) ? mulLabels[0] : simVal;
+                      drawCircle(cx, cy, geom.cellR, '#f0883e', 'rgba(240, 136, 62, 0.20)', mulVal, 0, null, 1, '#e6edf3', 'mul');
+                    } else if (d <= 8) {
+                      for (let m = 0; m < d; m++) {
+                        const pt = cellLayout.points[m];
+                        const mVal = (mulLabels && mulLabels.length) ? mulLabels[m % mulLabels.length] : null;
+                        drawCircle(cx + pt.x * factor, cy + pt.y * factor, cellLayout.r, '#f0883e', 'rgba(240, 136, 62, 0.20)', mVal, 0, null, 1, '#e6edf3', 'mul');
+                      }
+                    } else {
+                      drawCircle(cx, cy, geom.cellR * (0.8 + 0.2 * (1 - factor)), '#f0883e', 'rgba(240, 136, 62, 0.20)', simVal, 0, null, 1, '#e6edf3', 'mul');
+                    }
+                  }
+                }
+              }
+            } else {
+              threeFullAttn.renderFrame(T, d, ms, geom, width, height, s);
+            }
+            return;
+          }
+
+          // ==========================================
+          // PHASE 6: Softmax Step 1: Exp (7600 to 9000ms)
+          // ==========================================
+          if (ms >= 7600 && ms < 9000) {
+            updateMathHighlight('softmax-red');
+            caption.innerHTML = '<span class="caption-op exp">Softmax</span> (step 1): <span class="caption-op exp">exp</span> elementwise on each row';
+
+            const labelY = geom.matTop - 30 * s;
+            drawLabel("softmax", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
+            drawValuesAtPosition(geom.valParkedY, 1.0);
+
+            const p = (ms - 7600) / 1400;
+            const flash = Math.sin(p * Math.PI);
+            const rMult = 1 + 0.14 * flash;
+            const redBg = `rgba(248, 81, 73, ${0.15 + 0.30 * flash})`;
+
+            const expVals = (p > 0.25 && data) ? data.exp : (data ? data.sim : null);
+            drawMatrix('#f85149', redBg, expVals, 0, null, 1, '#e6edf3', rMult, false, 'exp');
+
+            if (isWebGL) {
+              threeFullAttn.renderFrame(T, d, ms, geom, width, height, s);
+            }
+            return;
+          }
+
+          // ==========================================
+          // PHASE 7: Softmax Step 2: Row Sum (9000 to 10600ms)
+          // ==========================================
+          if (ms >= 9000 && ms < 10600) {
+            updateMathHighlight('softmax-red');
+            caption.innerHTML = '<span class="caption-op exp">Softmax</span> (step 2): <span class="caption-op add">+ sum</span> each row &rarr; denominators';
+
+            const labelY = geom.matTop - 30 * s;
+            drawLabel("softmax", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
+            drawValuesAtPosition(geom.valParkedY, 1.0);
+
+            const p = (ms - 9000) / 1600;
+            const easeSum = easeInOut(Math.min(1, p / 0.72));
+            const isSummed = p >= 0.72;
+            const flash = isSummed ? Math.sin(((p - 0.72) / 0.28) * Math.PI) : 0;
+
+            const expVals = data ? data.exp : null;
+            drawMatrix('#f85149', 'rgba(248, 81, 73, 0.18)', expVals, 0, null, 1, '#e6edf3', 1, false, 'exp');
+
+            if (T > 4 && isSummed) {
+              drawLabel("row sum", geom.rightSumX, geom.rowY[0] - 14 * s, "#3fb950", "center", `400 ${Math.round(10 * s)}px ui-monospace`);
+            }
+
+            if (!isWebGL) {
+              for (let i = 0; i < T; i++) {
+                const cy = geom.rowY[i];
+                const rowSumVal = (data && data.sum) ? data.sum[i % data.sum.length] : '2.0';
+                if (isSummed) {
+                  const rSum = geom.cellR * 1.18 * (1 + 0.22 * flash);
+                  const greenBg = `rgba(63, 185, 80, ${0.18 + 0.35 * flash})`;
+
+                  ctx.save();
+                  ctx.translate(centerX, centerY);
+                  ctx.beginPath();
+                  ctx.arc(geom.rightSumX, cy, rSum + 2.5 * s, 0, Math.PI * 2);
+                  ctx.fillStyle = 'rgba(10, 13, 18, 0.70)';
+                  ctx.fill();
+                  ctx.strokeStyle = `rgba(63, 185, 80, ${0.20 + 0.20 * flash})`;
+                  ctx.lineWidth = 0.75;
+                  ctx.stroke();
+                  ctx.restore();
+
+                  drawCircle(geom.rightSumX, cy, rSum, '#3fb950', greenBg, rowSumVal, 0, null, 1, '#e6edf3', 'sum');
+                  if ((T <= 2 || i === 0) && T <= 4) {
+                    drawLabel("sum", geom.rightSumX, cy - 20 * s, "#3fb950", "center", `400 ${Math.round(9.5 * s)}px ui-monospace`);
+                  }
+                } else {
+                  if (T === 1) {
+                    const curX = lerp(geom.colX[0], geom.rightSumX, easeSum);
+                    const val0 = (expVals && expVals[0]) ? expVals[0][0] : null;
+                    drawCircle(curX, cy, geom.cellR, '#f85149', 'rgba(248, 81, 73, 0.20)', val0, 0, null, 0.85, '#e6edf3', 'exp');
+                  } else {
+                    for (let j = 0; j < T; j++) {
+                      const curX = lerp(geom.colX[j], geom.rightSumX, easeSum);
+                      const valRow = expVals ? expVals[i % expVals.length] : null;
+                      const valIJ = valRow ? valRow[j % valRow.length] : null;
+                      drawCircle(curX, cy, geom.cellR * 0.9, '#f85149', 'rgba(248, 81, 73, 0.20)', valIJ, 0, null, 0.85, '#e6edf3', 'exp');
+                    }
+                  }
+                }
+              }
+            } else {
+              threeFullAttn.renderFrame(T, d, ms, geom, width, height, s);
+            }
+            return;
+          }
+
+          // ==========================================
+          // PHASE 8: Softmax Step 3: PURPLE Dividing (10600 to 12200ms)
+          // ==========================================
+          if (ms >= 10600 && ms < 12200) {
+            updateMathHighlight('softmax-purple');
+            caption.innerHTML = '<span class="caption-op exp" style="color:#a371f7;">Softmax</span> (step 3): <span class="caption-op div" style="color:#a371f7;">&divide; divide</span> each row by its sum &rarr; <span style="color:#a371f7;">Attention Matrix A</span>';
+
+            const labelY = geom.matTop - 30 * s;
+            drawLabel("softmax", 0, labelY, "#a371f7", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
+            drawValuesAtPosition(geom.valParkedY, 1.0);
+
+            const p = (ms - 10600) / 1600;
+            const isDivided = p >= 0.40;
+            const flash = Math.sin(p * Math.PI);
+
+            if (!isWebGL) {
+              const sumAlpha = Math.max(0, 1 - Math.max(0, (p - 0.45) / 0.55));
+              if (sumAlpha > 0) {
+                const rSumStep3 = geom.cellR * 1.16;
+                for (let i = 0; i < T; i++) {
+                  const sVal = (data && data.sum) ? data.sum[i % data.sum.length] : null;
+
+                  ctx.save();
+                  ctx.translate(centerX, centerY);
+                  ctx.beginPath();
+                  ctx.arc(geom.rightSumX, geom.rowY[i], rSumStep3 + 2.5 * s, 0, Math.PI * 2);
+                  ctx.fillStyle = `rgba(10, 13, 18, ${(0.60 * sumAlpha).toFixed(3)})`;
+                  ctx.fill();
+                  ctx.strokeStyle = `rgba(63, 185, 80, ${(0.18 * sumAlpha).toFixed(3)})`;
+                  ctx.lineWidth = 0.75;
+                  ctx.stroke();
+                  ctx.restore();
+
+                  drawCircle(geom.rightSumX, geom.rowY[i], rSumStep3, '#3fb950', 'rgba(63, 185, 80, 0.18)', sVal, 0, null, sumAlpha, '#e6edf3', 'sum');
+                }
+              }
+            }
+
+            const rayAlpha = Math.max(0, Math.sin(p * Math.PI));
+            if (rayAlpha > 0) {
+              ctx.save();
+              ctx.translate(centerX, centerY);
+              ctx.strokeStyle = `rgba(163, 113, 247, ${rayAlpha * 0.55})`;
+              ctx.lineWidth = 1.0;
+              const numRays = geom.T_calc || T;
+              const rayStep = numRays > 16 ? Math.ceil(numRays / 16) : 1;
+              ctx.beginPath();
+              for (let i = 0; i < numRays; i += rayStep) {
+                ctx.moveTo(geom.rightSumX, geom.rowY[i]);
+                ctx.lineTo(geom.colX[0] - geom.cellW / 2, geom.rowY[i]);
+              }
+              ctx.stroke();
+              ctx.restore();
+            }
+
+            if (!isWebGL) {
+              const strokeColor = isDivided ? '#a371f7' : '#f85149';
+              const purpleBg = `rgba(163, 113, 247, ${0.15 + 0.35 * flash})`;
+              const curVals = isDivided && data ? data.prob : (data ? data.exp : null);
+              drawMatrix(strokeColor, purpleBg, curVals, 0, null, 1, '#e6edf3', 1 + 0.12 * flash, false, isDivided ? 'prob' : 'exp');
+            } else {
+              drawMatrix('#a371f7', 'rgba(163,113,247,0.18)', null, 0, null, 1);
+              threeFullAttn.renderFrame(T, d, ms, geom, width, height, s);
+            }
+            return;
+          }
+
+          // ==========================================
+          // PHASE 8b: Attention Matrix A (12200 to 14000ms)
+          // ==========================================
+          if (ms >= 12200 && ms < 14000) {
+            updateMathHighlight('softmax-purple');
+            caption.style.opacity = '1';
+
+            const labelFade = Math.min(1, (ms - 12200) / 350);
+            const labelY = geom.matTop - 30 * s;
+            drawLabel("Attention Matrix", 0, labelY, "#58a6ff", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, labelFade);
+            drawValuesAtPosition(geom.valParkedY, 1.0);
+
+            const greenAlpha = ms >= 13400 ? Math.max(0, 1 - (ms - 13400) / 600) : 1.0;
+
+            if (greenAlpha > 0.05) {
+              caption.innerHTML = `= Attention Matrix A = <span class="caption-op exp">softmax</span>(Q &middot; K<sup>T</sup>) <span style="color:rgba(63, 185, 80, ${greenAlpha.toFixed(2)}); font-weight:400;">(row sum = 1.0)</span>`;
+            } else {
+              caption.innerHTML = '= Attention Matrix A = <span class="caption-op exp">softmax</span>(Q &middot; K<sup>T</sup>)';
+            }
+
+            const probVals = data ? data.prob : null;
+
+            if (greenAlpha > 0) {
+              const numRows = Math.min(T, geom.rowY.length);
+              const numCols = Math.min(T, geom.colX.length);
+              ctx.save();
+              ctx.translate(centerX, centerY);
+              ctx.lineWidth = 1.0;
+              ctx.strokeStyle = `rgba(63, 185, 80, ${(0.70 * greenAlpha).toFixed(3)})`;
+              const xLineStart = geom.colX[0] - geom.cellW / 2;
+              const xLineEnd = (T <= 4) ? (geom.matR + 12 * s) : (geom.colX[numCols - 1] + geom.cellW / 2);
+              for (let i = 0; i < numRows; i++) {
+                ctx.beginPath();
+                ctx.moveTo(xLineStart, geom.rowY[i]);
+                ctx.lineTo(xLineEnd, geom.rowY[i]);
+                ctx.stroke();
+              }
+              ctx.restore();
+
+              if (T <= 4) {
+                for (let i = 0; i < numRows; i++) {
+                  drawLabel("row sum = 1.0", geom.matR + 16 * s, geom.rowY[i], "#3fb950", "left", `400 ${Math.round(9.5 * s)}px ui-monospace`, greenAlpha);
+                }
+              } else {
+                drawLabel("row sum = 1.0", geom.matR + 16 * s, geom.rowY[0] - 12 * s, "#3fb950", "left", `400 ${Math.round(9.5 * s)}px ui-monospace`, greenAlpha);
+                if (!isWebGL) {
+                  for (let i = 0; i < numRows; i++) {
+                    drawCircle(geom.rightSumX, geom.rowY[i], Math.min(geom.cellR * 0.75, 4 * s), '#3fb950', 'rgba(63, 185, 80, 0.3)', null, 0, null, 0.8 * greenAlpha, '#e6edf3');
+                  }
+                }
+              }
+            }
+
+            drawMatrix('#58a6ff', 'rgba(88, 166, 255, 0.18)', probVals, 0, null, 1, '#e6edf3', 1, true, 'prob');
+
+            if (isWebGL) {
+              threeFullAttn.renderFrame(T, d, ms, geom, width, height, s);
+            }
+            return;
+          }
+
+          // ==========================================
+          // PHASE 9: Values slide down & multiply with orange flash (14000 to 17200ms)
+          // ==========================================
+          if (ms >= 14000 && ms < 17200) {
+            updateMathHighlight('val-orange');
+            const p = (ms - 14000) / 3200;
+            caption.innerHTML = '<span class="caption-op val" style="color:#58a6ff;">weight and sum values using attention matrix</span> &rarr; <span class="caption-op mul">&times; multiply</span> values by attention weights';
+            drawGridOutline(0.75);
+
+            const labelY = geom.matTop - (T <= 2 ? 38 * s : 32 * s);
+            drawLabel("weight and sum values using attention matrix", 0, labelY, "#58a6ff", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
+
+            const isDescent = p < 0.45;
+            const isCollision = p >= 0.45 && p < 0.70;
+
+            if (isDescent) {
+              const easeSub = easeInOut(p / 0.45);
+              drawMatrix('#a371f7', 'rgba(163, 113, 247, 0.14)', data.prob, 0, null, 0.8, '#e6edf3', 1, true, 'prob');
+
+              for (let i = 0; i < T; i++) {
+                const curY = lerp(geom.valParkedY, geom.rowY[i], easeSub);
+                for (let j = 0; j < T; j++) {
+                  const vx = geom.colX[j];
+                  const vLabels = (data && data.v && data.v[j]) ? data.v[j] : null;
+                  if (isDepthMode) {
+                    drawDepthVector(vx, curY, d, depthLen, '#58a6ff', 'rgba(88, 166, 255, 0.18)', vLabels, 1, 0, 1, 'vector');
+                  } else {
+                    const isHoriz = easeSub > 0.6;
+                    drawVector(vx, curY, isHoriz ? cellLayout : layoutVert, '#58a6ff', 'rgba(88, 166, 255, 0.18)', vLabels, 0, null, 1, '#ffffff', 1, 'vector');
+                  }
+                }
+              }
+            } else if (isCollision) {
+              const flashA = Math.sin(((p - 0.45) / 0.25) * Math.PI);
+
+              for (let i = 0; i < T; i++) {
+                for (let j = 0; j < T; j++) {
+                  const cx = geom.colX[j];
+                  const cy = geom.rowY[i];
+                  const bLabels = (data && data.broadcast && data.broadcast[i]) ? data.broadcast[i][j] : null;
+
+                  ctx.save();
+                  ctx.translate(centerX + cx, centerY + cy);
+                  ctx.strokeStyle = `rgba(240, 136, 62, ${(0.90 * flashA).toFixed(3)})`;
+                  ctx.lineWidth = 1.5;
+                  ctx.beginPath();
+                  ctx.arc(0, 0, geom.cellR * (1.15 + 0.45 * flashA), 0, Math.PI * 2);
+                  ctx.stroke();
+                  ctx.restore();
+
+                  if (isDepthMode) {
+                    drawDepthVector(cx, cy, d, depthLen, '#f0883e', 'rgba(240, 136, 62, 0.35)', bLabels, 1, 0, 1 + 0.2 * flashA, 'mul');
+                  } else {
+                    drawVector(cx, cy, cellLayout, '#f0883e', 'rgba(240, 136, 62, 0.35)', bLabels, 14 * flashA, '#f0883e', 1, '#ffffff', 1 + 0.15 * flashA, 'mul');
+                  }
+                }
+              }
+            } else {
+              for (let i = 0; i < T; i++) {
+                for (let j = 0; j < T; j++) {
+                  const cx = geom.colX[j];
+                  const cy = geom.rowY[i];
+                  const bLabels = (data && data.broadcast && data.broadcast[i]) ? data.broadcast[i][j] : null;
+                  if (isDepthMode) {
+                    drawDepthVector(cx, cy, d, depthLen * 0.7, '#58a6ff', 'rgba(88, 166, 255, 0.20)', bLabels, 1, 0, 0.85, 'vector');
+                  } else {
+                    drawVector(cx, cy, cellLayout, '#58a6ff', 'rgba(88, 166, 255, 0.20)', bLabels, 0, null, 1, '#ffffff', 1, 'vector');
+                  }
+                }
+              }
+            }
+
+            if (isWebGL) {
+              threeFullAttn.renderFrame(T, d, ms, geom, width, height, s);
+            }
+            return;
+          }
+
+          // ==========================================
+          // PHASE 10: Sum Reduce (Green) to Output (17200 to 20200ms)
+          // ==========================================
+          if (ms >= 17200 && ms < 20200) {
+            updateMathHighlight('val-green');
+            const p = (ms - 17200) / 3000;
+            caption.innerHTML = '<span class="caption-op val" style="color:#58a6ff;">weight and sum values using attention matrix</span> &rarr; <span class="caption-op add">&sum; sum</span> &rarr; output vectors <span class="caption-op out">O</span>';
+            drawGridOutline(0.5);
+
+            const labelY = geom.matTop - (T <= 2 ? 38 * s : 32 * s);
+            const labelFade = clamp(1 - (p - 0.65) / 0.10, 0, 1);
+            if (labelFade > 0) {
+              drawLabel("weight and sum values using attention matrix", 0, labelY, "#58a6ff", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, labelFade);
+            }
+
+            const isGreenFlash = (p >= 0.70 && p < 0.88);
+            const greenPulse = isGreenFlash ? Math.sin(((p - 0.70) / 0.18) * Math.PI) : 0;
+
+            const numRows = Math.min(T, geom.rowY.length);
+            const numCols = Math.min(T, geom.colX.length);
+
+            for (let i = 0; i < numRows; i++) {
+              const ry = geom.rowY[i];
+              if (p < 0.70) {
+                if (!isWebGL) {
+                  const easeP = easeInOut(p / 0.70);
+                  for (let j = 0; j < numCols; j++) {
+                    const startX = geom.colX[j];
+                    const curX = lerp(startX, geom.rightOutX, easeP);
+                    const bLabels = (data && data.broadcast && data.broadcast[i]) ? data.broadcast[i][j] : null;
+                    if (isDepthMode) {
+                      drawDepthVector(curX, ry, d, depthLen * 0.7, '#58a6ff', 'rgba(88, 166, 255, 0.20)', bLabels, 1 - easeP * 0.4, 0, 0.85, 'vector');
+                    } else {
+                      drawVector(curX, ry, cellLayout, '#58a6ff', 'rgba(88, 166, 255, 0.20)', bLabels, 0, null, 1 - easeP * 0.4, '#ffffff', 1, 'vector');
+                    }
+                  }
+                }
+              } else {
+                const oLabels = (data && data.out) ? data.out[i] : null;
+                if (isGreenFlash) {
+                  const strokeColor = '#3fb950';
+                  const fillColor = 'rgba(63, 185, 80, 0.35)';
+                  if (isDepthMode) {
+                    drawDepthVector(geom.rightOutX + (0.82 * depthLen) / 2, ry + (0.57 * depthLen) / 2, d, depthLen, strokeColor, fillColor, oLabels, 1, 0, 1.1 + 0.25 * greenPulse, 'sum');
+                  } else {
+                    drawVector(geom.rightOutX, ry, layoutHoriz, strokeColor, fillColor, oLabels, 20 * greenPulse, '#3fb950', 1, '#ffffff', 1.05 + 0.2 * greenPulse, 'sum');
+                  }
+
+                  ctx.save();
+                  ctx.translate(centerX + geom.rightOutX, centerY + ry);
+                  ctx.strokeStyle = `rgba(63, 185, 80, ${0.80 * greenPulse})`;
+                  ctx.lineWidth = 1.6;
+                  ctx.beginPath();
+                  ctx.arc(0, 0, (geom.cellR * 1.6) + 14 * greenPulse, 0, Math.PI * 2);
+                  ctx.stroke();
+                  ctx.restore();
+                } else {
+                  if (isDepthMode) {
+                    drawDepthVector(geom.rightOutX + (0.82 * depthLen) / 2, ry + (0.57 * depthLen) / 2, d, depthLen, '#79c0ff', 'rgba(121, 192, 255, 0.22)', oLabels, 1, 0, 1, 'vector');
+                  } else {
+                    drawVector(geom.rightOutX, ry, layoutHoriz, '#79c0ff', 'rgba(121, 192, 255, 0.22)', oLabels, 0, null, 1, '#ffffff', 1, 'vector');
+                  }
+                }
+                if (T <= 4 && !isDepthMode) {
+                  drawLabel(`o${subscript(i + 1)}`, geom.rightOutX + rowBracketW / 2 + 14 * s, ry, "#79c0ff", "left", null, 1);
+                }
+              }
+
+              const outAlpha = clamp((p - 0.70) / 0.10, 0, 1);
+              const outHeaderY = geom.rowY[0] - rowBracketH / 2 - 16 * s;
+              drawLabel("output", geom.rightOutX, outHeaderY, "#79c0ff", "center", null, outAlpha);
+
+              const bColor = isGreenFlash ? '#3fb950' : '#484f58';
+              if (T <= 2) {
+                for (let i = 0; i < T; i++) {
+                  drawBrackets(geom.rightOutX, geom.rowY[i], rowBracketW, rowBracketH, outAlpha, bColor);
+                }
+              } else {
+                const topO = geom.rowY[0] - rowBracketH / 2;
+                const botO = geom.rowY[numRows - 1] + rowBracketH / 2;
+                drawBracket(geom.rightOutX - rowBracketW / 2 - 4 * s, (topO + botO) / 2, botO - topO, true, outAlpha, bColor);
+                drawBracket(geom.rightOutX + rowBracketW / 2 + 4 * s, (topO + botO) / 2, botO - topO, false, outAlpha, bColor);
+              }
+              if (isWebGL && isDepthMode && outAlpha > 0) {
+                drawSlightDepthBar(geom.rightOutX, geom.rowY[0], geom.rightOutX, geom.rowY[numRows - 1], depthLen, outAlpha, '#79c0ff');
+              }
+            }
+
+            if (isWebGL) {
+              threeFullAttn.renderFrame(T, d, ms, geom, width, height, s);
+            }
+            return;
+          }
+
+          // ==========================================
+          // PHASE 11: Loopback (20200 to 25000ms)
+          // ==========================================
+          if (ms >= 20200) {
+            updateMathHighlight(null);
+            const p = (ms - 20200) / 4800;
+            caption.innerHTML = 'output vectors <span class="caption-op out">O</span> loop back &rarr; a <span style="color:#79c0ff; font-weight:600;">Transformer</span> is just attention done in a loop';
+
+            const outFade = Math.max(0, 1 - (p / 0.40));
+            if (outFade > 0) {
+              const outHeaderY = geom.rowY[0] - rowBracketH / 2 - 16 * s;
+              drawLabel("output", geom.rightOutX, outHeaderY, "#79c0ff", "center", null, outFade);
+            }
+
+            const numRows = Math.min(T, geom.rowY.length);
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.strokeStyle = "rgba(121, 192, 255, 0.25)";
+            ctx.lineWidth = 1.0;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            const topY = geom.rowY[0];
+            const botY = geom.rowY[numRows - 1];
+            ctx.moveTo(geom.rightOutX, (topY + botY) / 2);
+            ctx.bezierCurveTo(geom.rightOutX + 45 * s, topY - 70 * s, -45 * s, topY - 70 * s, 0, (topY + botY) / 2);
+            ctx.stroke();
+            ctx.restore();
+
+            const easeP = easeInOut(p);
+            for (let i = 0; i < numRows; i++) {
+              const ry = geom.rowY[i];
+              const curX = cubicBezier(geom.rightOutX, geom.rightOutX + 45 * s, -45 * s, 0, easeP);
+              const curY = cubicBezier(ry, ry - 70 * s, ry - 70 * s, ry, easeP);
+
+              const oLabels = (data && data.out) ? data.out[i] : null;
+              if (isDepthMode) {
+                drawDepthVector(curX, curY, d, depthLen, '#79c0ff', 'rgba(121, 192, 255, 0.22)', oLabels, 1, 0, 1, 'vector');
+              } else {
+                drawVector(curX, curY, layoutHoriz, '#79c0ff', 'rgba(121, 192, 255, 0.22)', oLabels, 0, null, 1, '#ffffff', 1, 'vector');
+              }
+            }
+
+            if (isWebGL) {
+              threeFullAttn.renderFrame(T, d, ms, geom, width, height, s);
+            }
+            return;
+          }
+        }
+
+        function animLoop(now) {
+          const elapsed = typeof window.__freezeFullAttnMs === 'number' ? window.__freezeFullAttnMs : ((now - startTime) % TOTAL_DURATION);
+          if (elapsed < last_full_attn_elapsed) {
+            current_full_attn_data = generate_random_full_attn_data(T, d);
+          }
+          last_full_attn_elapsed = elapsed;
+          render(elapsed);
+          requestAnimationFrame(animLoop);
+        }
+        requestAnimationFrame(animLoop);
+
+        canvasStage.addEventListener('click', () => refresh_full_attn_data());
       })();
     })();
   </script>

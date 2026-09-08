@@ -91,17 +91,6 @@
       color: #7d8590;
     }
 
-    .float-legend {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.75rem;
-      color: #7d8590;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
     .prereqs-list {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -345,6 +334,333 @@
       padding-top: 1rem;
       border-top: 1px solid #21262d;
       margin-top: 0.35rem;
+    }
+
+    .attn-quiz-grid-wrap {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      overflow-x: auto;
+      padding: 0.5rem 0;
+      box-sizing: border-box;
+    }
+
+    .attn-quiz-container {
+      width: 100%;
+      max-width: 440px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      box-sizing: border-box;
+      margin: 0 auto;
+    }
+
+    .attn-qk-container {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      box-sizing: border-box;
+    }
+
+    @media (max-width: 440px) {
+      .attn-qk-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .attn-qk-group {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      border-radius: 6px;
+      padding: 0.4rem 0.55rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      box-sizing: border-box;
+    }
+
+    .attn-qk-title {
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #7d8590;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .attn-qk-items {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .attn-qk-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      transition: all 0.2s ease;
+      box-sizing: border-box;
+    }
+
+    .attn-qk-row.active {
+      border-color: #f0883e;
+      background: rgba(240, 136, 62, 0.16);
+      box-shadow: 0 0 8px rgba(240, 136, 62, 0.4);
+    }
+
+    .attn-qk-row .attn-vec-tag {
+      font-weight: 600;
+      font-size: 0.72rem;
+      color: #7d8590;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .attn-qk-row.active .attn-vec-tag {
+      color: #f0883e;
+    }
+
+    .attn-op-card {
+      width: 100%;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 0.45rem 0.65rem;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      align-items: center;
+    }
+
+    .attn-op-top {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.7rem;
+    }
+
+    .attn-op-badge {
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 0.65rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .attn-op-badge.op-dot {
+      background: rgba(240, 136, 62, 0.15);
+      color: #f0883e;
+      border: 1px solid rgba(240, 136, 62, 0.35);
+    }
+
+    .attn-op-badge.op-exp {
+      background: rgba(248, 81, 73, 0.15);
+      color: #f85149;
+      border: 1px solid rgba(248, 81, 73, 0.35);
+    }
+
+    .attn-op-badge.op-sum {
+      background: rgba(63, 185, 80, 0.15);
+      color: #3fb950;
+      border: 1px solid rgba(63, 185, 80, 0.35);
+    }
+
+    .attn-op-badge.op-prob {
+      background: rgba(88, 166, 255, 0.15);
+      color: #58a6ff;
+      border: 1px solid rgba(88, 166, 255, 0.35);
+    }
+
+    .attn-op-step {
+      color: #7d8590;
+      font-size: 0.68rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .attn-op-formula {
+      font-size: 0.8rem;
+      color: #e6edf3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .attn-op-target {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 24px;
+      height: 22px;
+      padding: 0 5px;
+      border-radius: 4px;
+      background: rgba(88, 166, 255, 0.22);
+      border: 1px solid #58a6ff;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.75rem;
+      box-shadow: 0 0 6px rgba(88, 166, 255, 0.45);
+    }
+
+    .attn-quiz-grid-wrap {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      overflow-x: auto;
+      padding: 0.2rem 0;
+      box-sizing: border-box;
+    }
+
+    .attn-quiz-table {
+      border-collapse: separate;
+      border-spacing: 4px;
+      margin: 0 auto;
+    }
+
+    .attn-quiz-table th,
+    .attn-quiz-table td {
+      padding: 0;
+      margin: 0;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .attn-corner-th,
+    .attn-row-td {
+      width: 36px;
+      min-width: 36px;
+      max-width: 36px;
+    }
+
+    .attn-col-th,
+    .attn-cell-td {
+      width: 46px;
+      min-width: 46px;
+      max-width: 46px;
+    }
+
+    .attn-col-th.sum-col,
+    .attn-cell-td.sum-cell {
+      width: 48px;
+      min-width: 48px;
+      max-width: 48px;
+    }
+
+    .attn-col-hdr,
+    .attn-row-hdr {
+      width: 100%;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(13, 17, 23, 0.7);
+      border: 1px solid #21262d;
+      border-radius: 5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: #7d8590;
+      box-sizing: border-box;
+      transition: all 0.2s ease;
+    }
+
+    .attn-col-hdr.active,
+    .attn-row-hdr.active {
+      border-color: #f0883e;
+      background: rgba(240, 136, 62, 0.16);
+      color: #f0883e;
+      box-shadow: 0 0 8px rgba(240, 136, 62, 0.4);
+    }
+
+    .attn-col-hdr.sum-hdr {
+      color: #3fb950;
+      border-color: rgba(63, 185, 80, 0.2);
+    }
+
+    .attn-matrix-cell {
+      width: 100%;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 5px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      color: #8b949e;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.72rem;
+      box-sizing: border-box;
+      transition: all 0.2s ease;
+    }
+
+    .attn-matrix-cell.active {
+      border-color: #58a6ff;
+      background: rgba(88, 166, 255, 0.25);
+      box-shadow: 0 0 8px rgba(88, 166, 255, 0.5);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .attn-matrix-cell.sim {
+      border-color: #3fb950;
+      background: rgba(63, 185, 80, 0.15);
+      color: #3fb950;
+      font-weight: 500;
+    }
+
+    .attn-matrix-cell.exp {
+      border-color: #f85149;
+      background: rgba(248, 81, 73, 0.15);
+      color: #f85149;
+      font-weight: 500;
+    }
+
+    .attn-matrix-cell.prob {
+      border-color: #58a6ff;
+      background: rgba(88, 166, 255, 0.18);
+      color: #79c0ff;
+      font-weight: 600;
+    }
+
+    .attn-row-sum {
+      width: 100%;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 5px;
+      background: rgba(22, 27, 34, 0.5);
+      border: 1px solid #21262d;
+      color: #484f58;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.7rem;
+      box-sizing: border-box;
+      transition: all 0.2s ease;
+    }
+
+    .attn-row-sum.active {
+      border-color: #3fb950;
+      background: rgba(63, 185, 80, 0.18);
+      color: #3fb950;
+      font-weight: 700;
+      box-shadow: 0 0 8px rgba(63, 185, 80, 0.4);
+    }
+
+    .attn-row-sum.done {
+      color: #3fb950;
+      background: rgba(63, 185, 80, 0.1);
+      border-color: rgba(63, 185, 80, 0.25);
     }
 
     .filters {
@@ -625,20 +941,197 @@
       background: rgba(163, 113, 247, 0.18);
       color: #a371f7;
     }
-
+    .calc-dock {
+      position: fixed;
+      bottom: 1.25rem;
+      right: 1.25rem;
+      z-index: 9999;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+    }
+    .calc-btn-fab {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #161b22;
+      border: 1px solid #30363d;
+      color: #7d8590;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+      transition: all 0.15s ease;
+      outline: none;
+    }
+    .calc-btn-fab svg {
+      pointer-events: none;
+    }
+    .calc-btn-fab:hover, .calc-btn-fab.active {
+      color: #58a6ff;
+      border-color: #58a6ff;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(88, 166, 255, 0.25);
+    }
+    .calc-panel {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      right: 0;
+      width: 176px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.65);
+      padding: 8px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .calc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 2px 2px 2px;
+      border-bottom: 1px solid #21262d;
+    }
+    .calc-title {
+      font-size: 0.68rem;
+      color: #7d8590;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+    .calc-close-btn {
+      background: none;
+      border: none;
+      color: #7d8590;
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+      padding: 0 2px;
+    }
+    .calc-close-btn:hover {
+      color: #e6edf3;
+    }
+    .calc-display-wrap {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      border-radius: 6px;
+      padding: 4px 8px;
+      text-align: right;
+      min-height: 42px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+    .calc-subdisplay {
+      font-size: 0.65rem;
+      color: #7d8590;
+      min-height: 12px;
+      line-height: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .calc-display {
+      font-size: 1.1rem;
+      color: #e6edf3;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .calc-keys {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+    }
+    .calc-key {
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #e6edf3;
+      border-radius: 5px;
+      font-size: 0.78rem;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+      padding: 0;
+      font-family: inherit;
+      transition: background 0.1s ease, border-color 0.1s ease;
+      outline: none;
+    }
+    .calc-key:hover {
+      background: #30363d;
+    }
+    .calc-key:active {
+      transform: scale(0.96);
+    }
+    .calc-key.op-c {
+      color: #7d8590;
+      background: rgba(110, 118, 129, 0.1);
+      border-color: rgba(110, 118, 129, 0.2);
+    }
+    .calc-key.op-c:hover {
+      color: #c9d1d9;
+      background: #30363d;
+    }
+    .calc-key.op-exp {
+      color: #f85149;
+      background: rgba(248, 81, 73, 0.15);
+      border-color: rgba(248, 81, 73, 0.4);
+      font-weight: 600;
+      font-size: 0.72rem;
+    }
+    .calc-key.op-div {
+      color: #a371f7;
+      background: rgba(163, 113, 247, 0.15);
+      border-color: rgba(163, 113, 247, 0.4);
+      font-weight: 600;
+    }
+    .calc-key.op-mul {
+      color: #f0883e;
+      background: rgba(240, 136, 62, 0.15);
+      border-color: rgba(240, 136, 62, 0.4);
+      font-weight: 600;
+    }
+    .calc-key.op-sub {
+      color: #7d8590;
+      background: rgba(110, 118, 129, 0.1);
+      border-color: rgba(110, 118, 129, 0.2);
+    }
+    .calc-key.op-sub:hover {
+      color: #c9d1d9;
+      background: #30363d;
+    }
+    .calc-key.op-add {
+      color: #3fb950;
+      background: rgba(63, 185, 80, 0.15);
+      border-color: rgba(63, 185, 80, 0.4);
+      font-weight: 600;
+    }
+    .calc-key.op-eq {
+      color: #ffffff;
+      background: #1f6feb;
+      border-color: #58a6ff;
+      font-weight: 600;
+    }
+    .calc-key.zero {
+      grid-column: span 2;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <header>
+    <div class="dot-card" id="prereq-card">
       <div class="prereqs-header">
         <div class="header-left">
           <div class="prereqs-label">Prerequisites</div>
           <button class="quiz-toggle-btn" id="prereq-quiz-toggle" aria-expanded="false">quiz &#9662;</button>
-        </div>
-        <div class="float-legend">
-          <span class="num-circle sm"></span>
-          <span>number</span>
         </div>
       </div>
       <div class="prereqs-list">
@@ -673,30 +1166,30 @@
           <span class="op-name">divide</span>
         </div>
       </div>
-    </header>
 
-    <div class="card quiz-card" id="prereq-quiz-card" style="display: none;">
-      <div class="filters">
-        <button class="filter-btn active" data-op="all">all</button>
-        <button class="filter-btn" data-op="add">+</button>
-        <button class="filter-btn" data-op="mul">&times;</button>
-        <button class="filter-btn" data-op="exp">exp</button>
-        <button class="filter-btn" data-op="div">&divide;</button>
-        <button class="filter-btn" id="prereq-new-btn">new quiz</button>
-      </div>
+      <div class="quiz-panel" id="prereq-quiz-panel" style="display: none;">
+        <div class="filters">
+          <button class="filter-btn active" data-op="all">all</button>
+          <button class="filter-btn" data-op="add">+</button>
+          <button class="filter-btn" data-op="mul">&times;</button>
+          <button class="filter-btn" data-op="exp">exp</button>
+          <button class="filter-btn" data-op="div">&divide;</button>
+          <button class="filter-btn" id="prereq-new-btn">new quiz</button>
+        </div>
 
-      <div class="problem" id="prereq-problem">...</div>
+        <div class="problem" id="prereq-problem">...</div>
 
-      <div class="input-row">
-        <input type="text" id="prereq-answer" placeholder="answer" autocomplete="off" inputmode="decimal" />
-        <button class="submit-btn" id="prereq-submit">Check</button>
-      </div>
+        <div class="input-row">
+          <input type="text" id="prereq-answer" placeholder="answer" autocomplete="off" inputmode="decimal" />
+          <button class="submit-btn" id="prereq-submit">Check</button>
+        </div>
 
-      <div class="feedback" id="prereq-feedback"></div>
+        <div class="feedback" id="prereq-feedback"></div>
 
-      <div class="stats">
-        <div>streak: <span id="prereq-stat-streak">0</span></div>
-        <div>solved: <span id="prereq-stat-solved">0</span></div>
+        <div class="stats">
+          <div>streak: <span id="prereq-stat-streak">0</span></div>
+          <div>solved: <span id="prereq-stat-solved">0</span></div>
+        </div>
       </div>
     </div>
 
@@ -794,7 +1287,10 @@
 
     <div class="dot-card" id="attn-card">
       <div class="dot-header">
-        <span>Attention Matrix</span>
+        <div class="header-left">
+          <span>Attention Matrix</span>
+          <button class="quiz-toggle-btn" id="attn-quiz-toggle" aria-expanded="false">quiz &#9662;</button>
+        </div>
         <span id="attn-header-dim">Queries &middot; Keys</span>
       </div>
 
@@ -820,6 +1316,76 @@
       </div>
 
       <div class="stage-caption" id="attn-caption">vectors &middot; 2 &middot; dim 2</div>
+
+      <div class="quiz-panel" id="attn-quiz-panel" style="display: none;">
+        <div class="filters">
+          <button class="filter-btn active" data-size="1">1&times;1</button>
+          <button class="filter-btn" data-size="2">2&times;2</button>
+          <button class="filter-btn" data-size="3">3&times;3</button>
+          <button class="filter-btn" data-size="4">4&times;4</button>
+          <button class="filter-btn" id="attn-new-btn">new quiz</button>
+        </div>
+
+        <div class="problem" id="attn-problem">...</div>
+
+        <div class="input-row">
+          <input type="text" id="attn-answer" placeholder="answer" autocomplete="off" inputmode="decimal" />
+          <button class="submit-btn" id="attn-submit">Check</button>
+        </div>
+
+        <div class="feedback" id="attn-feedback"></div>
+
+        <div class="stats">
+          <div>streak: <span id="attn-stat-streak">0</span></div>
+          <div>solved: <span id="attn-stat-solved">0</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="calc-dock" id="calc-dock">
+    <button class="calc-btn-fab" id="calc-toggle-btn" aria-label="Toggle calculator" title="Calculator">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="4" y="2" width="16" height="20" rx="2"></rect>
+        <line x1="8" y1="6" x2="16" y2="6"></line>
+        <line x1="16" y1="14" x2="16" y2="18"></line>
+        <path d="M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M8 18h.01M12 18h.01"></path>
+      </svg>
+    </button>
+    <div class="calc-panel" id="calc-panel" style="display: none;">
+      <div class="calc-header">
+        <span class="calc-title">calc</span>
+        <button class="calc-close-btn" id="calc-close-btn" aria-label="Close calculator">&times;</button>
+      </div>
+      <div class="calc-display-wrap">
+        <div class="calc-subdisplay" id="calc-subdisplay"></div>
+        <div class="calc-display" id="calc-display">0</div>
+      </div>
+      <div class="calc-keys">
+        <button class="calc-key op-c" data-action="clear">C</button>
+        <button class="calc-key op-exp" data-action="exp">exp</button>
+        <button class="calc-key op-div" data-action="op" data-val="/">&divide;</button>
+        <button class="calc-key op-mul" data-action="op" data-val="*">&times;</button>
+
+        <button class="calc-key num" data-action="num" data-val="7">7</button>
+        <button class="calc-key num" data-action="num" data-val="8">8</button>
+        <button class="calc-key num" data-action="num" data-val="9">9</button>
+        <button class="calc-key op-sub" data-action="op" data-val="-">&minus;</button>
+
+        <button class="calc-key num" data-action="num" data-val="4">4</button>
+        <button class="calc-key num" data-action="num" data-val="5">5</button>
+        <button class="calc-key num" data-action="num" data-val="6">6</button>
+        <button class="calc-key op-add" data-action="op" data-val="+">+</button>
+
+        <button class="calc-key num" data-action="num" data-val="1">1</button>
+        <button class="calc-key num" data-action="num" data-val="2">2</button>
+        <button class="calc-key num" data-action="num" data-val="3">3</button>
+        <button class="calc-key num" data-action="sign">&plusmn;</button>
+
+        <button class="calc-key num zero" data-action="num" data-val="0">0</button>
+        <button class="calc-key num" data-action="dot">.</button>
+        <button class="calc-key op-eq" data-action="eq">=</button>
+      </div>
     </div>
   </div>
 
@@ -860,14 +1426,14 @@
       let is_open = false;
 
       const toggle_btn = document.getElementById('prereq-quiz-toggle');
-      const card_el = document.getElementById('prereq-quiz-card');
+      const card_el = document.getElementById('prereq-quiz-panel');
       const problem_el = document.getElementById('prereq-problem');
       const input_el = document.getElementById('prereq-answer');
       const submit_btn = document.getElementById('prereq-submit');
       const feedback_el = document.getElementById('prereq-feedback');
       const streak_el = document.getElementById('prereq-stat-streak');
       const solved_el = document.getElementById('prereq-stat-solved');
-      const filter_btns = document.querySelectorAll('#prereq-quiz-card .filter-btn');
+      const filter_btns = document.querySelectorAll('#prereq-quiz-panel .filter-btn');
 
       const generators = {
         add: () => {
@@ -1069,14 +1635,20 @@
         input_el.focus();
 
         const len = rand_choice([2, 3]);
-        u = [];
-        v = [];
-        for (let i = 0; i < len; i++) {
-          u.push(rand_int(-3, 4));
-          v.push(rand_int(-3, 4));
-        }
-        if (u.every(x => x === 0)) u[0] = 2;
-        if (v.every(x => x === 0)) v[0] = 3;
+        do {
+          u = [];
+          v = [];
+          for (let i = 0; i < len; i++) {
+            u.push(rand_int(-3, 3));
+            v.push(rand_int(-3, 3));
+          }
+        } while (
+          u.every(x => x === u[0]) ||
+          v.every(x => x === v[0]) ||
+          u.filter(x => x === 0).length > 1 ||
+          v.filter(x => x === 0).length > 1 ||
+          u.reduce((acc, val, idx) => acc + val * v[idx], 0) === 0
+        );
 
         step_idx = 0;
         prods = [];
@@ -1277,50 +1849,43 @@
         submit_btn.className = 'submit-btn';
         submit_btn.textContent = 'Check';
 
-        const problem_type = rand_choice(['mask', 'zeros', 'ones', 'mixed', 'twos']);
-        z = [];
-        e_z = [];
-
-        if (problem_type === 'mask') {
-          const len = rand_choice([2, 3]);
-          const mask_idx = rand_int(0, len - 1);
-          for (let i = 0; i < len; i++) {
-            if (i === mask_idx) {
-              z.push('-\u221e');
-              e_z.push(0);
-            } else {
-              z.push('0');
-              e_z.push(1);
-            }
-          }
-        } else if (problem_type === 'zeros') {
-          const len = rand_choice([2, 3]);
-          for (let i = 0; i < len; i++) {
-            z.push('0');
-            e_z.push(1);
-          }
-        } else if (problem_type === 'ones') {
-          const len = rand_choice([2, 3]);
-          for (let i = 0; i < len; i++) {
-            z.push('1');
-            e_z.push(2.7);
-          }
-        } else if (problem_type === 'twos') {
-          z = ['2', '2'];
-          e_z = [7.4, 7.4];
-        } else {
-          const high_idx = rand_choice([0, 1]);
-          const val = rand_choice([1, 2]);
-          z = high_idx === 0 ? [String(val), '0'] : ['0', String(val)];
-          const ev = val === 1 ? 2.7 : 7.4;
-          e_z = high_idx === 0 ? [ev, 1] : [1, ev];
-        }
-
-        let s_sum = 0;
-        for (let i = 0; i < e_z.length; i++) s_sum += e_z[i];
-        sum = parseFloat(s_sum.toFixed(1));
-
-        probs = e_z.map(v => parseFloat((v / sum).toFixed(2)));
+        const presets = [
+          { z: ['1', '0'], e: [2.7, 1.0], s: 3.7, p: [0.73, 0.27] },
+          { z: ['0', '1'], e: [1.0, 2.7], s: 3.7, p: [0.27, 0.73] },
+          { z: ['2', '0'], e: [7.4, 1.0], s: 8.4, p: [0.88, 0.12] },
+          { z: ['0', '2'], e: [1.0, 7.4], s: 8.4, p: [0.12, 0.88] },
+          { z: ['2', '1'], e: [7.4, 2.7], s: 10.1, p: [0.73, 0.27] },
+          { z: ['1', '2'], e: [2.7, 7.4], s: 10.1, p: [0.27, 0.73] },
+          { z: ['0', '-1'], e: [1.0, 0.4], s: 1.4, p: [0.71, 0.29] },
+          { z: ['-1', '0'], e: [0.4, 1.0], s: 1.4, p: [0.29, 0.71] },
+          { z: ['1', '-1'], e: [2.7, 0.4], s: 3.1, p: [0.87, 0.13] },
+          { z: ['-1', '1'], e: [0.4, 2.7], s: 3.1, p: [0.13, 0.87] },
+          { z: ['-\u221e', '1'], e: [0.0, 2.7], s: 2.7, p: [0.0, 1.0] },
+          { z: ['1', '-\u221e'], e: [2.7, 0.0], s: 2.7, p: [1.0, 0.0] },
+          { z: ['-\u221e', '0'], e: [0.0, 1.0], s: 1.0, p: [0.0, 1.0] },
+          { z: ['0', '-\u221e'], e: [1.0, 0.0], s: 1.0, p: [1.0, 0.0] },
+          { z: ['-\u221e', '2'], e: [0.0, 7.4], s: 7.4, p: [0.0, 1.0] },
+          { z: ['2', '-\u221e'], e: [7.4, 0.0], s: 7.4, p: [1.0, 0.0] },
+          { z: ['1', '0', '-1'], e: [2.7, 1.0, 0.4], s: 4.1, p: [0.66, 0.24, 0.10] },
+          { z: ['-1', '1', '0'], e: [0.4, 2.7, 1.0], s: 4.1, p: [0.10, 0.66, 0.24] },
+          { z: ['0', '-1', '1'], e: [1.0, 0.4, 2.7], s: 4.1, p: [0.24, 0.10, 0.66] },
+          { z: ['2', '1', '0'], e: [7.4, 2.7, 1.0], s: 11.1, p: [0.67, 0.24, 0.09] },
+          { z: ['0', '2', '1'], e: [1.0, 7.4, 2.7], s: 11.1, p: [0.09, 0.67, 0.24] },
+          { z: ['1', '0', '2'], e: [2.7, 1.0, 7.4], s: 11.1, p: [0.24, 0.09, 0.67] },
+          { z: ['-\u221e', '1', '0'], e: [0.0, 2.7, 1.0], s: 3.7, p: [0.0, 0.73, 0.27] },
+          { z: ['1', '-\u221e', '0'], e: [2.7, 0.0, 1.0], s: 3.7, p: [0.73, 0.0, 0.27] },
+          { z: ['0', '1', '-\u221e'], e: [1.0, 2.7, 0.0], s: 3.7, p: [0.27, 0.73, 0.0] },
+          { z: ['-\u221e', '0', '1'], e: [0.0, 1.0, 2.7], s: 3.7, p: [0.0, 0.27, 0.73] },
+          { z: ['2', '0', '-\u221e'], e: [7.4, 1.0, 0.0], s: 8.4, p: [0.88, 0.12, 0.0] },
+          { z: ['0', '-\u221e', '2'], e: [1.0, 0.0, 7.4], s: 8.4, p: [0.12, 0.0, 0.88] },
+          { z: ['2', '-\u221e', '1'], e: [7.4, 0.0, 2.7], s: 10.1, p: [0.73, 0.0, 0.27] },
+          { z: ['1', '2', '0'], e: [2.7, 7.4, 1.0], s: 11.1, p: [0.24, 0.67, 0.09] }
+        ];
+        const chosen = rand_choice(presets);
+        z = chosen.z.slice();
+        e_z = chosen.e.slice();
+        sum = chosen.s;
+        probs = chosen.p.slice();
         step_idx = 0;
         render_problem();
       }
@@ -1378,7 +1943,7 @@
           input_el.style.display = '';
           if (step_idx < k) {
             target = e_z[step_idx];
-            target_tolerance = z[step_idx] === '1' ? 0.15 : (z[step_idx] === '2' ? 0.45 : 0.06);
+            target_tolerance = z[step_idx] === '1' ? 0.15 : (z[step_idx] === '2' ? 0.45 : (z[step_idx] === '-1' ? 0.10 : 0.06));
             const active_val = num_circle(z[step_idx], 'orange');
             problem_el.innerHTML = `<div style="font-size:0.85rem; color:#7d8590; width:100%; text-align:center; margin-bottom:0.4rem;">step ${step_idx + 1} of ${total_steps}: exp( ${active_val} )</div>${vec_box(z, step_idx, 'orange', 'blue')}`;
           } else if (step_idx === k) {
@@ -1535,9 +2100,727 @@
       });
     }
 
+    function create_attn_quiz() {
+      let size = 1;
+      let is_open = false;
+      let is_answered = false;
+      let streak = 0;
+      let solved = 0;
+
+      let q = [];
+      let k = [];
+      let sim = [];
+      let exp_mat = [];
+      let row_sums = [];
+      let attn_mat = [];
+      let steps = [];
+      let step_idx = 0;
+      let target = 0;
+      let target_tolerance = 1e-4;
+
+      const toggle_btn = document.getElementById('attn-quiz-toggle');
+      const panel_el = document.getElementById('attn-quiz-panel');
+      const problem_el = document.getElementById('attn-problem');
+      const input_el = document.getElementById('attn-answer');
+      const submit_btn = document.getElementById('attn-submit');
+      const feedback_el = document.getElementById('attn-feedback');
+      const streak_el = document.getElementById('attn-stat-streak');
+      const solved_el = document.getElementById('attn-stat-solved');
+      const filter_btns = document.querySelectorAll('#attn-quiz-panel .filter-btn');
+
+      function toggle() {
+        is_open = !is_open;
+        panel_el.style.display = is_open ? 'flex' : 'none';
+        if (toggle_btn) {
+          toggle_btn.classList.toggle('active', is_open);
+          toggle_btn.setAttribute('aria-expanded', is_open);
+          toggle_btn.innerHTML = is_open ? 'quiz &#9652;' : 'quiz &#9662;';
+        }
+        if (is_open) {
+          if (steps.length === 0) next_problem();
+          setTimeout(() => input_el.focus(), 50);
+        }
+      }
+      if (toggle_btn) toggle_btn.addEventListener('click', toggle);
+
+      const presets_by_size = {
+        1: [
+          { q: [[2, -1]], k: [[1, 0]], sim: [[2]], exp: [[7.4]], sums: [7.4], attn: [[1.0]] },
+          { q: [[1, 2]], k: [[0, 1]], sim: [[2]], exp: [[7.4]], sums: [7.4], attn: [[1.0]] },
+          { q: [[2, -1]], k: [[1, 1]], sim: [[1]], exp: [[2.7]], sums: [2.7], attn: [[1.0]] },
+          { q: [[1, 3]], k: [[1, 0]], sim: [[1]], exp: [[2.7]], sums: [2.7], attn: [[1.0]] },
+          { q: [[1, -2]], k: [[2, 1]], sim: [[0]], exp: [[1]], sums: [1], attn: [[1.0]] },
+          { q: [[2, 1]], k: [[-1, 2]], sim: [[0]], exp: [[1]], sums: [1], attn: [[1.0]] }
+        ],
+        2: [
+          {
+            q: [[1, 2], [2, -1]],
+            k: [[1, 0], [0, 1]],
+            sim: [[1, 2], [2, -1]],
+            exp: [[2.7, 7.4], [7.4, 0.4]],
+            sums: [10.1, 7.8],
+            attn: [[0.27, 0.73], [0.95, 0.05]]
+          },
+          {
+            q: [[2, 1], [1, -1]],
+            k: [[0, 1], [1, 0]],
+            sim: [[1, 2], [-1, 1]],
+            exp: [[2.7, 7.4], [0.4, 2.7]],
+            sums: [10.1, 3.1],
+            attn: [[0.27, 0.73], [0.13, 0.87]]
+          },
+          {
+            q: [[1, 2, 0], [0, 1, 2]],
+            k: [[1, 0, 1], [0, 1, 0]],
+            sim: [[1, 2], [2, 1]],
+            exp: [[2.7, 7.4], [7.4, 2.7]],
+            sums: [10.1, 10.1],
+            attn: [[0.27, 0.73], [0.73, 0.27]]
+          },
+          {
+            q: [[2, -1, 1], [1, 2, -1]],
+            k: [[0, 1, 1], [1, 0, -1]],
+            sim: [[0, 1], [1, 2]],
+            exp: [[1, 2.7], [2.7, 7.4]],
+            sums: [3.7, 10.1],
+            attn: [[0.27, 0.73], [0.27, 0.73]]
+          },
+          {
+            q: [[1, 0, 2], [2, 1, 0]],
+            k: [[0, 1, 1], [1, 0, 0]],
+            sim: [[2, 1], [1, 2]],
+            exp: [[7.4, 2.7], [2.7, 7.4]],
+            sums: [10.1, 10.1],
+            attn: [[0.73, 0.27], [0.27, 0.73]]
+          },
+          {
+            q: [[2, 1, 0], [0, -1, 2]],
+            k: [[1, 0, 1], [0, 1, 0]],
+            sim: [[2, 1], [2, -1]],
+            exp: [[7.4, 2.7], [7.4, 0.4]],
+            sums: [10.1, 7.8],
+            attn: [[0.73, 0.27], [0.95, 0.05]]
+          }
+        ],
+        3: [
+          {
+            q: [[1, 2, 0], [0, 1, 2], [2, 0, 1]],
+            k: [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+            sim: [[1, 2, 0], [0, 1, 2], [2, 0, 1]],
+            exp: [[2.7, 7.4, 1.0], [1.0, 2.7, 7.4], [7.4, 1.0, 2.7]],
+            sums: [11.1, 11.1, 11.1],
+            attn: [[0.24, 0.67, 0.09], [0.09, 0.24, 0.67], [0.67, 0.09, 0.24]]
+          },
+          {
+            q: [[2, 1, -1], [-1, 2, 1], [1, -1, 2]],
+            k: [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+            sim: [[2, 1, -1], [-1, 2, 1], [1, -1, 2]],
+            exp: [[7.4, 2.7, 0.4], [0.4, 7.4, 2.7], [2.7, 0.4, 7.4]],
+            sums: [10.5, 10.5, 10.5],
+            attn: [[0.70, 0.26, 0.04], [0.04, 0.70, 0.26], [0.26, 0.04, 0.70]]
+          },
+          {
+            q: [[1, 0, -1], [-1, 1, 0], [0, -1, 1]],
+            k: [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+            sim: [[1, 0, -1], [-1, 1, 0], [0, -1, 1]],
+            exp: [[2.7, 1.0, 0.4], [0.4, 2.7, 1.0], [1.0, 0.4, 2.7]],
+            sums: [4.1, 4.1, 4.1],
+            attn: [[0.66, 0.24, 0.10], [0.10, 0.66, 0.24], [0.24, 0.10, 0.66]]
+          },
+          {
+            q: [[2, 0, 1], [1, 2, 0], [0, 1, 2]],
+            k: [[0, 1, 0], [0, 0, 1], [1, 0, 0]],
+            sim: [[0, 1, 2], [2, 0, 1], [1, 2, 0]],
+            exp: [[1.0, 2.7, 7.4], [7.4, 1.0, 2.7], [2.7, 7.4, 1.0]],
+            sums: [11.1, 11.1, 11.1],
+            attn: [[0.09, 0.24, 0.67], [0.67, 0.09, 0.24], [0.24, 0.67, 0.09]]
+          }
+        ],
+        4: [
+          {
+            q: [[2, 1, 0, -1], [-1, 2, 1, 0], [0, -1, 2, 1], [1, 0, -1, 2]],
+            k: [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]],
+            sim: [
+              [2, 1, 0, -1],
+              [-1, 2, 1, 0],
+              [0, -1, 2, 1],
+              [1, 0, -1, 2]
+            ],
+            exp: [
+              [7.4, 2.7, 1.0, 0.4],
+              [0.4, 7.4, 2.7, 1.0],
+              [1.0, 0.4, 7.4, 2.7],
+              [2.7, 1.0, 0.4, 7.4]
+            ],
+            sums: [11.5, 11.5, 11.5, 11.5],
+            attn: [
+              [0.64, 0.23, 0.09, 0.04],
+              [0.04, 0.64, 0.23, 0.09],
+              [0.09, 0.04, 0.64, 0.23],
+              [0.23, 0.09, 0.04, 0.64]
+            ]
+          },
+          {
+            q: [[1, 2, -1, 0], [0, 1, 2, -1], [-1, 0, 1, 2], [2, -1, 0, 1]],
+            k: [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]],
+            sim: [
+              [1, 2, -1, 0],
+              [0, 1, 2, -1],
+              [-1, 0, 1, 2],
+              [2, -1, 0, 1]
+            ],
+            exp: [
+              [2.7, 7.4, 0.4, 1.0],
+              [1.0, 2.7, 7.4, 0.4],
+              [0.4, 1.0, 2.7, 7.4],
+              [7.4, 0.4, 1.0, 2.7]
+            ],
+            sums: [11.5, 11.5, 11.5, 11.5],
+            attn: [
+              [0.23, 0.64, 0.04, 0.09],
+              [0.09, 0.23, 0.64, 0.04],
+              [0.04, 0.09, 0.23, 0.64],
+              [0.64, 0.04, 0.09, 0.23]
+            ]
+          },
+          {
+            q: [[1, 0, 0, -1], [-1, 1, 0, 0], [0, -1, 1, 0], [0, 0, -1, 1]],
+            k: [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]],
+            sim: [
+              [1, 0, 0, -1],
+              [-1, 1, 0, 0],
+              [0, -1, 1, 0],
+              [0, 0, -1, 1]
+            ],
+            exp: [
+              [2.7, 1.0, 1.0, 0.4],
+              [0.4, 2.7, 1.0, 1.0],
+              [1.0, 0.4, 2.7, 1.0],
+              [1.0, 1.0, 0.4, 2.7]
+            ],
+            sums: [5.1, 5.1, 5.1, 5.1],
+            attn: [
+              [0.53, 0.20, 0.20, 0.07],
+              [0.07, 0.53, 0.20, 0.20],
+              [0.20, 0.07, 0.53, 0.20],
+              [0.20, 0.20, 0.07, 0.53]
+            ]
+          },
+          {
+            q: [[2, 0, 1, -1], [-1, 2, 0, 1], [1, -1, 2, 0], [0, 1, -1, 2]],
+            k: [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]],
+            sim: [
+              [2, 0, 1, -1],
+              [-1, 2, 0, 1],
+              [1, -1, 2, 0],
+              [0, 1, -1, 2]
+            ],
+            exp: [
+              [7.4, 1.0, 2.7, 0.4],
+              [0.4, 7.4, 1.0, 2.7],
+              [2.7, 0.4, 7.4, 1.0],
+              [1.0, 2.7, 0.4, 7.4]
+            ],
+            sums: [11.5, 11.5, 11.5, 11.5],
+            attn: [
+              [0.64, 0.09, 0.23, 0.04],
+              [0.04, 0.64, 0.09, 0.23],
+              [0.23, 0.04, 0.64, 0.09],
+              [0.09, 0.23, 0.04, 0.64]
+            ]
+          }
+        ]
+      };
+
+      function build_steps() {
+        steps = [];
+        for (let i = 0; i < size; i++) {
+          for (let j = 0; j < size; j++) {
+            steps.push({
+              type: 'dot',
+              row: i,
+              col: j,
+              target: sim[i][j],
+              tolerance: 1e-4,
+              desc: `dot product S${subscript(i+1)}${subscript(j+1)} = q${subscript(i+1)} &middot; k${subscript(j+1)}`
+            });
+          }
+        }
+        for (let i = 0; i < size; i++) {
+          for (let j = 0; j < size; j++) {
+            const v = sim[i][j];
+            const tol = v === 1 ? 0.15 : (v === 2 ? 0.45 : (v === -1 ? 0.10 : 0.06));
+            steps.push({
+              type: 'exp',
+              row: i,
+              col: j,
+              target: exp_mat[i][j],
+              tolerance: tol,
+              desc: `row ${i+1}: exp( S${subscript(i+1)}${subscript(j+1)} ) = exp(${v})`
+            });
+          }
+          steps.push({
+            type: 'sum',
+            row: i,
+            target: row_sums[i],
+            tolerance: 0.15,
+            desc: `row ${i+1}: denominator sum`
+          });
+          for (let j = 0; j < size; j++) {
+            steps.push({
+              type: 'prob',
+              row: i,
+              col: j,
+              target: attn_mat[i][j],
+              tolerance: 0.06,
+              desc: `row ${i+1}: divide by sum &rarr; A${subscript(i+1)}${subscript(j+1)}`
+            });
+          }
+        }
+      }
+
+      function render_qk_blocks(cur_r, cur_c, cur_type) {
+        let q_rows = '';
+        for (let i = 0; i < size; i++) {
+          const is_active = (cur_r === i);
+          const circles = q[i].map(v => num_circle(v, is_active ? 'orange' : 'blue')).join(' ');
+          q_rows += `<div class="attn-qk-row${is_active ? ' active' : ''}"><span class="attn-vec-tag">q${subscript(i + 1)}</span><span class="quiz-vec">${circles}</span></div>`;
+        }
+
+        let k_rows = '';
+        for (let j = 0; j < size; j++) {
+          const is_active = (cur_c === j && (cur_type === 'dot' || cur_type === 'prob' || cur_type === 'exp'));
+          const circles = k[j].map(v => num_circle(v, is_active ? 'orange' : 'blue')).join(' ');
+          k_rows += `<div class="attn-qk-row${is_active ? ' active' : ''}"><span class="attn-vec-tag">k${subscript(j + 1)}</span><span class="quiz-vec">${circles}</span></div>`;
+        }
+
+        return `<div class="attn-qk-container"><div class="attn-qk-group"><div class="attn-qk-title">queries (rows)</div><div class="attn-qk-items">${q_rows}</div></div><div class="attn-qk-group"><div class="attn-qk-title">keys (columns)</div><div class="attn-qk-items">${k_rows}</div></div></div>`;
+      }
+
+      function render_matrix_table(cur_step, is_done) {
+        const cur_type = cur_step ? cur_step.type : '';
+        const cur_r = cur_step ? cur_step.row : -1;
+        const cur_c = cur_step ? cur_step.col : -1;
+
+        let hdr_cells = '<th class="attn-corner-th"></th>';
+        for (let j = 0; j < size; j++) {
+          const is_k_active = (cur_c === j && (cur_type === 'dot' || cur_type === 'prob' || cur_type === 'exp'));
+          const k_cls = 'attn-col-hdr' + (is_k_active ? ' active' : '');
+          hdr_cells += `<th class="attn-col-th"><div class="${k_cls}">k${subscript(j + 1)}</div></th>`;
+        }
+        hdr_cells += '<th class="attn-col-th sum-col"><div class="attn-col-hdr sum-hdr">&sum;</div></th>';
+
+        let body_rows = '';
+        for (let i = 0; i < size; i++) {
+          const is_q_active = (cur_r === i);
+          const q_cls = 'attn-row-hdr' + (is_q_active ? ' active' : '');
+          let row_html = `<td class="attn-row-td"><div class="${q_cls}">q${subscript(i + 1)}</div></td>`;
+
+          for (let j = 0; j < size; j++) {
+            let cell_cls = 'attn-matrix-cell';
+            let cell_content = '&middot;';
+
+            if (is_done) {
+              cell_cls += ' prob';
+              cell_content = attn_mat[i][j];
+            } else {
+              const is_cur_cell = (cur_r === i && cur_c === j);
+
+              const prob_step_idx = steps.findIndex(s => s.type === 'prob' && s.row === i && s.col === j);
+              const exp_step_idx = steps.findIndex(s => s.type === 'exp' && s.row === i && s.col === j);
+              const dot_step_idx = steps.findIndex(s => s.type === 'dot' && s.row === i && s.col === j);
+
+              if (step_idx > prob_step_idx && prob_step_idx !== -1) {
+                cell_cls += ' prob';
+                cell_content = attn_mat[i][j];
+              } else if (is_cur_cell && cur_type === 'prob') {
+                cell_cls += ' active';
+                cell_content = '?';
+              } else if (step_idx > exp_step_idx && exp_step_idx !== -1) {
+                cell_cls += ' exp';
+                cell_content = exp_mat[i][j];
+              } else if (is_cur_cell && cur_type === 'exp') {
+                cell_cls += ' active';
+                cell_content = '?';
+              } else if (step_idx > dot_step_idx && dot_step_idx !== -1) {
+                cell_cls += ' sim';
+                cell_content = sim[i][j];
+              } else if (is_cur_cell && cur_type === 'dot') {
+                cell_cls += ' active';
+                cell_content = '?';
+              }
+            }
+            row_html += `<td class="attn-cell-td"><div class="${cell_cls}">${cell_content}</div></td>`;
+          }
+
+          let sum_cls = 'attn-row-sum';
+          let sum_content = '&middot;';
+          const sum_step_idx = steps.findIndex(s => s.type === 'sum' && s.row === i);
+          const has_passed_sum = (step_idx > sum_step_idx && sum_step_idx !== -1);
+
+          if (is_done) {
+            sum_cls += ' done';
+            sum_content = `1.0`;
+          } else if (cur_type === 'sum' && cur_r === i) {
+            sum_cls += ' active';
+            sum_content = `?`;
+          } else if (has_passed_sum) {
+            sum_cls += ' done';
+            sum_content = `${row_sums[i]}`;
+          }
+          row_html += `<td class="attn-cell-td sum-cell"><div class="${sum_cls}">${sum_content}</div></td>`;
+          body_rows += `<tr>${row_html}</tr>`;
+        }
+
+        return `<div class="attn-quiz-grid-wrap"><table class="attn-quiz-table"><thead><tr>${hdr_cells}</tr></thead><tbody>${body_rows}</tbody></table></div>`;
+      }
+
+      function next_problem() {
+        is_answered = false;
+        feedback_el.textContent = '';
+        feedback_el.className = 'feedback';
+        input_el.value = '';
+        submit_btn.className = 'submit-btn';
+        submit_btn.textContent = 'Check';
+
+        const pool = presets_by_size[size] || presets_by_size[1];
+        const chosen = rand_choice(pool);
+
+        q = chosen.q;
+        k = chosen.k;
+        sim = chosen.sim;
+        exp_mat = chosen.exp;
+        row_sums = chosen.sums;
+        attn_mat = chosen.attn;
+
+        build_steps();
+        step_idx = 0;
+        render_step();
+      }
+
+      function render_step() {
+        input_el.value = '';
+        submit_btn.classList.remove('ready-green');
+
+        if (is_answered) {
+          const qk_html = render_qk_blocks(-1, -1, '');
+          const matrix_html = render_matrix_table(null, true);
+          problem_el.innerHTML = `<div class="attn-quiz-container">${qk_html}<div class="attn-op-card"><div class="attn-op-top"><span class="attn-op-badge op-prob">Complete</span><span class="attn-op-step" style="color:#3fb950; font-weight:600;">Attention Matrix solved &middot; row sums = 1.0</span></div></div>${matrix_html}</div>`;
+          return;
+        }
+
+        const cur_step = steps[step_idx];
+        target = cur_step.target;
+        target_tolerance = cur_step.tolerance;
+
+        let badge_cls = '';
+        let badge_text = '';
+        let formula_html = '';
+
+        if (cur_step.type === 'dot') {
+          badge_cls = 'op-dot';
+          badge_text = `dot product \u00b7 S${subscript(cur_step.row + 1)}${subscript(cur_step.col + 1)}`;
+          const q_vec = vec_box(q[cur_step.row], -1, 'orange', 'orange');
+          const k_vec = vec_box(k[cur_step.col], -1, 'orange', 'orange');
+          formula_html = `<span style="color:#f0883e; font-weight:600;">q${subscript(cur_step.row + 1)} &middot; k${subscript(cur_step.col + 1)}</span> = ${q_vec} &middot; ${k_vec} = <span class="attn-op-target">?</span>`;
+        } else if (cur_step.type === 'exp') {
+          badge_cls = 'op-exp';
+          badge_text = `exponentiate \u00b7 exp(S${subscript(cur_step.row + 1)}${subscript(cur_step.col + 1)})`;
+          const active_sim = num_circle(sim[cur_step.row][cur_step.col], 'orange');
+          formula_html = `<span style="color:#f85149; font-weight:600;">exp( S${subscript(cur_step.row + 1)}${subscript(cur_step.col + 1)} )</span> = <span class="op-exp">exp</span>( ${active_sim} ) = <span class="attn-op-target">?</span>`;
+        } else if (cur_step.type === 'sum') {
+          badge_cls = 'op-sum';
+          badge_text = `row ${cur_step.row + 1} sum \u00b7 denominator &sum;`;
+          const sum_terms = exp_mat[cur_step.row].map(v => num_circle(v, 'red')).join(' + ');
+          formula_html = `<span style="color:#3fb950; font-weight:600;">row ${cur_step.row + 1} sum</span> = ${sum_terms} = <span class="attn-op-target">?</span>`;
+        } else if (cur_step.type === 'prob') {
+          badge_cls = 'op-prob';
+          badge_text = `softmax probability \u00b7 A${subscript(cur_step.row + 1)}${subscript(cur_step.col + 1)}`;
+          const exp_c = num_circle(exp_mat[cur_step.row][cur_step.col], 'purple');
+          const sum_c = num_circle(row_sums[cur_step.row], 'green');
+          formula_html = `<span style="color:#58a6ff; font-weight:600;">A${subscript(cur_step.row + 1)}${subscript(cur_step.col + 1)}</span> = ${exp_c} &divide; ${sum_c} = <span class="attn-op-target">?</span>`;
+        }
+
+        const qk_html = render_qk_blocks(cur_step.row, cur_step.col, cur_step.type);
+        const matrix_html = render_matrix_table(cur_step, false);
+
+        problem_el.innerHTML = `<div class="attn-quiz-container">${qk_html}<div class="attn-op-card"><div class="attn-op-top"><span class="attn-op-badge ${badge_cls}">${badge_text}</span><span class="attn-op-step">step ${step_idx + 1} of ${steps.length}</span></div><div class="attn-op-formula">${formula_html}</div></div>${matrix_html}</div>`;
+        setTimeout(() => input_el.focus(), 50);
+      }
+
+      function check_answer() {
+        const raw = input_el.value.trim().replace(',', '.');
+        if (!raw) return;
+        const val = parseFloat(raw);
+        if (isNaN(val)) {
+          feedback_el.className = 'feedback incorrect';
+          feedback_el.textContent = 'enter a valid number';
+          return;
+        }
+
+        const is_correct = Math.abs(val - target) <= target_tolerance;
+
+        if (is_correct) {
+          if (step_idx < steps.length - 1) {
+            feedback_el.className = 'feedback correct';
+            feedback_el.innerHTML = `&#10003; correct: ${target}`;
+            step_idx++;
+            render_step();
+            input_el.focus();
+          } else {
+            is_answered = true;
+            streak++;
+            solved++;
+            feedback_el.className = 'feedback correct';
+            feedback_el.innerHTML = `&#10003; complete! Attention Matrix solved (row sum = 1.0)`;
+            submit_btn.className = 'submit-btn ready-green';
+            submit_btn.textContent = 'New quiz \u2192';
+            streak_el.textContent = streak;
+            solved_el.textContent = solved;
+            render_step();
+          }
+        } else {
+          streak = 0;
+          streak_el.textContent = streak;
+          feedback_el.className = 'feedback incorrect';
+          feedback_el.innerHTML = `&#10005; target was ${target}`;
+        }
+      }
+
+      filter_btns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (btn.dataset.size) {
+            filter_btns.forEach(b => { if (b.dataset.size) b.classList.remove('active'); });
+            btn.classList.add('active');
+            size = parseInt(btn.dataset.size, 10);
+            next_problem();
+          }
+        });
+      });
+
+      const new_btn = document.getElementById('attn-new-btn');
+      if (new_btn) {
+        new_btn.addEventListener('click', () => {
+          next_problem();
+        });
+      }
+
+      submit_btn.addEventListener('click', () => {
+        if (is_answered) next_problem();
+        else check_answer();
+      });
+
+      input_el.addEventListener('input', () => {
+        input_el.value = input_el.value.replace(/[^0-9.-]/g, '');
+        if (input_el.value.trim().length > 0) {
+          submit_btn.classList.add('ready-green');
+        } else {
+          submit_btn.classList.remove('ready-green');
+        }
+      });
+
+      input_el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          if (is_answered) next_problem();
+          else check_answer();
+        }
+      });
+    }
+
     create_prereq_quiz();
     create_dot_quiz();
     create_softmax_quiz();
+    create_attn_quiz();
+
+    function init_calculator() {
+      const toggle_btn = document.getElementById('calc-toggle-btn');
+      const close_btn = document.getElementById('calc-close-btn');
+      const panel = document.getElementById('calc-panel');
+      const display_el = document.getElementById('calc-display');
+      const subdisplay_el = document.getElementById('calc-subdisplay');
+      const dock = document.getElementById('calc-dock');
+      const keys = panel ? panel.querySelectorAll('.calc-key') : [];
+
+      let is_open = false;
+      let display_val = '0';
+      let prev_operand = null;
+      let pending_op = null;
+      let waiting_for_next = false;
+      let subdisplay_val = '';
+
+      function update_ui() {
+        if (display_el) display_el.textContent = display_val;
+        if (subdisplay_el) subdisplay_el.textContent = subdisplay_val;
+      }
+
+      function toggle_calc(open_state) {
+        is_open = typeof open_state === 'boolean' ? open_state : !is_open;
+        if (panel) panel.style.display = is_open ? 'flex' : 'none';
+        if (toggle_btn) toggle_btn.classList.toggle('active', is_open);
+      }
+
+      if (toggle_btn) {
+        toggle_btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggle_calc();
+        });
+      }
+
+      if (close_btn) {
+        close_btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggle_calc(false);
+        });
+      }
+
+      document.addEventListener('click', (e) => {
+        if (is_open && dock && !dock.contains(e.target)) {
+          toggle_calc(false);
+        }
+      });
+
+      function compute(a, b, op) {
+        if (op === '+') return a + b;
+        if (op === '-') return a - b;
+        if (op === '*') return a * b;
+        if (op === '/') return b !== 0 ? a / b : NaN;
+        return b;
+      }
+
+      function handle_num(digit) {
+        if (waiting_for_next) {
+          display_val = digit;
+          waiting_for_next = false;
+        } else {
+          display_val = display_val === '0' ? digit : (display_val.length < 11 ? display_val + digit : display_val);
+        }
+        update_ui();
+      }
+
+      function handle_dot() {
+        if (waiting_for_next) {
+          display_val = '0.';
+          waiting_for_next = false;
+        } else if (!display_val.includes('.')) {
+          display_val += '.';
+        }
+        update_ui();
+      }
+
+      function handle_sign() {
+        const val = parseFloat(display_val);
+        if (!isNaN(val) && val !== 0) {
+          display_val = String(-val);
+          update_ui();
+        }
+      }
+
+      function handle_clear() {
+        display_val = '0';
+        prev_operand = null;
+        pending_op = null;
+        waiting_for_next = false;
+        subdisplay_val = '';
+        update_ui();
+      }
+
+      function handle_exp() {
+        const val = parseFloat(display_val);
+        if (isNaN(val)) return;
+        const res = Math.exp(val);
+        const rounded = Math.abs(val - 1) < 1e-4 ? 2.7 : parseFloat(res.toFixed(4));
+        subdisplay_val = `exp(${display_val})`;
+        display_val = String(rounded);
+        waiting_for_next = true;
+        update_ui();
+      }
+
+      function handle_op(next_op) {
+        const current = parseFloat(display_val);
+        if (isNaN(current)) return;
+        const op_sym = next_op === '*' ? '\u00d7' : (next_op === '/' ? '\u00f7' : (next_op === '-' ? '\u2212' : '+'));
+
+        if (pending_op && !waiting_for_next) {
+          const res = compute(prev_operand, current, pending_op);
+          prev_operand = res;
+          display_val = String(parseFloat(res.toFixed(4)));
+        } else {
+          prev_operand = current;
+        }
+
+        pending_op = next_op;
+        waiting_for_next = true;
+        subdisplay_val = `${parseFloat(prev_operand.toFixed(4))} ${op_sym}`;
+        update_ui();
+      }
+
+      function handle_eq() {
+        if (!pending_op || prev_operand === null) return;
+        const current = parseFloat(display_val);
+        if (isNaN(current)) return;
+        const op_sym = pending_op === '*' ? '\u00d7' : (pending_op === '/' ? '\u00f7' : (pending_op === '-' ? '\u2212' : '+'));
+        const res = compute(prev_operand, current, pending_op);
+        subdisplay_val = `${parseFloat(prev_operand.toFixed(4))} ${op_sym} ${current} =`;
+        display_val = String(parseFloat(res.toFixed(4)));
+        prev_operand = null;
+        pending_op = null;
+        waiting_for_next = true;
+        update_ui();
+      }
+
+      keys.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const action = btn.dataset.action;
+          const val = btn.dataset.val;
+
+          if (action === 'num') handle_num(val);
+          else if (action === 'dot') handle_dot();
+          else if (action === 'sign') handle_sign();
+          else if (action === 'clear') handle_clear();
+          else if (action === 'exp') handle_exp();
+          else if (action === 'op') handle_op(val);
+          else if (action === 'eq') handle_eq();
+        });
+      });
+
+      window.addEventListener('keydown', (e) => {
+        if (!is_open) return;
+        const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+        if (tag === 'input' || tag === 'textarea') return;
+
+        if (e.key >= '0' && e.key <= '9') {
+          handle_num(e.key);
+        } else if (e.key === '.') {
+          handle_dot();
+        } else if (e.key === '+') {
+          handle_op('+');
+        } else if (e.key === '-') {
+          handle_op('-');
+        } else if (e.key === '*' || e.key === 'x') {
+          handle_op('*');
+        } else if (e.key === '/') {
+          e.preventDefault();
+          handle_op('/');
+        } else if (e.key === 'e' || e.key === 'E') {
+          handle_exp();
+        } else if (e.key === 'Enter' || e.key === '=') {
+          e.preventDefault();
+          handle_eq();
+        } else if (e.key === 'Escape' || e.key === 'c' || e.key === 'C') {
+          handle_clear();
+        } else if (e.key === 'Backspace') {
+          if (!waiting_for_next && display_val.length > 1) {
+            display_val = display_val.slice(0, -1);
+          } else {
+            display_val = '0';
+          }
+          update_ui();
+        }
+      });
+    }
+
+    init_calculator();
 
       function createMagnitudeGradient(ctx, x, y, r, val, baseColor = '#58a6ff', alpha = 1, category = 'default') {
         const num = typeof val === 'number' ? val : parseFloat(val);
@@ -3869,6 +5152,10 @@
               caption.innerHTML = '<span class="caption-op mul">Dot Product</span>: <span class="caption-op add">&sum; sum</span> &rarr; similarity scores';
             }
 
+            const labelY = geom.matTop - 14 * s;
+            const labelFade = Math.min(1, (ms - 3600) / 300);
+            drawLabel("dot product", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, labelFade);
+
             ctx.save();
             ctx.translate(centerX, centerY);
             ctx.lineWidth = 1.2;
@@ -4001,6 +5288,9 @@
           if (ms >= 5600 && ms < 7600) {
             caption.innerHTML = '<span class="caption-op add">Dot Product</span>: <span class="caption-op add">+ sum</span> &rarr; similarity scores';
 
+            const labelY = geom.matTop - 14 * s;
+            drawLabel("dot product", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
+
             const p = (ms - 5600) / 2000;
             const coalesceProg = Math.min(1, p / 0.72);
             const easeCoal = coalesceProg * coalesceProg * (3 - 2 * coalesceProg);
@@ -4052,6 +5342,9 @@
           if (ms >= 7600 && ms < 9000) {
             caption.innerHTML = '<span class="caption-op exp">Softmax</span> (step 1): <span class="caption-op exp">exp</span> elementwise on each row';
 
+            const labelY = geom.matTop - 14 * s;
+            drawLabel("softmax", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
+
             const p = (ms - 7600) / 1400;
             const flash = Math.sin(p * Math.PI);
             const rMult = 1 + 0.14 * flash;
@@ -4068,6 +5361,9 @@
 
           if (ms >= 9000 && ms < 10600) {
             caption.innerHTML = '<span class="caption-op exp">Softmax</span> (step 2): <span class="caption-op add">+ sum</span> each row &rarr; denominators';
+
+            const labelY = geom.matTop - 14 * s;
+            drawLabel("softmax", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
 
             const p = (ms - 9000) / 1600;
             const sumProg = Math.min(1, p / 0.72);
@@ -4120,6 +5416,9 @@
 
           if (ms >= 10600 && ms < 12200) {
             caption.innerHTML = '<span class="caption-op exp">Softmax</span> (step 3): <span class="caption-op div">&divide; divide</span> each row by its sum';
+
+            const labelY = geom.matTop - 14 * s;
+            drawLabel("softmax", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
 
             const p = (ms - 10600) / 1600;
             const isDivided = p >= 0.40;

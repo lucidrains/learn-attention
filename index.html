@@ -1589,6 +1589,44 @@
       return String(n).split('').map(c => chars[c] || c).join('');
     };
 
+    function round_probabilities(probs) {
+      const T = probs.length;
+      if (T === 0) return [];
+      if (T === 1) return ['1.00'];
+
+      const sum = probs.reduce((a, b) => a + b, 0) || 1;
+      const normalized = probs.map(p => Math.max(0, p) / sum);
+      const scaled = normalized.map(p => p * 100);
+      const floors = scaled.map(Math.floor);
+
+      let remainder = 100 - floors.reduce((a, b) => a + b, 0);
+      const diffs = scaled.map((s, i) => ({ diff: s - floors[i], idx: i }));
+
+      if (remainder > 0) {
+        diffs.sort((a, b) => b.diff - a.diff);
+        let k = 0;
+        while (remainder > 0) {
+          floors[diffs[k % diffs.length].idx]++;
+          remainder--;
+          k++;
+        }
+      } else if (remainder < 0) {
+        diffs.sort((a, b) => a.diff - b.diff);
+        let k = 0;
+        while (remainder < 0) {
+          const idx = diffs[k % diffs.length].idx;
+          if (floors[idx] > 0) {
+            floors[idx]--;
+            remainder++;
+          }
+          k++;
+          if (k > diffs.length * 100) break;
+        }
+      }
+
+      return floors.map(c => (c / 100).toFixed(2));
+    };
+
     function num_circle(val, color = 'blue') {
       const s = String(val);
       const isSingle = s.length === 1;
@@ -3556,6 +3594,7 @@
           if (count > 64) return null;
           const raw = [];
           const exp = [];
+          const evs = [];
           let sumVal = 0;
           for (let i = 0; i < count; i++) {
             let z;
@@ -3569,13 +3608,10 @@
             const ez = Math.exp(z);
             raw.push(z.toFixed(1));
             exp.push(ez.toFixed(1));
+            evs.push(ez);
             sumVal += ez;
           }
-          const prob = [];
-          for (let i = 0; i < count; i++) {
-            const p = Math.exp(parseFloat(raw[i])) / sumVal;
-            prob.push(p.toFixed(2));
-          }
+          const prob = round_probabilities(evs);
           return {
             raw,
             exp,
@@ -4539,6 +4575,7 @@
             const mulRow = [];
             const simRow = [];
             const expRow = [];
+            const rowEvs = [];
             let rowSum = 0;
             for (let j = 0; j < T_eff; j++) {
               const pairMul = [];
@@ -4550,9 +4587,11 @@
               }
               mulRow.push(pairMul);
               const scaledDot = rawDot * scaleFactor;
+              const dotVal = parseFloat(scaledDot.toFixed(1));
               simRow.push(scaledDot.toFixed(1));
-              const ev = Math.exp(Math.max(-4, Math.min(4, scaledDot)));
+              const ev = Math.exp(Math.max(-4, Math.min(4, dotVal)));
               expRow.push(ev.toFixed(1));
+              rowEvs.push(ev);
               rowSum += ev;
             }
             mul.push(mulRow);
@@ -4560,14 +4599,7 @@
             exp.push(expRow);
             sum.push(rowSum.toFixed(1));
 
-            const probRow = [];
-            let pSum = 0;
-            for (let j = 0; j < T_eff; j++) {
-              const p = Math.exp(Math.max(-4, Math.min(4, parseFloat(simRow[j])))) / rowSum;
-              probRow.push(p);
-              pSum += p;
-            }
-            const finalRow = probRow.map(p => (p / pSum).toFixed(2));
+            const finalRow = round_probabilities(rowEvs);
             prob.push(finalRow);
           }
           return { q, k, mul, sim, exp, sum, prob };
@@ -6198,7 +6230,7 @@
           }
 
           for (let i = 0; i < T_eff; i++) {
-            const mulRow = [], simRow = [], expRow = [];
+            const mulRow = [], simRow = [], expRow = [], rowEvs = [];
             let rowSum = 0;
             for (let j = 0; j < T_eff; j++) {
               const pairMul = [];
@@ -6209,9 +6241,11 @@
                 rawDot += p;
               }
               mulRow.push(pairMul);
+              const dotVal = parseFloat(formatVal(rawDot, 1));
               simRow.push(formatVal(rawDot, 1));
-              const ev = Math.exp(clamp(rawDot, -4, 4));
+              const ev = Math.exp(clamp(dotVal, -4, 4));
               expRow.push(ev.toFixed(1));
+              rowEvs.push(ev);
               rowSum += ev;
             }
             mul.push(mulRow);
@@ -6219,12 +6253,8 @@
             exp.push(expRow);
             sum.push(formatVal(rowSum, 1));
 
-            const probRowStr = [], probRowNums = [];
-            for (let j = 0; j < T_eff; j++) {
-              const p = Math.exp(clamp(parseFloat(simRow[j]), -4, 4)) / rowSum;
-              probRowNums.push(p);
-              probRowStr.push(p.toFixed(2));
-            }
+            const probRowStr = round_probabilities(rowEvs);
+            const probRowNums = probRowStr.map(Number);
             prob.push(probRowStr);
             probNums.push(probRowNums);
           }

@@ -3779,7 +3779,7 @@
         } else if (baseColor === '#f85149' || baseColor === 'red' || (typeof baseColor === 'string' && baseColor.includes('248, 81, 73'))) {
           rgb = [248, 81, 73];
         } else if (baseColor === '#a371f7' || baseColor === 'purple' || (typeof baseColor === 'string' && baseColor.includes('163, 113, 247'))) {
-          rgb = [135, 138, 172];
+          rgb = [163, 113, 247];
         } else if (Array.isArray(baseColor)) {
           rgb = baseColor;
         }
@@ -3981,7 +3981,7 @@
 
                 let dotFill = fill;
                 let dotStroke = stroke;
-                if (lbl !== null) {
+                if (lbl !== null && glow <= 0) {
                   const magInfo = createMagnitudeGradient(ctx, px, py, r, lbl, stroke, alpha);
                   dotFill = magInfo.grad;
                   dotStroke = magInfo.strokeColor;
@@ -4386,7 +4386,7 @@
 
           const drawBracket = (x, y, h, isLeft, alpha = 1, color = "#484f58") => drawCanvasBracket(ctx, centerX + x, centerY + y, h, isLeft, alpha, color, 6);
 
-          function drawDotBatch(positions, yBase, easeY, easeX, scale, stroke, fill, glow = 0, glowColor = null, alpha = 1, labels = null, textColor = '#ffffff') {
+          function drawDotBatch(positions, yBase, easeY, easeX, scale, stroke, fill, glow = 0, glowColor = null, alpha = 1, labels = null, textColor = '#ffffff', category = 'default') {
             if (alpha <= 0) return;
             ctx.save();
             ctx.translate(centerX, centerY);
@@ -4420,8 +4420,8 @@
 
                 let dotFill = fill;
                 let dotStroke = stroke;
-                if (lbl !== null) {
-                  const magInfo = createMagnitudeGradient(ctx, px, py, r, lbl, stroke, alpha);
+                if (lbl !== null && category !== 'flash') {
+                  const magInfo = createMagnitudeGradient(ctx, px, py, r, lbl, stroke, alpha, category);
                   dotFill = magInfo.grad;
                   dotStroke = magInfo.strokeColor;
                 }
@@ -4434,7 +4434,7 @@
                   ctx.fillStyle = dotFill;
                   ctx.fill();
                 }
-                ctx.lineWidth = 0.75;
+                ctx.lineWidth = category === 'flash' ? 1.5 : 0.75;
                 ctx.strokeStyle = dotStroke;
                 ctx.stroke();
               }
@@ -4451,8 +4451,12 @@
                 const p = positions[i];
                 const px = p.x * easeX;
                 const py = yBase + p.y * easeY;
-                const magInfo = createMagnitudeGradient(ctx, px, py, r, labels[i], stroke, alpha);
-                ctx.fillStyle = magInfo.textColor;
+                if (category === 'flash') {
+                  ctx.fillStyle = textColor;
+                } else {
+                  const magInfo = createMagnitudeGradient(ctx, px, py, r, labels[i], stroke, alpha, category);
+                  ctx.fillStyle = magInfo.textColor;
+                }
                 ctx.fillText(labels[i], px, py);
               }
             }
@@ -4576,11 +4580,12 @@
 
             const p = (ms - 5200) / 1400;
             const isDivided = p >= 0.40;
-            const flash = Math.sin(p * Math.PI);
+            const divProg = isDivided ? (p - 0.40) / 0.60 : 0;
+            const flash = isDivided ? Math.sin(divProg * Math.PI) : 0;
+            const isFlash = isDivided && flash > 0.05;
 
-            const bColor = flash > 0.3 ? '#a371f7' : '#484f58';
-            drawBracket(bracketL, Y_TOP, bracketH, true, 1, bColor);
-            drawBracket(bracketR, Y_TOP, bracketH, false, 1, bColor);
+            drawBracket(bracketL, Y_TOP, bracketH, true, 1, '#484f58');
+            drawBracket(bracketR, Y_TOP, bracketH, false, 1, '#484f58');
 
             const rayAlpha = Math.max(0, Math.sin(p * Math.PI));
             if (rayAlpha > 0) {
@@ -4659,9 +4664,13 @@
             }
 
             const strokeColor = isDivided ? '#a371f7' : '#f85149';
-            const purpleBg = `rgba(163, 113, 247, ${0.15 + 0.35 * flash})`;
+            const purpleBg = `rgba(163, 113, 247, ${(0.28 + 0.45 * flash).toFixed(3)})`;
             const labels = isDivided && data ? data.prob : (data ? data.exp : null);
-            drawDotBatch(layout.positions, Y_TOP, 1, 1, 1 + 0.15 * flash, strokeColor, purpleBg, 0, null, 1, labels, '#ffffff');
+            const scale = 1 + (isFlash ? 0.20 * flash : 0);
+            const glow = isFlash ? 14 * flash : 0;
+            const glowColor = isFlash ? '#a371f7' : null;
+            const cat = isFlash ? 'flash' : (isDivided ? 'prob' : 'exp');
+            drawDotBatch(layout.positions, Y_TOP, 1, 1, scale, strokeColor, purpleBg, glow, glowColor, 1, labels, '#ffffff', cat);
             return;
           }
 
@@ -5058,12 +5067,16 @@
               matAlpha = 0;
             } else if (ms >= 3600 && ms < 5600) {
               const p = (ms - 3600) / 2000;
-              if (p >= 0.65) {
-                const contactPhase = (p - 0.65) / 0.35;
+              if (p >= 0.55 && p < 0.80) {
+                const contactPhase = (p - 0.55) / 0.25;
                 const flash = Math.sin(contactPhase * Math.PI);
                 matR = 0.94; matG = 0.53; matB = 0.24;
                 matAlpha = 0.85 + 0.15 * flash;
                 matScale = 1.0 + 0.22 * flash;
+              } else if (p >= 0.80) {
+                matR = 0.94; matG = 0.53; matB = 0.24;
+                matAlpha = 0.85;
+                matScale = 1.0;
               } else {
                 matAlpha = 0;
               }
@@ -5074,30 +5087,37 @@
               matR = 0.25; matG = 0.73; matB = 0.31;
               matAlpha = 0.90;
               matScale = 1.0 + 0.20 * flash;
-            } else if (ms >= 7600 && ms < 9000) {
-              const p = (ms - 7600) / 1400;
+            } else if (ms >= 7600 && ms < 8400) {
+              matR = 0.25; matG = 0.73; matB = 0.31;
+              matAlpha = 0.90;
+              matScale = 1.0;
+            } else if (ms >= 8400 && ms < 9800) {
+              const p = (ms - 8400) / 1400;
               const flash = Math.sin(p * Math.PI);
               matR = 0.97; matG = 0.32; matB = 0.29;
               matAlpha = 0.90;
               matScale = 1.0 + 0.18 * flash;
-            } else if (ms >= 9000 && ms < 10600) {
+            } else if (ms >= 9800 && ms < 11400) {
               matR = 0.97; matG = 0.32; matB = 0.29;
               matAlpha = 0.80;
               matScale = 1.0;
-            } else if (ms >= 10600 && ms < 12200) {
-              const p = (ms - 10600) / 1600;
+            } else if (ms >= 11400 && ms < 13000) {
+              const p = (ms - 11400) / 1600;
               const isDivided = p >= 0.40;
-              const flash = Math.sin(p * Math.PI);
+              const divProg = isDivided ? (p - 0.40) / 0.60 : 0;
+              const flash = isDivided ? Math.sin(divProg * Math.PI) : 0;
               if (isDivided) {
                 matR = 0.64; matG = 0.44; matB = 0.97;
               } else {
                 matR = 0.97; matG = 0.32; matB = 0.29;
               }
               matAlpha = 0.85 + 0.15 * flash;
-              matScale = 1.0 + 0.14 * flash;
-            } else if (ms >= 12200) {
+              matScale = 1.0 + 0.20 * flash;
+            } else if (ms >= 13000) {
               isPhase8 = true;
               matAlpha = 1.0;
+              matR = 0.35; matG = 0.65; matB = 1.0;
+              matScale = 1.0;
               if (ms >= 15600) {
                 const fade = Math.max(0, 1 - (ms - 15600) / 1000);
                 matAlpha *= fade;
@@ -5441,7 +5461,7 @@
             let finalStroke = stroke;
             let finalTextColor = textColor;
 
-            if (text !== null && text !== undefined) {
+            if (text !== null && text !== undefined && category !== 'flash') {
               const magInfo = createMagnitudeGradient(ctx, 0, 0, r, text, stroke, alpha, category);
               finalFill = magInfo.grad;
               finalStroke = magInfo.strokeColor;
@@ -5450,6 +5470,9 @@
                 ctx.shadowBlur = magInfo.glowBlur;
                 ctx.shadowColor = magInfo.glowColor || finalStroke;
               }
+            } else if (glow > 0 && r >= 3.0) {
+              ctx.shadowBlur = glow;
+              ctx.shadowColor = glowColor || finalStroke;
             }
 
             ctx.beginPath();
@@ -5461,11 +5484,11 @@
               ctx.fill();
             }
             if (finalStroke) {
-              ctx.lineWidth = 0.75;
+              ctx.lineWidth = category === 'flash' ? 1.5 : 0.75;
               ctx.strokeStyle = finalStroke;
               ctx.stroke();
             }
-            const isMatrixCell = (category === 'sim' || category === 'exp' || category === 'sum' || category === 'prob' || category === 'binary');
+            const isMatrixCell = (category === 'sim' || category === 'exp' || category === 'sum' || category === 'prob' || category === 'binary' || category === 'flash');
             const shouldShowNumber = isMatrixCell ? (!isWebGL && T <= 16) : showNumbers;
             if (shouldShowNumber && text !== null && text !== undefined && r >= 2.4) {
               ctx.shadowBlur = 0;
@@ -5546,7 +5569,7 @@
             ctx.restore();
           }
 
-          function drawDepthVector(baseX, baseY, numPoints, dLen, stroke, fill, labels = null, alpha = 1, collapse = 0, scaleR = 1, category = 'vector') {
+          function drawDepthVector(baseX, baseY, numPoints, dLen, stroke, fill, labels = null, alpha = 1, collapse = 0, scaleR = 1, category = 'vector', glow = 0, glowColor = null) {
             if (alpha <= 0) return;
             const count = Math.min(numPoints, 32);
             const unitX = -0.82;
@@ -5557,7 +5580,7 @@
             if (curLen > 2 && alpha > 0.08) {
               ctx.save();
               ctx.translate(centerX + baseX, centerY + baseY);
-              const rayColor = (category === 'mul')
+              const rayColor = (category === 'mul' || category === 'flash')
                 ? `rgba(240, 136, 62, ${(0.42 * alpha * (1 - collapse * 0.8)).toFixed(3)})`
                 : `rgba(88, 166, 255, ${(0.32 * alpha * (1 - collapse * 0.8)).toFixed(3)})`;
               ctx.strokeStyle = rayColor;
@@ -5569,7 +5592,7 @@
 
               if (!isWebGL && d >= 64 && curLen > 18) {
                 const tickCount = 4;
-                ctx.strokeStyle = (category === 'mul')
+                ctx.strokeStyle = (category === 'mul' || category === 'flash')
                   ? `rgba(240, 136, 62, ${(0.28 * alpha).toFixed(3)})`
                   : `rgba(88, 166, 255, ${(0.24 * alpha).toFixed(3)})`;
                 ctx.lineWidth = 0.8;
@@ -5596,7 +5619,7 @@
               const r = Math.max(0.6, rBase * (1.0 - (isWebGL ? 0.18 : 0.32) * f));
               const rawVal = (labels && labels.length) ? labels[m % labels.length] : null;
               const nodeAlpha = alpha * (1.0 - (isWebGL ? 0.15 : 0.22) * f);
-              drawCircle(px, py, r, stroke, fill, rawVal, 0, null, nodeAlpha, '#e6edf3', category);
+              drawCircle(px, py, r, stroke, fill, rawVal, glow, glowColor, nodeAlpha, '#e6edf3', category);
             }
           }
 
@@ -5653,7 +5676,7 @@
 
           function drawMatrix(stroke, fill, cellValues, glow = 0, glowColor = null, alpha = 1, textColor = "#ffffff", rMult = 1, isFinalProb = false, category = 'default') {
             if (alpha <= 0) return;
-            const bColor = glow > 5 ? glowColor : "#484f58";
+            const bColor = "#484f58";
             drawBracket(geom.matL, geom.matCenterY, geom.matHBrack, true, alpha, bColor, 7);
             drawBracket(geom.matR, geom.matCenterY, geom.matHBrack, false, alpha, bColor, 7);
 
@@ -5957,7 +5980,7 @@
 
           if (ms >= 3600 && ms < 5600) {
             const p = (ms - 3600) / 2000;
-            updateAttnMathHighlight(p < 0.68 ? 'qk-orange' : 'qk-green');
+            updateAttnMathHighlight('qk-orange');
             const outerAlpha = Math.max(0, 1 - p / 0.45) * 0.85;
             if (outerAlpha > 0) {
               drawStaticHeaders(outerAlpha);
@@ -5965,24 +5988,16 @@
               drawGridOutline(0.75);
             }
 
-            const isApproach = p < 0.50;
-            const isContact = p >= 0.50 && p < 0.68;
-            const isCollapse = p >= 0.68;
+            const isApproach = p < 0.55;
+            const isContact = p >= 0.55 && p < 0.80;
 
-            const approachProg = Math.min(1, p / 0.50);
+            const approachProg = Math.min(1, p / 0.55);
             const easeApproach = approachProg * approachProg * (3 - 2 * approachProg);
 
-            const contactProg = isContact ? (p - 0.50) / 0.18 : 0;
+            const contactProg = isContact ? (p - 0.55) / 0.25 : 0;
             const flash = isContact ? Math.sin(contactProg * Math.PI) : 0;
 
-            const collapseProg = isCollapse ? (p - 0.68) / 0.32 : 0;
-            const easeCollapse = collapseProg * collapseProg * (3 - 2 * collapseProg);
-
-            if (isApproach || isContact) {
-              caption.innerHTML = '<span class="caption-op mul">Dot Product</span>: <span class="caption-op mul">&times; multiply</span> pairwise';
-            } else {
-              caption.innerHTML = '<span class="caption-op mul">Dot Product</span>: <span class="caption-op add">&sum; sum</span> &rarr; similarity scores';
-            }
+            caption.innerHTML = '<span class="caption-op mul">Dot Product</span>: <span class="caption-op mul">&times; multiply</span> pairwise';
 
             const labelY = geom.matTop - 30 * s;
             const labelFade = Math.min(1, (ms - 3600) / 300);
@@ -5994,7 +6009,8 @@
 
             const maxColX = geom.colX[geom.colX.length - 1];
             const guideEndX = geom.leftQueryX + (maxColX + 16 * s - geom.leftQueryX) * easeApproach;
-            ctx.strokeStyle = `rgba(88, 166, 255, ${(0.35 * Math.max(0, 1 - (isCollapse ? easeCollapse : 0) * 1.5)).toFixed(3)})`;
+            const guideFade = p < 0.55 ? 1.0 : Math.max(0, 1 - (p - 0.55) / 0.25);
+            ctx.strokeStyle = `rgba(88, 166, 255, ${(0.35 * guideFade).toFixed(3)})`;
             const rowCount = geom.T_calc || T;
             const lineStep = rowCount > 16 ? Math.ceil(rowCount / 16) : 1;
             ctx.beginPath();
@@ -6013,8 +6029,6 @@
             ctx.restore();
 
             if (!isWebGL) {
-              const orangeBg = `rgba(240, 136, 62, ${0.20 + 0.35 * flash})`;
-              const scale = 1 + 0.18 * flash;
               for (let i = 0; i < T; i++) {
                 for (let j = 0; j < T; j++) {
                   const cx = geom.colX[j];
@@ -6048,35 +6062,29 @@
                       drawCircle(cx, ky, geom.cellR, '#388bfd', 'rgba(56,139,253,0.18)', kv, 0, null, vAlpha, '#e6edf3', 'vector');
                     }
                   } else if (isContact) {
+                    const strokeColor = '#f0883e';
+                    const flashBg = `rgba(240, 136, 62, ${(0.28 + 0.35 * flash).toFixed(3)})`;
+                    const flashGlow = 10 * flash;
+                    const scale = 1 + 0.18 * flash;
                     if (isDepthMode) {
-                      drawDepthVector(cx, cy, d, depthLen, '#f0883e', orangeBg, mulLabels, 1, 0, scale, 'mul');
+                      drawDepthVector(cx, cy, d, depthLen, strokeColor, flashBg, mulLabels, 1, 0, scale, 'flash', flashGlow, '#f0883e');
                     } else if (d === 1) {
                       const mulVal = (mulLabels && mulLabels.length) ? mulLabels[0] : simVal;
-                      drawCircle(cx, cy, geom.cellR * scale, '#f0883e', orangeBg, mulVal, 0, null, 1, '#e6edf3', 'mul');
+                      drawCircle(cx, cy, geom.cellR * scale, strokeColor, flashBg, mulVal, flashGlow, '#f0883e', 1, '#ffffff', 'flash');
                     } else if (d <= 8) {
-                      drawVector(cx, cy, cellLayout, '#f0883e', orangeBg, mulLabels, 0, null, 1, '#e6edf3', scale, 'mul');
+                      drawVector(cx, cy, cellLayout, strokeColor, flashBg, mulLabels, flashGlow, '#f0883e', 1, '#ffffff', scale, 'flash');
                     } else {
-                      drawCircle(cx, cy, geom.cellR * scale, '#f0883e', orangeBg, simVal, 0, null, 1, '#e6edf3', 'mul');
+                      drawCircle(cx, cy, geom.cellR * scale, strokeColor, flashBg, simVal, flashGlow, '#f0883e', 1, '#ffffff', 'flash');
                     }
                   } else {
                     if (isDepthMode) {
-                      if (easeCollapse >= 0.85) {
-                        const finalR = geom.cellR * (1 + 0.18 * Math.sin(((easeCollapse - 0.85) / 0.15) * Math.PI));
-                        drawCircle(cx, cy, finalR, '#3fb950', 'rgba(63, 185, 80, 0.28)', simVal, 0, null, 1, '#e6edf3', 'sim');
-                      } else {
-                        drawDepthVector(cx, cy, d, depthLen, '#f0883e', orangeBg, mulLabels, 1, easeCollapse, 1, 'mul');
-                      }
+                      drawDepthVector(cx, cy, d, depthLen, '#f0883e', 'rgba(240, 136, 62, 0.20)', mulLabels, 1, 0, 1, 'mul');
                     } else if (d === 1) {
-                      drawCircle(cx, cy, geom.cellR, '#f0883e', orangeBg, simVal, 0, null, 1, '#e6edf3', 'mul');
+                      drawCircle(cx, cy, geom.cellR, '#f0883e', 'rgba(240, 136, 62, 0.20)', simVal, 0, null, 1, '#e6edf3', 'mul');
                     } else if (d <= 8) {
-                      const factor = 1 - easeCollapse;
-                      for (let m = 0; m < d; m++) {
-                        const pt = cellLayout.points[m];
-                        const mVal = (mulLabels && mulLabels.length) ? mulLabels[m % mulLabels.length] : null;
-                        drawCircle(cx + pt.x * factor, cy + pt.y * factor, cellLayout.r, '#f0883e', orangeBg, mVal, 0, null, 1, '#e6edf3', 'mul');
-                      }
+                      drawVector(cx, cy, cellLayout, '#f0883e', 'rgba(240, 136, 62, 0.20)', mulLabels, 0, null, 1, '#e6edf3', 1, 'mul');
                     } else {
-                      drawCircle(cx, cy, geom.cellR, '#f0883e', orangeBg, simVal, 0, null, 1, '#e6edf3', 'mul');
+                      drawCircle(cx, cy, geom.cellR, '#f0883e', 'rgba(240, 136, 62, 0.20)', simVal, 0, null, 1, '#e6edf3', 'mul');
                     }
                   }
                 }
@@ -6089,7 +6097,7 @@
                   drawSlightDepthBar(qx, geom.rowY[0], qx, geom.rowY[geom.rowY.length - 1], depthLen, 0.85);
                   drawSlightDepthBar(geom.colX[0], ky, geom.colX[geom.colX.length - 1], ky, depthLen, 0.85);
                 } else if (depthLen > 2) {
-                  const collapse = isCollapse ? easeCollapse : 0;
+                  const collapse = 0;
                   const curD = depthLen * (1 - collapse);
                   const ribAlpha = (1 - collapse) * 0.35;
                   if (ribAlpha > 0.05 && curD > 1.5) {
@@ -6132,9 +6140,8 @@
             const mergePhase = isMerged ? (p - 0.72) / 0.28 : 0;
             const flash = Math.sin(mergePhase * Math.PI);
 
-            const bColor = flash > 0.2 ? '#3fb950' : '#484f58';
-            drawBracket(geom.matL, geom.matCenterY, geom.matHBrack, true, 1, bColor, 7);
-            drawBracket(geom.matR, geom.matCenterY, geom.matHBrack, false, 1, bColor, 7);
+            drawBracket(geom.matL, geom.matCenterY, geom.matHBrack, true, 1, '#484f58', 7);
+            drawBracket(geom.matR, geom.matCenterY, geom.matHBrack, false, 1, '#484f58', 7);
 
             if (!isWebGL) {
               for (let i = 0; i < T; i++) {
@@ -6143,10 +6150,15 @@
                   const cy = geom.rowY[i];
                   const simRow = (data && data.sim) ? data.sim[i % data.sim.length] : null;
                   const simVal = simRow ? simRow[j % simRow.length] : (i === j ? '2.0' : '1.0');
-                  if (isMerged || isDepthMode) {
+                  if (isMerged || (isDepthMode && coalesceProg >= 1)) {
                     const rFinal = geom.cellR * (1 + 0.20 * flash);
-                    const greenBg = `rgba(63, 185, 80, ${0.18 + 0.35 * flash})`;
-                    drawCircle(cx, cy, rFinal, '#3fb950', greenBg, simVal, 0, null, 1, '#e6edf3', 'sim');
+                    const greenBg = `rgba(63, 185, 80, ${(0.28 + 0.35 * flash).toFixed(3)})`;
+                    const flashGlow = 14 * flash;
+                    drawCircle(cx, cy, rFinal, '#3fb950', greenBg, simVal, flashGlow, '#3fb950', 1, '#ffffff', 'flash');
+                  } else if (isDepthMode) {
+                    const mulRow = (data && data.mul) ? data.mul[i % data.mul.length] : null;
+                    const mulLabels = mulRow ? mulRow[j % mulRow.length] : null;
+                    drawDepthVector(cx, cy, d, depthLen, '#f0883e', 'rgba(240, 136, 62, 0.20)', mulLabels, 1, easeCoal, 1, 'mul');
                   } else {
                     const factor = 1 - easeCoal;
                     const mulRow = (data && data.mul) ? data.mul[i % data.mul.length] : null;
@@ -6180,8 +6192,8 @@
             const labelY = geom.matTop - 30 * s;
             drawLabel("dot product", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
 
-            drawBracket(geom.matL, geom.matCenterY, geom.matHBrack, true, 1, '#3fb950', 7);
-            drawBracket(geom.matR, geom.matCenterY, geom.matHBrack, false, 1, '#3fb950', 7);
+            drawBracket(geom.matL, geom.matCenterY, geom.matHBrack, true, 1, '#484f58', 7);
+            drawBracket(geom.matR, geom.matCenterY, geom.matHBrack, false, 1, '#484f58', 7);
 
             if (!isWebGL) {
               for (let i = 0; i < T; i++) {
@@ -6286,7 +6298,9 @@
 
             const p = (ms - 11400) / 1600;
             const isDivided = p >= 0.40;
-            const flash = Math.sin(p * Math.PI);
+            const divProg = isDivided ? (p - 0.40) / 0.60 : 0;
+            const flash = isDivided ? Math.sin(divProg * Math.PI) : 0;
+            const isFlash = isDivided && flash > 0.05;
 
             const rayAlpha = Math.max(0, Math.sin(p * Math.PI));
             if (rayAlpha > 0) {
@@ -6315,9 +6329,13 @@
               }
 
               const strokeColor = isDivided ? '#a371f7' : '#f85149';
-              const purpleBg = `rgba(163, 113, 247, ${0.15 + 0.35 * flash})`;
+              const purpleBg = `rgba(163, 113, 247, ${(0.28 + 0.45 * flash).toFixed(3)})`;
               const curVals = isDivided && data ? data.prob : (data ? data.exp : null);
-              drawMatrix(strokeColor, purpleBg, curVals, 0, null, 1, '#e6edf3', 1 + 0.12 * flash, false, isDivided ? 'prob' : 'exp');
+              const rMult = 1 + (isFlash ? 0.20 * flash : 0);
+              const glow = isFlash ? 14 * flash : 0;
+              const glowColor = isFlash ? '#a371f7' : null;
+              const cat = isFlash ? 'flash' : (isDivided ? 'prob' : 'exp');
+              drawMatrix(strokeColor, purpleBg, curVals, glow, glowColor, 1, '#ffffff', rMult, false, cat);
             } else {
               drawMatrix('#a371f7', 'rgba(163,113,247,0.18)', null, 0, null, 1);
               threeAttn.renderFrame(T, d, ms, geom, width, height, s);
@@ -6661,41 +6679,75 @@
               qAlpha = qkAlpha; kAlpha = qkAlpha;
               const pVal = clamp((p - 0.15) / 0.50, 0, 1);
               vY = lerp(geom.topValY, geom.valParkedY, easeInOut(pVal));
-              if (p >= 0.65) {
-                matR = 0.94; matG = 0.53; matB = 0.24; matAlpha = 0.85; matScale = 1.15;
+              if (p >= 0.55 && p < 0.80) {
+                const contactPhase = (p - 0.55) / 0.25;
+                const flash = Math.sin(contactPhase * Math.PI);
+                matR = 0.94; matG = 0.53; matB = 0.24;
+                matAlpha = 0.85 + 0.15 * flash;
+                matScale = 1.0 + 0.22 * flash;
+              } else if (p >= 0.80) {
+                matR = 0.94; matG = 0.53; matB = 0.24;
+                matAlpha = 0.85;
+                matScale = 1.0;
               }
             } else if (ms < 7600) {
               qAlpha = 0; kAlpha = 0; vY = geom.valParkedY;
+              const p = (ms - 5600) / 2000;
+              const mergePhase = p >= 0.72 ? (p - 0.72) / 0.28 : 0;
+              const flash = Math.sin(mergePhase * Math.PI);
               matR = 0.25; matG = 0.73; matB = 0.31; matAlpha = 0.90;
-            } else if (ms < 9000) {
+              matScale = 1.0 + 0.20 * flash;
+            } else if (ms < 8400) {
               qAlpha = 0; kAlpha = 0; vY = geom.valParkedY;
+              matR = 0.25; matG = 0.73; matB = 0.31; matAlpha = 0.90;
+              matScale = 1.0;
+            } else if (ms < 9800) {
+              qAlpha = 0; kAlpha = 0; vY = geom.valParkedY;
+              const p = (ms - 8400) / 1400;
+              const flash = Math.sin(p * Math.PI);
               matR = 0.97; matG = 0.32; matB = 0.29; matAlpha = 0.90;
-            } else if (ms < 10600) {
+              matScale = 1.0 + 0.18 * flash;
+            } else if (ms < 11400) {
               qAlpha = 0; kAlpha = 0; vY = geom.valParkedY;
               matR = 0.97; matG = 0.32; matB = 0.29; matAlpha = 0.80;
-            } else if (ms < 12200) {
+              matScale = 1.0;
+            } else if (ms < 13000) {
               qAlpha = 0; kAlpha = 0; vY = geom.valParkedY;
-              matR = 0.64; matG = 0.44; matB = 0.97; matAlpha = 0.90;
-            } else if (ms < 14000) {
+              const p = (ms - 11400) / 1600;
+              const isDivided = p >= 0.40;
+              const divProg = isDivided ? (p - 0.40) / 0.60 : 0;
+              const flash = isDivided ? Math.sin(divProg * Math.PI) : 0;
+              if (isDivided) {
+                matR = 0.64; matG = 0.44; matB = 0.97;
+              } else {
+                matR = 0.97; matG = 0.32; matB = 0.29;
+              }
+              matAlpha = 0.85 + 0.15 * flash;
+              matScale = 1.0 + 0.20 * flash;
+            } else if (ms < 14800) {
               qAlpha = 0; kAlpha = 0; vY = geom.valParkedY;
               matR = 0.35; matG = 0.65; matB = 1.0; matAlpha = 0.90;
-            } else if (ms < 17200) {
+              matScale = 1.0;
+            } else if (ms < 18000) {
               qAlpha = 0; kAlpha = 0;
-              const p = (ms - 14000) / 3200;
+              const p = (ms - 14800) / 3200;
               if (p < 0.45) {
                 const ease = easeInOut(p / 0.45);
                 vY = lerp(geom.valParkedY, geom.matCenterY, ease);
                 matR = 0.64; matG = 0.44; matB = 0.97; matAlpha = 0.85;
-              } else if (p < 0.70) {
+              } else if (p < 0.65) {
                 vAlpha = 0;
-                matR = 0.94; matG = 0.53; matB = 0.24; matAlpha = 1.0; matScale = 1.25;
+                const orangePulse = Math.sin(((p - 0.45) / 0.20) * Math.PI);
+                matR = 0.94; matG = 0.53; matB = 0.24;
+                matAlpha = 0.85 + 0.15 * orangePulse;
+                matScale = 1.05 + 0.22 * orangePulse;
               } else {
                 vAlpha = 0;
                 matR = 0.47; matG = 0.75; matB = 1.0; matAlpha = 0.85;
               }
-            } else if (ms < 20200) {
+            } else if (ms < 21000) {
               qAlpha = 0; kAlpha = 0; vAlpha = 0;
-              const p = (ms - 17200) / 3000;
+              const p = (ms - 18000) / 3000;
               if (p < 0.70) {
                 matR = 0.47; matG = 0.75; matB = 1.0;
                 matAlpha = Math.max(0, 1 - p / 0.70);
@@ -6709,8 +6761,14 @@
             } else {
               qAlpha = 0; kAlpha = 0; vAlpha = 0; matAlpha = 0;
               outAlpha = 1.0;
-              const p = (ms - 20200) / 4800;
-              outX = lerp(geom.rightOutX, 0, easeInOut(p));
+              const p = (ms - 21000) / 4800;
+              const moveP = Math.min(1, p / 0.70);
+              outX = lerp(geom.rightOutX, 0, easeInOut(moveP));
+              if (moveP >= 1.0) {
+                outR = 0.35; outG = 0.65; outB = 1.0;
+              } else {
+                outR = 0.47; outG = 0.75; outB = 1.0;
+              }
             }
 
             const isDepthMode = (d_val >= 8) || (T_val >= 4 && d_val >= 2);
@@ -7127,7 +7185,7 @@
               ctx.stroke();
             }
 
-            const isMatrixCell = (category === 'sim' || category === 'exp' || category === 'sum' || category === 'prob' || category === 'binary');
+            const isMatrixCell = (category === 'sim' || category === 'exp' || category === 'sum' || category === 'prob' || category === 'binary' || category === 'flash');
             const shouldShowNumber = isMatrixCell ? (!isWebGL && T <= 16) : showNumbers;
             if (shouldShowNumber && exists(text) && r >= 4.5 * s) {
               ctx.shadowBlur = 0;
@@ -7233,7 +7291,7 @@
             if (curLen > 2 && alpha > 0.08) {
               ctx.save();
               ctx.translate(centerX + baseX, centerY + baseY);
-              const rayColor = (category === 'mul')
+              const rayColor = (category === 'mul' || category === 'flash')
                 ? `rgba(240, 136, 62, ${(0.42 * alpha * (1 - collapse * 0.8)).toFixed(3)})`
                 : (category === 'prob-vector')
                 ? stroke
@@ -7247,7 +7305,7 @@
 
               if (!isWebGL && d >= 64 && curLen > 18) {
                 const tickCount = 4;
-                ctx.strokeStyle = (category === 'mul')
+                ctx.strokeStyle = (category === 'mul' || category === 'flash')
                   ? `rgba(240, 136, 62, ${(0.28 * alpha).toFixed(3)})`
                   : (category === 'prob-vector')
                   ? stroke
@@ -7368,7 +7426,7 @@
 
           function drawMatrix(stroke, fill, cellValues, glow = 0, glowColor = null, alpha = 1, textColor = "#ffffff", rMult = 1, isFinalProb = false, category = 'default') {
             if (alpha <= 0) return;
-            const bColor = glow > 5 ? glowColor : "#484f58";
+            const bColor = "#484f58";
             drawBracket(geom.matL, geom.matCenterY, geom.matHBrack, true, alpha, bColor, 7);
             drawBracket(geom.matR, geom.matCenterY, geom.matHBrack, false, alpha, bColor, 7);
 
@@ -7709,7 +7767,7 @@
           // ==========================================
           if (ms >= 3600 && ms < 5600) {
             const p = (ms - 3600) / 2000;
-            updateMathHighlight(p < 0.68 ? 'qk-orange' : 'qk-green');
+            updateMathHighlight('qk-orange');
             const outerAlpha = Math.max(0, 1 - p / 0.45) * 0.85;
             if (outerAlpha > 0) {
               drawStaticHeaders(outerAlpha);
@@ -7721,20 +7779,16 @@
             const curVY = lerp(geom.topValY, geom.valParkedY, easeInOut(pValSlide));
             drawValuesAtPosition(curVY, 1.0);
 
-            const isApproach = p < 0.50;
-            const isContact = p >= 0.50 && p < 0.68;
-            const isCollapse = p >= 0.68;
+            const isApproach = p < 0.55;
+            const isContact = p >= 0.55 && p < 0.80;
 
-            const easeApproach = easeInOut(Math.min(1, p / 0.50));
-            const contactProg = isContact ? (p - 0.50) / 0.18 : 0;
+            const approachProg = Math.min(1, p / 0.55);
+            const easeApproach = approachProg * approachProg * (3 - 2 * approachProg);
+
+            const contactProg = isContact ? (p - 0.55) / 0.25 : 0;
             const flash = isContact ? Math.sin(contactProg * Math.PI) : 0;
-            const easeCollapse = isCollapse ? easeInOut((p - 0.68) / 0.32) : 0;
 
-            if (isApproach || isContact) {
-              caption.innerHTML = '<span class="caption-op mul">Dot Product</span>: <span class="caption-op mul">&times; multiply</span> pairwise';
-            } else {
-              caption.innerHTML = '<span class="caption-op mul">Dot Product</span>: <span class="caption-op add">&sum; sum</span> &rarr; similarity scores';
-            }
+            caption.innerHTML = '<span class="caption-op mul">Dot Product</span>: <span class="caption-op mul">&times; multiply</span> pairwise';
 
             const labelY = geom.matTop - 30 * s;
             drawLabel("dot product", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, Math.min(1, (ms - 3600) / 300));
@@ -7745,7 +7799,8 @@
 
             const maxColX = geom.colX[geom.colX.length - 1];
             const guideEndX = lerp(geom.leftQueryX, maxColX + 16 * s, easeApproach);
-            ctx.strokeStyle = `rgba(88, 166, 255, ${(0.35 * Math.max(0, 1 - (isCollapse ? easeCollapse : 0) * 1.5)).toFixed(3)})`;
+            const guideFade = p < 0.55 ? 1.0 : Math.max(0, 1 - (p - 0.55) / 0.25);
+            ctx.strokeStyle = `rgba(88, 166, 255, ${(0.35 * guideFade).toFixed(3)})`;
             const rowCount = geom.T_calc || T;
             const lineStep = rowCount > 16 ? Math.ceil(rowCount / 16) : 1;
             ctx.beginPath();
@@ -7764,7 +7819,6 @@
             ctx.restore();
 
             if (!isWebGL) {
-              const orangeBg = `rgba(240, 136, 62, ${0.20 + 0.35 * flash})`;
               const scale = 1 + 0.18 * flash;
               for (let i = 0; i < T; i++) {
                 for (let j = 0; j < T; j++) {
@@ -7799,35 +7853,28 @@
                       drawCircle(cx, ky, geom.cellR, '#388bfd', 'rgba(56,139,253,0.18)', kv, 0, null, vAlpha, '#e6edf3', 'vector');
                     }
                   } else if (isContact) {
+                    const strokeColor = '#f0883e';
+                    const flashBg = `rgba(240, 136, 62, ${(0.28 + 0.35 * flash).toFixed(3)})`;
+                    const flashGlow = 10 * flash;
                     if (isDepthMode) {
-                      drawDepthVector(cx, cy, d, depthLen, '#f0883e', orangeBg, mulLabels, 1, 0, scale, 'mul');
+                      drawDepthVector(cx, cy, d, depthLen, strokeColor, flashBg, mulLabels, 1, 0, scale, 'flash', flashGlow, '#f0883e');
                     } else if (d === 1) {
                       const mulVal = (mulLabels && mulLabels.length) ? mulLabels[0] : simVal;
-                      drawCircle(cx, cy, geom.cellR * scale, '#f0883e', orangeBg, mulVal, 0, null, 1, '#e6edf3', 'mul');
+                      drawCircle(cx, cy, geom.cellR * scale, strokeColor, flashBg, mulVal, flashGlow, '#f0883e', 1, '#ffffff', 'flash');
                     } else if (d <= 8) {
-                      drawVector(cx, cy, cellLayout, '#f0883e', orangeBg, mulLabels, 0, null, 1, '#e6edf3', scale, 'mul');
+                      drawVector(cx, cy, cellLayout, strokeColor, flashBg, mulLabels, flashGlow, '#f0883e', 1, '#ffffff', scale, 'flash');
                     } else {
-                      drawCircle(cx, cy, geom.cellR * scale, '#f0883e', orangeBg, simVal, 0, null, 1, '#e6edf3', 'mul');
+                      drawCircle(cx, cy, geom.cellR * scale, strokeColor, flashBg, simVal, flashGlow, '#f0883e', 1, '#ffffff', 'flash');
                     }
                   } else {
                     if (isDepthMode) {
-                      if (easeCollapse >= 0.85) {
-                        const finalR = geom.cellR * (1 + 0.18 * Math.sin(((easeCollapse - 0.85) / 0.15) * Math.PI));
-                        drawCircle(cx, cy, finalR, '#3fb950', 'rgba(63, 185, 80, 0.28)', simVal, 0, null, 1, '#e6edf3', 'sim');
-                      } else {
-                        drawDepthVector(cx, cy, d, depthLen, '#f0883e', orangeBg, mulLabels, 1, easeCollapse, 1, 'mul');
-                      }
+                      drawDepthVector(cx, cy, d, depthLen, '#f0883e', 'rgba(240, 136, 62, 0.20)', mulLabels, 1, 0, 1, 'mul');
                     } else if (d === 1) {
-                      drawCircle(cx, cy, geom.cellR, '#f0883e', orangeBg, simVal, 0, null, 1, '#e6edf3', 'mul');
+                      drawCircle(cx, cy, geom.cellR, '#f0883e', 'rgba(240, 136, 62, 0.20)', simVal, 0, null, 1, '#e6edf3', 'mul');
                     } else if (d <= 8) {
-                      const factor = 1 - easeCollapse;
-                      for (let m = 0; m < d; m++) {
-                        const pt = cellLayout.points[m];
-                        const mVal = (mulLabels && mulLabels.length) ? mulLabels[m % mulLabels.length] : null;
-                        drawCircle(cx + pt.x * factor, cy + pt.y * factor, cellLayout.r, '#f0883e', orangeBg, mVal, 0, null, 1, '#e6edf3', 'mul');
-                      }
+                      drawVector(cx, cy, cellLayout, '#f0883e', 'rgba(240, 136, 62, 0.20)', mulLabels, 0, null, 1, '#e6edf3', 1, 'mul');
                     } else {
-                      drawCircle(cx, cy, geom.cellR, '#f0883e', orangeBg, simVal, 0, null, 1, '#e6edf3', 'mul');
+                      drawCircle(cx, cy, geom.cellR, '#f0883e', 'rgba(240, 136, 62, 0.20)', simVal, 0, null, 1, '#e6edf3', 'mul');
                     }
                   }
                 }
@@ -7850,13 +7897,14 @@
             drawValuesAtPosition(geom.valParkedY, 1.0);
 
             const p = (ms - 5600) / 2000;
-            const easeCoal = easeInOut(Math.min(1, p / 0.72));
+            const coalesceProg = Math.min(1, p / 0.72);
+            const easeCoal = coalesceProg * coalesceProg * (3 - 2 * coalesceProg);
             const isMerged = p >= 0.72;
-            const flash = isMerged ? Math.sin(((p - 0.72) / 0.28) * Math.PI) : 0;
+            const mergePhase = isMerged ? (p - 0.72) / 0.28 : 0;
+            const flash = Math.sin(mergePhase * Math.PI);
 
-            const bColor = flash > 0.2 ? '#3fb950' : '#484f58';
-            drawBracket(geom.matL, geom.matCenterY, geom.matHBrack, true, 1, bColor, 7);
-            drawBracket(geom.matR, geom.matCenterY, geom.matHBrack, false, 1, bColor, 7);
+            drawBracket(geom.matL, geom.matCenterY, geom.matHBrack, true, 1, '#484f58', 7);
+            drawBracket(geom.matR, geom.matCenterY, geom.matHBrack, false, 1, '#484f58', 7);
 
             if (!isWebGL) {
               for (let i = 0; i < T; i++) {
@@ -7865,10 +7913,15 @@
                   const cy = geom.rowY[i];
                   const simRow = (data && data.sim) ? data.sim[i % data.sim.length] : null;
                   const simVal = simRow ? simRow[j % simRow.length] : (i === j ? '2.0' : '1.0');
-                  if (isMerged || isDepthMode) {
+                  if (isMerged || (isDepthMode && coalesceProg >= 1)) {
                     const rFinal = geom.cellR * (1 + 0.20 * flash);
-                    const greenBg = `rgba(63, 185, 80, ${0.18 + 0.35 * flash})`;
-                    drawCircle(cx, cy, rFinal, '#3fb950', greenBg, simVal, 0, null, 1, '#e6edf3', 'sim');
+                    const greenBg = `rgba(63, 185, 80, ${(0.28 + 0.35 * flash).toFixed(3)})`;
+                    const flashGlow = 14 * flash;
+                    drawCircle(cx, cy, rFinal, '#3fb950', greenBg, simVal, flashGlow, '#3fb950', 1, '#ffffff', 'flash');
+                  } else if (isDepthMode) {
+                    const mulRow = (data && data.mul) ? data.mul[i % data.mul.length] : null;
+                    const mulLabels = mulRow ? mulRow[j % mulRow.length] : null;
+                    drawDepthVector(cx, cy, d, depthLen, '#f0883e', 'rgba(240, 136, 62, 0.20)', mulLabels, 1, easeCoal, 1, 'mul');
                   } else {
                     const factor = 1 - easeCoal;
                     const mulRow = (data && data.mul) ? data.mul[i % data.mul.length] : null;
@@ -7905,8 +7958,8 @@
             drawLabel("dot product", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
             drawValuesAtPosition(geom.valParkedY, 1.0);
 
-            drawBracket(geom.matL, geom.matCenterY, geom.matHBrack, true, 1, '#3fb950', 7);
-            drawBracket(geom.matR, geom.matCenterY, geom.matHBrack, false, 1, '#3fb950', 7);
+            drawBracket(geom.matL, geom.matCenterY, geom.matHBrack, true, 1, '#484f58', 7);
+            drawBracket(geom.matR, geom.matCenterY, geom.matHBrack, false, 1, '#484f58', 7);
 
             if (!isWebGL) {
               for (let i = 0; i < T; i++) {
@@ -8030,7 +8083,9 @@
 
             const p = (ms - 11400) / 1600;
             const isDivided = p >= 0.40;
-            const flash = Math.sin(p * Math.PI);
+            const divProg = isDivided ? (p - 0.40) / 0.60 : 0;
+            const flash = isDivided ? Math.sin(divProg * Math.PI) : 0;
+            const isFlash = isDivided && flash > 0.05;
 
             if (!isWebGL) {
               const sumAlpha = Math.max(0, 1 - Math.max(0, (p - 0.45) / 0.55));
@@ -8074,9 +8129,13 @@
 
             if (!isWebGL) {
               const strokeColor = isDivided ? '#a371f7' : '#f85149';
-              const purpleBg = `rgba(163, 113, 247, ${0.15 + 0.35 * flash})`;
+              const purpleBg = `rgba(163, 113, 247, ${(0.28 + 0.45 * flash).toFixed(3)})`;
               const curVals = isDivided && data ? data.prob : (data ? data.exp : null);
-              drawMatrix(strokeColor, purpleBg, curVals, 0, null, 1, '#e6edf3', 1 + 0.12 * flash, false, isDivided ? 'prob' : 'exp');
+              const rMult = 1 + (isFlash ? 0.20 * flash : 0);
+              const glow = isFlash ? 14 * flash : 0;
+              const glowColor = isFlash ? '#a371f7' : null;
+              const cat = isFlash ? 'flash' : (isDivided ? 'prob' : 'exp');
+              drawMatrix(strokeColor, purpleBg, curVals, glow, glowColor, 1, '#ffffff', rMult, false, cat);
             } else {
               drawMatrix('#a371f7', 'rgba(163,113,247,0.18)', null, 0, null, 1);
               threeFullAttn.renderFrame(T, d, ms, geom, width, height, s);
@@ -8178,33 +8237,27 @@
                 }
               }
             } else if (isCollision) {
-              const flashA = Math.sin(((p - 0.45) / 0.25) * Math.PI);
+              const orangePulse = Math.sin(((p - 0.45) / 0.25) * Math.PI);
+              const strokeColor = '#f0883e';
+              const fillColor = `rgba(240, 136, 62, ${(0.28 + 0.45 * orangePulse).toFixed(3)})`;
+              const flashGlow = 14 * orangePulse;
+              const scaleR = 1.05 + 0.22 * orangePulse;
 
               for (let i = 0; i < T; i++) {
-                const pRow = (data && data.probNums && data.probNums[i]) ? data.probNums[i] : null;
                 for (let j = 0; j < T; j++) {
                   const cx = geom.colX[j];
                   const cy = geom.rowY[i];
                   const bLabels = (data && data.broadcast && data.broadcast[i]) ? data.broadcast[i][j] : null;
-                  const pWeight = (pRow && typeof pRow[j] === 'number') ? pRow[j] : (data && data.prob && data.prob[i] ? parseFloat(data.prob[i][j]) : 0);
 
-                  ctx.save();
-                  ctx.translate(centerX + cx, centerY + cy);
-                  ctx.strokeStyle = `rgba(240, 136, 62, ${(0.90 * flashA).toFixed(3)})`;
-                  ctx.lineWidth = 1.5;
-                  ctx.beginPath();
-                  ctx.arc(0, 0, geom.cellR * (1.15 + 0.45 * flashA), 0, Math.PI * 2);
-                  ctx.stroke();
-                  ctx.restore();
-
-                  if (p < 0.575) {
-                    if (isDepthMode) {
-                      drawDepthVector(cx, cy, d, depthLen, '#f0883e', 'rgba(240, 136, 62, 0.35)', bLabels, 1, 0, 1 + 0.2 * flashA, 'mul');
-                    } else {
-                      drawVector(cx, cy, cellLayout, '#f0883e', 'rgba(240, 136, 62, 0.35)', bLabels, 14 * flashA, '#f0883e', 1, '#ffffff', 1 + 0.15 * flashA, 'mul');
-                    }
+                  if (isDepthMode) {
+                    drawDepthVector(cx, cy, d, depthLen, strokeColor, fillColor, bLabels, 1, 0, scaleR, 'flash', flashGlow, '#f0883e');
+                  } else if (d === 1) {
+                    const bVal = (bLabels && bLabels.length) ? bLabels[0] : null;
+                    drawCircle(cx, cy, geom.cellR * scaleR, strokeColor, fillColor, bVal, flashGlow, '#f0883e', 1, '#ffffff', 'flash');
+                  } else if (d <= 8) {
+                    drawVector(cx, cy, cellLayout, strokeColor, fillColor, bLabels, flashGlow, '#f0883e', 1, '#ffffff', scaleR, 'flash');
                   } else {
-                    drawWeightedVector(cx, cy, cellLayout, pWeight, bLabels, 1, isDepthMode, depthLen * (0.7 + 0.3 * flashA));
+                    drawCircle(cx, cy, geom.cellR * scaleR, strokeColor, fillColor, null, flashGlow, '#f0883e', 1, '#ffffff', 'flash');
                   }
                 }
               }
@@ -8292,8 +8345,8 @@
               drawLabel("output", geom.rightOutX, outHeaderY, "#79c0ff", "center", null, outAlpha);
 
               const bColor = isGreenFlash ? '#3fb950' : '#484f58';
-              if (T <= 2) {
-                for (let i = 0; i < T; i++) {
+              if (T <= 4 && !isDepthMode) {
+                for (let i = 0; i < numRows; i++) {
                   drawBrackets(geom.rightOutX, geom.rowY[i], rowBracketW, rowBracketH, outAlpha, bColor);
                 }
               } else {
@@ -8321,37 +8374,75 @@
             const p = (ms - 21000) / 4800;
             caption.innerHTML = 'output vectors <span class="caption-op out">O</span> loop back &rarr; a <span style="color:#79c0ff; font-weight:600;">Transformer</span> is just attention done in a loop';
 
-            const outFade = Math.max(0, 1 - (p / 0.40));
+            // Fade out the "output" header and row labels as the vectors leave
+            const outFade = Math.max(0, 1 - (p / 0.35));
             if (outFade > 0) {
               const outHeaderY = geom.rowY[0] - rowBracketH / 2 - 16 * s;
               drawLabel("output", geom.rightOutX, outHeaderY, "#79c0ff", "center", null, outFade);
             }
 
             const numRows = Math.min(T, geom.rowY.length);
-            ctx.save();
-            ctx.translate(centerX, centerY);
-            ctx.strokeStyle = "rgba(121, 192, 255, 0.25)";
-            ctx.lineWidth = 1.0;
-            ctx.setLineDash([4, 4]);
-            ctx.beginPath();
-            const topY = geom.rowY[0];
-            const botY = geom.rowY[numRows - 1];
-            ctx.moveTo(geom.rightOutX, (topY + botY) / 2);
-            ctx.bezierCurveTo(geom.rightOutX + 45 * s, topY - 70 * s, -45 * s, topY - 70 * s, 0, (topY + botY) / 2);
-            ctx.stroke();
-            ctx.restore();
+            if (outFade > 0 && T <= 4 && !isDepthMode) {
+              for (let i = 0; i < numRows; i++) {
+                drawLabel(`o${subscript(i + 1)}`, geom.rightOutX + rowBracketW / 2 + 14 * s, geom.rowY[i], "#79c0ff", "left", null, outFade);
+              }
+            }
 
-            const easeP = easeInOut(p);
+            // Smooth linear interpolation along the row, settling at the exact original position
+            const moveP = Math.min(1, p / 0.70);
+            const easeP = easeInOut(moveP);
+            const brackX = lerp(geom.rightOutX, 0, easeP);
+
+            // Transition colors to match Phase 1 initial vectors as they arrive and settle
+            const arriveP = clamp((p - 0.50) / 0.25, 0, 1);
+            const strokeColor = arriveP > 0.5 ? '#58a6ff' : '#79c0ff';
+            const fillColor = arriveP > 0.5 ? 'rgba(88, 166, 255, 0.18)' : 'rgba(121, 192, 255, 0.22)';
+            const textColor = arriveP > 0.5 ? '#e6edf3' : '#ffffff';
+
             for (let i = 0; i < numRows; i++) {
               const ry = geom.rowY[i];
-              const curX = cubicBezier(geom.rightOutX, geom.rightOutX + 45 * s, -45 * s, 0, easeP);
-              const curY = cubicBezier(ry, ry - 70 * s, ry - 70 * s, ry, easeP);
-
               const oLabels = (data && data.out) ? data.out[i] : null;
               if (isDepthMode) {
-                drawDepthVector(curX, curY, d, depthLen, '#79c0ff', 'rgba(121, 192, 255, 0.22)', oLabels, 1, 0, 1, 'vector');
+                const curX = brackX + (0.82 * depthLen) / 2;
+                const curY = ry + (0.57 * depthLen) / 2;
+                drawDepthVector(curX, curY, d, depthLen, strokeColor, fillColor, oLabels, 1, 0, 1, 'vector');
+              } else if (!isWebGL) {
+                drawVector(brackX, ry, layoutHoriz, strokeColor, fillColor, oLabels, 0, null, 1, textColor, 1, 'vector');
+              }
+            }
+
+            // Keep brackets moving with the vectors
+            const bColor = "#484f58";
+            if (!isDepthMode && !isWebGL) {
+              if (T <= 4) {
+                for (let i = 0; i < numRows; i++) {
+                  drawBrackets(brackX, geom.rowY[i], rowBracketW, rowBracketH, 1, bColor);
+                }
               } else {
-                drawVector(curX, curY, layoutHoriz, '#79c0ff', 'rgba(121, 192, 255, 0.22)', oLabels, 0, null, 1, '#ffffff', 1, 'vector');
+                const topO = geom.rowY[0] - rowBracketH / 2;
+                const botO = geom.rowY[numRows - 1] + rowBracketH / 2;
+                drawBracket(brackX - rowBracketW / 2 - 4 * s, (topO + botO) / 2, botO - topO, true, 1, bColor);
+                drawBracket(brackX + rowBracketW / 2 + 4 * s, (topO + botO) / 2, botO - topO, false, 1, bColor);
+              }
+            } else {
+              const topO = geom.rowY[0] - rowBracketH / 2;
+              const botO = geom.rowY[numRows - 1] + rowBracketH / 2;
+              drawBracket(brackX - rowBracketW / 2 - 4 * s, (topO + botO) / 2, botO - topO, true, 1, bColor);
+              drawBracket(brackX + rowBracketW / 2 + 4 * s, (topO + botO) / 2, botO - topO, false, 1, bColor);
+              if (isWebGL && isDepthMode) {
+                drawSlightDepthBar(brackX, geom.rowY[0], brackX, geom.rowY[numRows - 1], depthLen, 1, strokeColor);
+              }
+            }
+
+            // As vectors arrive and settle at X = 0, fade in initial "vectors" header and row labels
+            const inFade = clamp((p - 0.55) / 0.25, 0, 1);
+            if (inFade > 0) {
+              const vecHeaderY = geom.rowY[0] - rowBracketH / 2 - 16 * s;
+              drawLabel("vectors", 0, vecHeaderY, "#58a6ff", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, inFade);
+              if (T <= 4 && !isDepthMode) {
+                for (let i = 0; i < numRows; i++) {
+                  drawLabel(`v${subscript(i + 1)}`, -rowBracketW / 2 - 14 * s, geom.rowY[i], "#7d8590", "right", null, inFade);
+                }
               }
             }
 

@@ -602,6 +602,89 @@
       box-shadow: 0 0 8px rgba(240, 136, 62, 0.4);
     }
 
+    .full-attn-qkv-container {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.45rem;
+      box-sizing: border-box;
+    }
+
+    @media (max-width: 520px) {
+      .full-attn-qkv-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .full-attn-qkv-group {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      border-radius: 6px;
+      padding: 0.4rem 0.55rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      box-sizing: border-box;
+    }
+
+    .full-attn-qkv-title {
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #7d8590;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      text-align: center;
+    }
+
+    .full-attn-qkv-items {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .full-attn-qkv-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      transition: all 0.2s ease;
+      box-sizing: border-box;
+    }
+
+    .full-attn-qkv-row.active-q,
+    .full-attn-qkv-row.active-k {
+      border-color: #f0883e;
+      background: rgba(240, 136, 62, 0.16);
+      box-shadow: 0 0 8px rgba(240, 136, 62, 0.4);
+    }
+
+    .full-attn-qkv-row.active-v {
+      border-color: #3fb950;
+      background: rgba(63, 185, 80, 0.16);
+      box-shadow: 0 0 8px rgba(63, 185, 80, 0.4);
+    }
+
+    .full-attn-qkv-row .attn-vec-tag {
+      font-weight: 600;
+      font-size: 0.72rem;
+      color: #7d8590;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .full-attn-qkv-row.active-q .attn-vec-tag,
+    .full-attn-qkv-row.active-k .attn-vec-tag {
+      color: #f0883e;
+    }
+
+    .full-attn-qkv-row.active-v .attn-vec-tag {
+      color: #3fb950;
+    }
+
     .attn-qk-row .attn-vec-tag {
       font-weight: 600;
       font-size: 0.72rem;
@@ -666,6 +749,12 @@
       background: rgba(88, 166, 255, 0.15);
       color: #58a6ff;
       border: 1px solid rgba(88, 166, 255, 0.35);
+    }
+
+    .attn-op-badge.op-val {
+      background: rgba(121, 192, 255, 0.15);
+      color: #79c0ff;
+      border: 1px solid rgba(121, 192, 255, 0.35);
     }
 
     .attn-op-step {
@@ -849,6 +938,52 @@
       color: #3fb950;
       background: rgba(63, 185, 80, 0.1);
       border-color: rgba(63, 185, 80, 0.25);
+    }
+
+    .attn-col-th.out-col,
+    .attn-cell-td.out-cell {
+      width: 68px;
+      min-width: 68px;
+      max-width: 68px;
+    }
+
+    .attn-col-hdr.out-hdr {
+      color: #79c0ff;
+      border-color: rgba(121, 192, 255, 0.25);
+    }
+
+    .full-attn-out-val {
+      width: 100%;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      border-radius: 5px;
+      background: rgba(22, 27, 34, 0.5);
+      border: 1px solid #21262d;
+      color: #484f58;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.68rem;
+      box-sizing: border-box;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      padding: 0 2px;
+    }
+
+    .full-attn-out-val.active {
+      border-color: #79c0ff;
+      background: rgba(121, 192, 255, 0.22);
+      color: #fff;
+      font-weight: 700;
+      box-shadow: 0 0 8px rgba(121, 192, 255, 0.45);
+    }
+
+    .full-attn-out-val.done {
+      color: #79c0ff;
+      background: rgba(121, 192, 255, 0.12);
+      border-color: rgba(121, 192, 255, 0.35);
+      font-weight: 600;
     }
 
     .filters {
@@ -1534,11 +1669,12 @@
       </div>
     </div>
 
-    <!-- Final Attention Panel (without a quiz) -->
+    <!-- Final Attention Panel -->
     <div class="dot-card" id="full-attn-card">
       <div class="dot-header">
         <div class="header-left">
           <span>Attention</span>
+          <button class="quiz-toggle-btn" id="full-attn-quiz-toggle" aria-expanded="false">quiz &#9662;</button>
         </div>
         <span id="full-attn-header-dim">Q, K, V &middot; 2 vec &middot; dim 2</span>
       </div>
@@ -1569,6 +1705,29 @@
       </div>
 
       <div class="stage-caption" id="full-attn-caption">vectors &middot; 2 &middot; dim 2</div>
+
+      <div class="quiz-panel" id="full-attn-quiz-panel" style="display: none;">
+        <div class="filters">
+          <button class="filter-btn active" data-size="1">1</button>
+          <button class="filter-btn" data-size="2">2</button>
+          <button class="filter-btn" data-size="4">4</button>
+          <button class="filter-btn" id="full-attn-new-btn">new quiz</button>
+        </div>
+
+        <div class="problem" id="full-attn-problem">...</div>
+
+        <div class="input-row">
+          <input type="text" id="full-attn-answer" placeholder="answer" autocomplete="off" inputmode="decimal" />
+          <button class="submit-btn" id="full-attn-submit">Check</button>
+        </div>
+
+        <div class="feedback" id="full-attn-feedback"></div>
+
+        <div class="stats">
+          <div>streak: <span id="full-attn-stat-streak">0</span></div>
+          <div>solved: <span id="full-attn-stat-solved">0</span></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1620,6 +1779,56 @@
 
   <script>
     (function () {
+    window.LEARN_ATTENTION_CONFIG = window.LEARN_ATTENTION_CONFIG || {
+      rpgExpFloat: true,
+      pauseBetweenDotAndSoftmaxMs: 800
+    };
+    const ANIM_CONFIG = window.LEARN_ATTENTION_CONFIG;
+
+    function drawRpgExpFloat(ctx, geom, T, ms, expStart, s, centerX = 0, centerY = 0) {
+      if (!ANIM_CONFIG.rpgExpFloat) return;
+      const duration = 850;
+      if (ms < expStart || ms >= expStart + duration) return;
+      const p = (ms - expStart) / duration;
+      const riseEase = 1 - Math.pow(1 - p, 3);
+      const floatYOffset = (14 * s) * riseEase;
+      const alpha = Math.max(0, 1 - Math.pow(p, 1.6));
+      const scale = 1.0 + 0.18 * Math.sin(p * Math.PI);
+
+      const fontSize = Math.max(9, Math.round(13 * s * scale));
+      ctx.save();
+      ctx.font = `italic 700 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillStyle = `rgba(255, 123, 114, ${alpha.toFixed(3)})`;
+      ctx.shadowColor = `rgba(248, 81, 73, ${(alpha * 0.75).toFixed(3)})`;
+      ctx.shadowBlur = 6 * s;
+
+      if (T >= 8) {
+        const midX = (geom.colX && geom.colX.length) ? (geom.colX[0] + geom.colX[geom.colX.length - 1]) / 2 : 0;
+        const midY = (geom.rowY && geom.rowY.length) ? (geom.rowY[0] + geom.rowY[geom.rowY.length - 1]) / 2 : (geom.matCenterY !== undefined ? geom.matCenterY : 0);
+        const singleFontSize = Math.max(16, Math.round(24 * s * scale));
+        ctx.font = `italic 700 ${singleFontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
+        ctx.textBaseline = 'middle';
+        const cx = centerX + midX;
+        const cy = centerY + midY - floatYOffset;
+        ctx.fillText('e', cx, cy);
+      } else {
+        const numRows = Math.min(T, geom.rowY.length);
+        const numCols = Math.min(T, geom.colX.length);
+        for (let i = 0; i < numRows; i++) {
+          const cy = centerY + geom.rowY[i];
+          for (let j = 0; j < numCols; j++) {
+            const cx = centerX + geom.colX[j];
+            const y = cy - geom.cellR - 2 * s - floatYOffset;
+            ctx.fillText('e', cx, y);
+          }
+        }
+      }
+      ctx.restore();
+    }
+    window.__drawRpgExpFloat = drawRpgExpFloat;
+
     const rand_choice = (arr) => arr[Math.floor(Math.random() * arr.length)];
     const rand_int = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
     const rand_float = (min, max, step = 0.5) => {
@@ -1684,13 +1893,342 @@
       return `<span class="quiz-vec">${circles}</span>`;
     }
 
+    const exists = v => v !== null && v !== undefined;
+    const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+    const lerp = (a, b, t) => a + (b - a) * t;
+    const easeInOut = t => t * t * (3 - 2 * t);
+
+    function drawCanvasBracket(ctx, x, y, h, isLeft, alpha = 1, color = "#484f58", wing = 5, lineWidth = 1.0) {
+      if (alpha <= 0) return;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineWidth;
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      const dir = isLeft ? 1 : -1;
+      ctx.moveTo(dir * wing, -h / 2);
+      ctx.lineTo(0, -h / 2);
+      ctx.lineTo(0, h / 2);
+      ctx.lineTo(dir * wing, h / 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawCanvasLabel(ctx, text, x, y, color = "#7d8590", align = "center", font = null, alpha = 1) {
+      if (alpha <= 0) return;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.globalAlpha = alpha;
+      if (font) ctx.font = font;
+      ctx.fillStyle = color;
+      ctx.textAlign = align;
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, 0, 0);
+      ctx.restore();
+    }
+
+    function getVectorLayout(count, isVertical, length, s = 1, maxCircleR = 999) {
+      const points = [];
+      if (count === 1) {
+        const r = Math.min(13.0 * s, maxCircleR);
+        return { points: [{ x: 0, y: 0, r }], r, length: 2 * r, extentW: 2 * r, extentH: 2 * r };
+      }
+      if (count <= 8) {
+        const spacing = length / count;
+        const targetR = count <= 2 ? 12.0 * s : (count <= 4 ? 10.0 * s : 5.5 * s);
+        const r = Math.max(1.5, Math.min(Math.min(targetR, maxCircleR), (spacing * 0.84) / 2));
+        const start = -length / 2 + spacing / 2;
+        for (let i = 0; i < count; i++) {
+          const offset = start + i * spacing;
+          points.push({ x: isVertical ? 0 : offset, y: isVertical ? offset : 0, r });
+        }
+        return { points, r, length, extentW: isVertical ? 2 * r : length, extentH: isVertical ? length : 2 * r };
+      }
+      const maxPts = Math.min(count, 48);
+      const spacing = length / maxPts;
+      const r = Math.max(0.6, Math.min(Math.min(1.8, maxCircleR), (spacing * 0.8) / 2));
+      const start = -length / 2 + spacing / 2;
+      for (let i = 0; i < count; i++) {
+        const idx = i % 48;
+        const lane = Math.floor(i / 48);
+        const offset = start + idx * spacing;
+        const laneOffset = (lane - (Math.ceil(count / 48) - 1) / 2) * (r * 2.4);
+        points.push({ x: isVertical ? laneOffset : offset, y: isVertical ? offset : laneOffset, r });
+      }
+      return { points, r, length, extentW: isVertical ? 20 * s : length + 2 * r, extentH: isVertical ? length + 2 * r : 20 * s };
+    }
+
+    function setup_quiz_accordion(toggle_btn, panel_el, input_el, on_open) {
+      let is_open = false;
+      function toggle() {
+        is_open = !is_open;
+        if (panel_el) panel_el.style.display = is_open ? 'flex' : 'none';
+        if (toggle_btn) {
+          toggle_btn.classList.toggle('active', is_open);
+          toggle_btn.setAttribute('aria-expanded', is_open);
+          toggle_btn.innerHTML = is_open ? 'quiz &#9652;' : 'quiz &#9662;';
+        }
+        if (is_open) {
+          if (on_open) on_open();
+          if (input_el) setTimeout(() => input_el.focus(), 50);
+        }
+      }
+      if (toggle_btn) toggle_btn.addEventListener('click', toggle);
+      return { isOpen: () => is_open, toggle };
+    }
+
+    function bind_quiz_input(input_el, submit_btn, on_submit, is_answered_fn, on_next) {
+      if (!input_el || !submit_btn) return;
+      input_el.addEventListener('input', () => {
+        input_el.value = input_el.value.replace(/[^0-9.-]/g, '');
+        submit_btn.classList.toggle('ready-green', input_el.value.trim().length > 0);
+      });
+      const submit_handler = () => {
+        if (is_answered_fn && is_answered_fn()) on_next();
+        else on_submit();
+      };
+      submit_btn.addEventListener('click', submit_handler);
+      input_el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') submit_handler();
+      });
+    }
+
+    const SHARED_ATTN_PRESETS = {
+      1: [
+        { q: [[2, -1]], k: [[1, 0]], v: [[1, 2]], sim: [[2]], exp: [[7.4]], sums: [7.4], attn: [[1.0]], out: [[1.0, 2.0]] },
+        { q: [[1, 2]], k: [[0, 1]], v: [[-1, 3]], sim: [[2]], exp: [[7.4]], sums: [7.4], attn: [[1.0]], out: [[-1.0, 3.0]] },
+        { q: [[2, -1]], k: [[1, 1]], v: [[2, -1]], sim: [[1]], exp: [[2.7]], sums: [2.7], attn: [[1.0]], out: [[2.0, -1.0]] },
+        { q: [[1, 3]], k: [[1, 0]], v: [[0, 2]], sim: [[1]], exp: [[2.7]], sums: [2.7], attn: [[1.0]], out: [[0.0, 2.0]] },
+        { q: [[1, -2]], k: [[2, 1]], v: [[3, 1]], sim: [[0]], exp: [[1.0]], sums: [1.0], attn: [[1.0]], out: [[3.0, 1.0]] },
+        { q: [[2, 1]], k: [[-1, 2]], v: [[-2, 2]], sim: [[0]], exp: [[1.0]], sums: [1.0], attn: [[1.0]], out: [[-2.0, 2.0]] }
+      ],
+      2: [
+        {
+          q: [[1, 2], [2, -1]],
+          k: [[1, 0], [0, 1]],
+          v: [[2, 0], [0, 2]],
+          sim: [[1, 2], [2, -1]],
+          exp: [[2.7, 7.4], [7.4, 0.4]],
+          sums: [10.1, 7.8],
+          attn: [[0.27, 0.73], [0.95, 0.05]],
+          out: [[0.54, 1.46], [1.90, 0.10]]
+        },
+        {
+          q: [[2, 1], [1, -1]],
+          k: [[0, 1], [1, 0]],
+          v: [[1, -1], [2, 1]],
+          sim: [[1, 2], [-1, 1]],
+          exp: [[2.7, 7.4], [0.4, 2.7]],
+          sums: [10.1, 3.1],
+          attn: [[0.27, 0.73], [0.13, 0.87]],
+          out: [[1.73, 0.46], [1.87, 0.74]]
+        },
+        {
+          q: [[1, 0], [0, 1]],
+          k: [[1, 2], [2, 1]],
+          v: [[1, 2], [-1, 1]],
+          sim: [[1, 2], [2, 1]],
+          exp: [[2.7, 7.4], [7.4, 2.7]],
+          sums: [10.1, 10.1],
+          attn: [[0.27, 0.73], [0.73, 0.27]],
+          out: [[-0.46, 1.27], [0.46, 1.73]]
+        },
+        {
+          q: [[2, 1], [0, -1]],
+          k: [[1, 0], [0, 1]],
+          v: [[0, 2], [2, 0]],
+          sim: [[2, 1], [0, -1]],
+          exp: [[7.4, 2.7], [1.0, 0.4]],
+          sums: [10.1, 1.4],
+          attn: [[0.73, 0.27], [0.71, 0.29]],
+          out: [[0.54, 1.46], [0.58, 1.42]]
+        },
+        {
+          q: [[1, 1], [2, 0]],
+          k: [[1, -1], [0, 1]],
+          v: [[2, 1], [1, -1]],
+          sim: [[0, 1], [2, 0]],
+          exp: [[1.0, 2.7], [7.4, 1.0]],
+          sums: [3.7, 8.4],
+          attn: [[0.27, 0.73], [0.88, 0.12]],
+          out: [[1.27, -0.46], [1.88, 0.76]]
+        },
+        {
+          q: [[0, 2], [1, -1]],
+          k: [[1, 1], [2, 0]],
+          v: [[1, 0], [0, 1]],
+          sim: [[2, 0], [0, 2]],
+          exp: [[7.4, 1.0], [1.0, 7.4]],
+          sums: [8.4, 8.4],
+          attn: [[0.88, 0.12], [0.12, 0.88]],
+          out: [[0.88, 0.12], [0.12, 0.88]]
+        }
+      ],
+      3: [
+        {
+          q: [[1, 2, 0], [0, 1, 2], [2, 0, 1]],
+          k: [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+          sim: [[1, 2, 0], [0, 1, 2], [2, 0, 1]],
+          exp: [[2.7, 7.4, 1.0], [1.0, 2.7, 7.4], [7.4, 1.0, 2.7]],
+          sums: [11.1, 11.1, 11.1],
+          attn: [[0.24, 0.67, 0.09], [0.09, 0.24, 0.67], [0.67, 0.09, 0.24]]
+        },
+        {
+          q: [[2, 1, -1], [-1, 2, 1], [1, -1, 2]],
+          k: [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+          sim: [[2, 1, -1], [-1, 2, 1], [1, -1, 2]],
+          exp: [[7.4, 2.7, 0.4], [0.4, 7.4, 2.7], [2.7, 0.4, 7.4]],
+          sums: [10.5, 10.5, 10.5],
+          attn: [[0.70, 0.26, 0.04], [0.04, 0.70, 0.26], [0.26, 0.04, 0.70]]
+        },
+        {
+          q: [[1, 0, -1], [-1, 1, 0], [0, -1, 1]],
+          k: [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+          sim: [[1, 0, -1], [-1, 1, 0], [0, -1, 1]],
+          exp: [[2.7, 1.0, 0.4], [0.4, 2.7, 1.0], [1.0, 0.4, 2.7]],
+          sums: [4.1, 4.1, 4.1],
+          attn: [[0.66, 0.24, 0.10], [0.10, 0.66, 0.24], [0.24, 0.10, 0.66]]
+        },
+        {
+          q: [[2, 0, 1], [1, 2, 0], [0, 1, 2]],
+          k: [[0, 1, 0], [0, 0, 1], [1, 0, 0]],
+          sim: [[0, 1, 2], [2, 0, 1], [1, 2, 0]],
+          exp: [[1.0, 2.7, 7.4], [7.4, 1.0, 2.7], [2.7, 7.4, 1.0]],
+          sums: [11.1, 11.1, 11.1],
+          attn: [[0.09, 0.24, 0.67], [0.67, 0.09, 0.24], [0.24, 0.67, 0.09]]
+        }
+      ],
+      4: [
+        {
+          q: [[1, 0], [0, 1], [-1, 0], [0, -1]],
+          k: [[1, 0], [0, 1], [-1, 0], [0, -1]],
+          v: [[2, 0], [0, 2], [-2, 0], [0, -2]],
+          sim: [
+            [1, 0, -1, 0],
+            [0, 1, 0, -1],
+            [-1, 0, 1, 0],
+            [0, -1, 0, 1]
+          ],
+          exp: [
+            [2.7, 1.0, 0.4, 1.0],
+            [1.0, 2.7, 1.0, 0.4],
+            [0.4, 1.0, 2.7, 1.0],
+            [1.0, 0.4, 1.0, 2.7]
+          ],
+          sums: [5.1, 5.1, 5.1, 5.1],
+          attn: [
+            [0.53, 0.20, 0.08, 0.19],
+            [0.19, 0.53, 0.20, 0.08],
+            [0.08, 0.19, 0.53, 0.20],
+            [0.20, 0.08, 0.19, 0.53]
+          ],
+          out: [
+            [0.90, 0.02],
+            [-0.02, 0.90],
+            [-0.90, -0.02],
+            [0.02, -0.90]
+          ]
+        },
+        {
+          q: [[1, 1], [-1, 1], [-1, -1], [1, -1]],
+          k: [[1, 0], [0, 1], [-1, 0], [0, -1]],
+          v: [[1, 1], [-1, 1], [-1, -1], [1, -1]],
+          sim: [
+            [1, 1, -1, -1],
+            [-1, 1, 1, -1],
+            [-1, -1, 1, 1],
+            [1, -1, -1, 1]
+          ],
+          exp: [
+            [2.7, 2.7, 0.4, 0.4],
+            [0.4, 2.7, 2.7, 0.4],
+            [0.4, 0.4, 2.7, 2.7],
+            [2.7, 0.4, 0.4, 2.7]
+          ],
+          sums: [6.2, 6.2, 6.2, 6.2],
+          attn: [
+            [0.44, 0.44, 0.06, 0.06],
+            [0.06, 0.44, 0.44, 0.06],
+            [0.06, 0.06, 0.44, 0.44],
+            [0.44, 0.06, 0.06, 0.44]
+          ],
+          out: [
+            [0.00, 0.76],
+            [-0.76, 0.00],
+            [0.00, -0.76],
+            [0.76, 0.00]
+          ]
+        },
+        {
+          q: [[2, 0], [0, 2], [1, 1], [1, -1]],
+          k: [[1, 0], [0, 1], [0, 0], [-1, 0]],
+          v: [[2, 1], [1, 2], [0, 0], [-1, 1]],
+          sim: [
+            [2, 0, 0, -2],
+            [0, 2, 0, 0],
+            [1, 1, 0, -1],
+            [1, -1, 0, -1]
+          ],
+          exp: [
+            [7.4, 1.0, 1.0, 0.1],
+            [1.0, 7.4, 1.0, 1.0],
+            [2.7, 2.7, 1.0, 0.4],
+            [2.7, 0.4, 1.0, 0.4]
+          ],
+          sums: [9.5, 10.4, 6.8, 4.5],
+          attn: [
+            [0.78, 0.11, 0.10, 0.01],
+            [0.10, 0.71, 0.10, 0.09],
+            [0.40, 0.40, 0.14, 0.06],
+            [0.60, 0.09, 0.22, 0.09]
+          ],
+          out: [
+            [1.66, 1.01],
+            [0.82, 1.61],
+            [1.14, 1.26],
+            [1.20, 0.87]
+          ]
+        },
+        {
+          q: [[1, 2], [2, 1], [0, 1], [1, 0]],
+          k: [[0, 1], [1, 0], [1, 1], [0, -1]],
+          v: [[1, -1], [2, 0], [0, 1], [-1, 2]],
+          sim: [
+            [2, 1, 3, -2],
+            [1, 2, 3, -1],
+            [1, 0, 1, -1],
+            [0, 1, 1, 0]
+          ],
+          exp: [
+            [7.4, 2.7, 20.1, 0.1],
+            [2.7, 7.4, 20.1, 0.4],
+            [2.7, 1.0, 2.7, 0.4],
+            [1.0, 2.7, 2.7, 1.0]
+          ],
+          sums: [30.3, 30.6, 6.8, 7.4],
+          attn: [
+            [0.24, 0.09, 0.66, 0.01],
+            [0.09, 0.24, 0.66, 0.01],
+            [0.40, 0.15, 0.40, 0.05],
+            [0.14, 0.36, 0.36, 0.14]
+          ],
+          out: [
+            [0.41, 0.44],
+            [0.56, 0.49],
+            [0.65, 0.10],
+            [0.72, 0.50]
+          ]
+        }
+      ]
+    };
+
     function create_prereq_quiz() {
       let current_op = 'all';
       let current_problem = null;
       let is_answered = false;
       let streak = 0;
       let solved = 0;
-      let is_open = false;
 
       const toggle_btn = document.getElementById('prereq-quiz-toggle');
       const card_el = document.getElementById('prereq-quiz-panel');
@@ -1737,20 +2275,7 @@
         }
       };
 
-      function toggle() {
-        is_open = !is_open;
-        card_el.style.display = is_open ? 'flex' : 'none';
-        if (toggle_btn) {
-          toggle_btn.classList.toggle('active', is_open);
-          toggle_btn.setAttribute('aria-expanded', is_open);
-          toggle_btn.innerHTML = is_open ? 'quiz &#9652;' : 'quiz &#9662;';
-        }
-        if (is_open) {
-          if (!current_problem) next_problem();
-          setTimeout(() => input_el.focus(), 50);
-        }
-      }
-      if (toggle_btn) toggle_btn.addEventListener('click', toggle);
+      setup_quiz_accordion(toggle_btn, card_el, input_el, () => { if (!current_problem) next_problem(); });
 
       function next_problem() {
         is_answered = false;
@@ -1832,31 +2357,11 @@
         });
       }
 
-      submit_btn.addEventListener('click', () => {
-        if (is_answered) next_problem();
-        else check_answer();
-      });
-
-      input_el.addEventListener('input', () => {
-        input_el.value = input_el.value.replace(/[^0-9.-]/g, '');
-        if (input_el.value.trim().length > 0) {
-          submit_btn.classList.add('ready-green');
-        } else {
-          submit_btn.classList.remove('ready-green');
-        }
-      });
-
-      input_el.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          if (is_answered) next_problem();
-          else check_answer();
-        }
-      });
+      bind_quiz_input(input_el, submit_btn, check_answer, () => is_answered, next_problem);
     }
 
     function create_dot_quiz() {
       let mode = 'final';
-      let is_open = false;
       let is_answered = false;
       let streak = 0;
       let solved = 0;
@@ -1877,20 +2382,7 @@
       const solved_el = document.getElementById('dot-stat-solved');
       const filter_btns = document.querySelectorAll('#dot-quiz-panel .filter-btn');
 
-      function toggle() {
-        is_open = !is_open;
-        panel_el.style.display = is_open ? 'flex' : 'none';
-        if (toggle_btn) {
-          toggle_btn.classList.toggle('active', is_open);
-          toggle_btn.setAttribute('aria-expanded', is_open);
-          toggle_btn.innerHTML = is_open ? 'quiz &#9652;' : 'quiz &#9662;';
-        }
-        if (is_open) {
-          if (u.length === 0) next_problem();
-          setTimeout(() => input_el.focus(), 50);
-        }
-      }
-      if (toggle_btn) toggle_btn.addEventListener('click', toggle);
+      setup_quiz_accordion(toggle_btn, panel_el, input_el, () => { if (u.length === 0) next_problem(); });
 
       function next_problem() {
         is_answered = false;
@@ -2039,26 +2531,7 @@
         });
       }
 
-      submit_btn.addEventListener('click', () => {
-        if (is_answered) next_problem();
-        else check_answer();
-      });
-
-      input_el.addEventListener('input', () => {
-        input_el.value = input_el.value.replace(/[^0-9.-]/g, '');
-        if (input_el.value.trim().length > 0) {
-          submit_btn.classList.add('ready-green');
-        } else {
-          submit_btn.classList.remove('ready-green');
-        }
-      });
-
-      input_el.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          if (is_answered) next_problem();
-          else check_answer();
-        }
-      });
+      bind_quiz_input(input_el, submit_btn, check_answer, () => is_answered, next_problem);
     }
 
     function create_softmax_quiz() {
@@ -2369,7 +2842,6 @@
 
     function create_attn_quiz() {
       let size = 1;
-      let is_open = false;
       let is_answered = false;
       let streak = 0;
       let solved = 0;
@@ -2395,209 +2867,9 @@
       const solved_el = document.getElementById('attn-stat-solved');
       const filter_btns = document.querySelectorAll('#attn-quiz-panel .filter-btn');
 
-      function toggle() {
-        is_open = !is_open;
-        panel_el.style.display = is_open ? 'flex' : 'none';
-        if (toggle_btn) {
-          toggle_btn.classList.toggle('active', is_open);
-          toggle_btn.setAttribute('aria-expanded', is_open);
-          toggle_btn.innerHTML = is_open ? 'quiz &#9652;' : 'quiz &#9662;';
-        }
-        if (is_open) {
-          if (steps.length === 0) next_problem();
-          setTimeout(() => input_el.focus(), 50);
-        }
-      }
-      if (toggle_btn) toggle_btn.addEventListener('click', toggle);
+      setup_quiz_accordion(toggle_btn, panel_el, input_el, () => { if (steps.length === 0) next_problem(); });
 
-      const presets_by_size = {
-        1: [
-          { q: [[2, -1]], k: [[1, 0]], sim: [[2]], exp: [[7.4]], sums: [7.4], attn: [[1.0]] },
-          { q: [[1, 2]], k: [[0, 1]], sim: [[2]], exp: [[7.4]], sums: [7.4], attn: [[1.0]] },
-          { q: [[2, -1]], k: [[1, 1]], sim: [[1]], exp: [[2.7]], sums: [2.7], attn: [[1.0]] },
-          { q: [[1, 3]], k: [[1, 0]], sim: [[1]], exp: [[2.7]], sums: [2.7], attn: [[1.0]] },
-          { q: [[1, -2]], k: [[2, 1]], sim: [[0]], exp: [[1]], sums: [1], attn: [[1.0]] },
-          { q: [[2, 1]], k: [[-1, 2]], sim: [[0]], exp: [[1]], sums: [1], attn: [[1.0]] }
-        ],
-        2: [
-          {
-            q: [[1, 2], [2, -1]],
-            k: [[1, 0], [0, 1]],
-            sim: [[1, 2], [2, -1]],
-            exp: [[2.7, 7.4], [7.4, 0.4]],
-            sums: [10.1, 7.8],
-            attn: [[0.27, 0.73], [0.95, 0.05]]
-          },
-          {
-            q: [[2, 1], [1, -1]],
-            k: [[0, 1], [1, 0]],
-            sim: [[1, 2], [-1, 1]],
-            exp: [[2.7, 7.4], [0.4, 2.7]],
-            sums: [10.1, 3.1],
-            attn: [[0.27, 0.73], [0.13, 0.87]]
-          },
-          {
-            q: [[1, 2, 0], [0, 1, 2]],
-            k: [[1, 0, 1], [0, 1, 0]],
-            sim: [[1, 2], [2, 1]],
-            exp: [[2.7, 7.4], [7.4, 2.7]],
-            sums: [10.1, 10.1],
-            attn: [[0.27, 0.73], [0.73, 0.27]]
-          },
-          {
-            q: [[2, -1, 1], [1, 2, -1]],
-            k: [[0, 1, 1], [1, 0, -1]],
-            sim: [[0, 1], [1, 2]],
-            exp: [[1, 2.7], [2.7, 7.4]],
-            sums: [3.7, 10.1],
-            attn: [[0.27, 0.73], [0.27, 0.73]]
-          },
-          {
-            q: [[1, 0, 2], [2, 1, 0]],
-            k: [[0, 1, 1], [1, 0, 0]],
-            sim: [[2, 1], [1, 2]],
-            exp: [[7.4, 2.7], [2.7, 7.4]],
-            sums: [10.1, 10.1],
-            attn: [[0.73, 0.27], [0.27, 0.73]]
-          },
-          {
-            q: [[2, 1, 0], [0, -1, 2]],
-            k: [[1, 0, 1], [0, 1, 0]],
-            sim: [[2, 1], [2, -1]],
-            exp: [[7.4, 2.7], [7.4, 0.4]],
-            sums: [10.1, 7.8],
-            attn: [[0.73, 0.27], [0.95, 0.05]]
-          }
-        ],
-        3: [
-          {
-            q: [[1, 2, 0], [0, 1, 2], [2, 0, 1]],
-            k: [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
-            sim: [[1, 2, 0], [0, 1, 2], [2, 0, 1]],
-            exp: [[2.7, 7.4, 1.0], [1.0, 2.7, 7.4], [7.4, 1.0, 2.7]],
-            sums: [11.1, 11.1, 11.1],
-            attn: [[0.24, 0.67, 0.09], [0.09, 0.24, 0.67], [0.67, 0.09, 0.24]]
-          },
-          {
-            q: [[2, 1, -1], [-1, 2, 1], [1, -1, 2]],
-            k: [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
-            sim: [[2, 1, -1], [-1, 2, 1], [1, -1, 2]],
-            exp: [[7.4, 2.7, 0.4], [0.4, 7.4, 2.7], [2.7, 0.4, 7.4]],
-            sums: [10.5, 10.5, 10.5],
-            attn: [[0.70, 0.26, 0.04], [0.04, 0.70, 0.26], [0.26, 0.04, 0.70]]
-          },
-          {
-            q: [[1, 0, -1], [-1, 1, 0], [0, -1, 1]],
-            k: [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
-            sim: [[1, 0, -1], [-1, 1, 0], [0, -1, 1]],
-            exp: [[2.7, 1.0, 0.4], [0.4, 2.7, 1.0], [1.0, 0.4, 2.7]],
-            sums: [4.1, 4.1, 4.1],
-            attn: [[0.66, 0.24, 0.10], [0.10, 0.66, 0.24], [0.24, 0.10, 0.66]]
-          },
-          {
-            q: [[2, 0, 1], [1, 2, 0], [0, 1, 2]],
-            k: [[0, 1, 0], [0, 0, 1], [1, 0, 0]],
-            sim: [[0, 1, 2], [2, 0, 1], [1, 2, 0]],
-            exp: [[1.0, 2.7, 7.4], [7.4, 1.0, 2.7], [2.7, 7.4, 1.0]],
-            sums: [11.1, 11.1, 11.1],
-            attn: [[0.09, 0.24, 0.67], [0.67, 0.09, 0.24], [0.24, 0.67, 0.09]]
-          }
-        ],
-        4: [
-          {
-            q: [[2, 1, 0, -1], [-1, 2, 1, 0], [0, -1, 2, 1], [1, 0, -1, 2]],
-            k: [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]],
-            sim: [
-              [2, 1, 0, -1],
-              [-1, 2, 1, 0],
-              [0, -1, 2, 1],
-              [1, 0, -1, 2]
-            ],
-            exp: [
-              [7.4, 2.7, 1.0, 0.4],
-              [0.4, 7.4, 2.7, 1.0],
-              [1.0, 0.4, 7.4, 2.7],
-              [2.7, 1.0, 0.4, 7.4]
-            ],
-            sums: [11.5, 11.5, 11.5, 11.5],
-            attn: [
-              [0.64, 0.23, 0.09, 0.04],
-              [0.04, 0.64, 0.23, 0.09],
-              [0.09, 0.04, 0.64, 0.23],
-              [0.23, 0.09, 0.04, 0.64]
-            ]
-          },
-          {
-            q: [[1, 2, -1, 0], [0, 1, 2, -1], [-1, 0, 1, 2], [2, -1, 0, 1]],
-            k: [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]],
-            sim: [
-              [1, 2, -1, 0],
-              [0, 1, 2, -1],
-              [-1, 0, 1, 2],
-              [2, -1, 0, 1]
-            ],
-            exp: [
-              [2.7, 7.4, 0.4, 1.0],
-              [1.0, 2.7, 7.4, 0.4],
-              [0.4, 1.0, 2.7, 7.4],
-              [7.4, 0.4, 1.0, 2.7]
-            ],
-            sums: [11.5, 11.5, 11.5, 11.5],
-            attn: [
-              [0.23, 0.64, 0.04, 0.09],
-              [0.09, 0.23, 0.64, 0.04],
-              [0.04, 0.09, 0.23, 0.64],
-              [0.64, 0.04, 0.09, 0.23]
-            ]
-          },
-          {
-            q: [[1, 0, 0, -1], [-1, 1, 0, 0], [0, -1, 1, 0], [0, 0, -1, 1]],
-            k: [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]],
-            sim: [
-              [1, 0, 0, -1],
-              [-1, 1, 0, 0],
-              [0, -1, 1, 0],
-              [0, 0, -1, 1]
-            ],
-            exp: [
-              [2.7, 1.0, 1.0, 0.4],
-              [0.4, 2.7, 1.0, 1.0],
-              [1.0, 0.4, 2.7, 1.0],
-              [1.0, 1.0, 0.4, 2.7]
-            ],
-            sums: [5.1, 5.1, 5.1, 5.1],
-            attn: [
-              [0.53, 0.20, 0.20, 0.07],
-              [0.07, 0.53, 0.20, 0.20],
-              [0.20, 0.07, 0.53, 0.20],
-              [0.20, 0.20, 0.07, 0.53]
-            ]
-          },
-          {
-            q: [[2, 0, 1, -1], [-1, 2, 0, 1], [1, -1, 2, 0], [0, 1, -1, 2]],
-            k: [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]],
-            sim: [
-              [2, 0, 1, -1],
-              [-1, 2, 0, 1],
-              [1, -1, 2, 0],
-              [0, 1, -1, 2]
-            ],
-            exp: [
-              [7.4, 1.0, 2.7, 0.4],
-              [0.4, 7.4, 1.0, 2.7],
-              [2.7, 0.4, 7.4, 1.0],
-              [1.0, 2.7, 0.4, 7.4]
-            ],
-            sums: [11.5, 11.5, 11.5, 11.5],
-            attn: [
-              [0.64, 0.09, 0.23, 0.04],
-              [0.04, 0.64, 0.09, 0.23],
-              [0.23, 0.04, 0.64, 0.09],
-              [0.09, 0.23, 0.04, 0.64]
-            ]
-          }
-        ]
-      };
+      const presets_by_size = SHARED_ATTN_PRESETS;
 
       function build_steps() {
         steps = [];
@@ -2872,32 +3144,410 @@
         });
       }
 
-      submit_btn.addEventListener('click', () => {
-        if (is_answered) next_problem();
-        else check_answer();
-      });
-
-      input_el.addEventListener('input', () => {
-        input_el.value = input_el.value.replace(/[^0-9.-]/g, '');
-        if (input_el.value.trim().length > 0) {
-          submit_btn.classList.add('ready-green');
-        } else {
-          submit_btn.classList.remove('ready-green');
-        }
-      });
-
-      input_el.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          if (is_answered) next_problem();
-          else check_answer();
-        }
-      });
+      bind_quiz_input(input_el, submit_btn, check_answer, () => is_answered, next_problem);
     }
 
     create_prereq_quiz();
     create_dot_quiz();
     create_softmax_quiz();
     create_attn_quiz();
+
+    function create_full_attn_quiz() {
+      let size = 1;
+      let is_answered = false;
+      let streak = 0;
+      let solved = 0;
+
+      let q = [];
+      let k = [];
+      let v = [];
+      let sim = [];
+      let exp_mat = [];
+      let row_sums = [];
+      let attn_mat = [];
+      let out_mat = [];
+      let steps = [];
+      let step_idx = 0;
+      let target = 0;
+      let target_tolerance = 1e-4;
+
+      const toggle_btn = document.getElementById('full-attn-quiz-toggle');
+      const panel_el = document.getElementById('full-attn-quiz-panel');
+      const problem_el = document.getElementById('full-attn-problem');
+      const input_el = document.getElementById('full-attn-answer');
+      const submit_btn = document.getElementById('full-attn-submit');
+      const feedback_el = document.getElementById('full-attn-feedback');
+      const streak_el = document.getElementById('full-attn-stat-streak');
+      const solved_el = document.getElementById('full-attn-stat-solved');
+      const filter_btns = document.querySelectorAll('#full-attn-quiz-panel .filter-btn');
+      const new_btn = document.getElementById('full-attn-new-btn');
+
+      setup_quiz_accordion(toggle_btn, panel_el, input_el, () => { if (steps.length === 0) next_problem(); });
+
+      const presets_by_size = SHARED_ATTN_PRESETS;
+
+      function build_steps() {
+        steps = [];
+        // 1. Dot products
+        for (let i = 0; i < size; i++) {
+          for (let j = 0; j < size; j++) {
+            steps.push({
+              type: 'dot',
+              row: i,
+              col: j,
+              target: sim[i][j],
+              tolerance: 1e-4,
+              desc: `dot product S${subscript(i + 1)}${subscript(j + 1)} = q${subscript(i + 1)} &middot; k${subscript(j + 1)}`
+            });
+          }
+        }
+        // 2. Softmax per row
+        for (let i = 0; i < size; i++) {
+          for (let j = 0; j < size; j++) {
+            const vVal = sim[i][j];
+            const tol = vVal === 1 ? 0.15 : (vVal === 2 ? 0.45 : (vVal === -1 ? 0.10 : 0.06));
+            steps.push({
+              type: 'exp',
+              row: i,
+              col: j,
+              target: exp_mat[i][j],
+              tolerance: tol,
+              desc: `row ${i + 1}: exp( S${subscript(i + 1)}${subscript(j + 1)} ) = exp(${vVal})`
+            });
+          }
+          steps.push({
+            type: 'sum',
+            row: i,
+            target: row_sums[i],
+            tolerance: 0.15,
+            desc: `row ${i + 1}: denominator sum`
+          });
+          for (let j = 0; j < size; j++) {
+            steps.push({
+              type: 'prob',
+              row: i,
+              col: j,
+              target: attn_mat[i][j],
+              tolerance: 0.06,
+              desc: `row ${i + 1}: divide by sum &rarr; A${subscript(i + 1)}${subscript(j + 1)}`
+            });
+          }
+        }
+        // 3. Values weighting -> Output vectors y_i = sum_j A_ij v_j
+        for (let i = 0; i < size; i++) {
+          steps.push({
+            type: 'val',
+            row: i,
+            dim: 0,
+            target: out_mat[i][0],
+            tolerance: 0.12,
+            desc: `row ${i + 1} output: y${subscript(i + 1)}[1] = &sum; A${subscript(i + 1)}ⱼ &middot; vⱼ[1]`
+          });
+          steps.push({
+            type: 'val',
+            row: i,
+            dim: 1,
+            target: out_mat[i][1],
+            tolerance: 0.12,
+            desc: `row ${i + 1} output: y${subscript(i + 1)}[2] = &sum; A${subscript(i + 1)}ⱼ &middot; vⱼ[2]`
+          });
+        }
+      }
+
+      function render_qkv_blocks(cur_r, cur_c, cur_type, cur_dim) {
+        let q_rows = '';
+        for (let i = 0; i < size; i++) {
+          const is_active = (cur_r === i);
+          const circles = q[i].map(val => num_circle(val, is_active ? 'orange' : 'blue')).join(' ');
+          q_rows += `<div class="full-attn-qkv-row${is_active ? ' active-q' : ''}"><span class="attn-vec-tag">q${subscript(i + 1)}</span><span class="quiz-vec">${circles}</span></div>`;
+        }
+
+        let k_rows = '';
+        for (let j = 0; j < size; j++) {
+          const is_active = (cur_c === j && (cur_type === 'dot' || cur_type === 'prob' || cur_type === 'exp'));
+          const circles = k[j].map(val => num_circle(val, is_active ? 'orange' : 'blue')).join(' ');
+          k_rows += `<div class="full-attn-qkv-row${is_active ? ' active-k' : ''}"><span class="attn-vec-tag">k${subscript(j + 1)}</span><span class="quiz-vec">${circles}</span></div>`;
+        }
+
+        let v_rows = '';
+        for (let j = 0; j < size; j++) {
+          const is_active = (cur_type === 'val');
+          const circles = v[j].map((val, dIdx) => num_circle(val, (is_active && cur_dim === dIdx) ? 'orange' : (is_active ? 'green' : 'blue'))).join(' ');
+          v_rows += `<div class="full-attn-qkv-row${is_active ? ' active-v' : ''}"><span class="attn-vec-tag">v${subscript(j + 1)}</span><span class="quiz-vec">${circles}</span></div>`;
+        }
+
+        return `<div class="full-attn-qkv-container">
+          <div class="full-attn-qkv-group"><div class="full-attn-qkv-title">queries (Q)</div><div class="full-attn-qkv-items">${q_rows}</div></div>
+          <div class="full-attn-qkv-group"><div class="full-attn-qkv-title">keys (K)</div><div class="full-attn-qkv-items">${k_rows}</div></div>
+          <div class="full-attn-qkv-group"><div class="full-attn-qkv-title">values (V)</div><div class="full-attn-qkv-items">${v_rows}</div></div>
+        </div>`;
+      }
+
+      function render_matrix_table(cur_step, is_done) {
+        const cur_type = cur_step ? cur_step.type : '';
+        const cur_r = cur_step ? cur_step.row : -1;
+        const cur_c = cur_step ? cur_step.col : -1;
+        const cur_dim = cur_step ? cur_step.dim : -1;
+
+        let hdr_cells = '<th class="attn-corner-th"></th>';
+        for (let j = 0; j < size; j++) {
+          const is_col_active = (cur_c === j && (cur_type === 'dot' || cur_type === 'prob' || cur_type === 'exp')) || (cur_type === 'val');
+          const k_cls = 'attn-col-hdr' + (is_col_active ? ' active' : '');
+          hdr_cells += `<th class="attn-col-th"><div class="${k_cls}">k${subscript(j + 1)}<span style="font-size:0.6rem; opacity:0.8; margin-left:1px;">/v${subscript(j + 1)}</span></div></th>`;
+        }
+        hdr_cells += '<th class="attn-col-th sum-col"><div class="attn-col-hdr sum-hdr">&sum;</div></th>';
+        hdr_cells += '<th class="attn-col-th out-col"><div class="attn-col-hdr out-hdr">output y</div></th>';
+
+        let body_rows = '';
+        for (let i = 0; i < size; i++) {
+          const is_q_active = (cur_r === i);
+          const q_cls = 'attn-row-hdr' + (is_q_active ? ' active' : '');
+          let row_html = `<td class="attn-row-td"><div class="${q_cls}">q${subscript(i + 1)}</div></td>`;
+
+          for (let j = 0; j < size; j++) {
+            let cell_cls = 'attn-matrix-cell';
+            let cell_content = '&middot;';
+
+            if (is_done) {
+              cell_cls += ' prob';
+              cell_content = attn_mat[i][j];
+            } else {
+              const is_cur_cell = (cur_r === i && cur_c === j);
+              const prob_step_idx = steps.findIndex(s => s.type === 'prob' && s.row === i && s.col === j);
+              const exp_step_idx = steps.findIndex(s => s.type === 'exp' && s.row === i && s.col === j);
+              const dot_step_idx = steps.findIndex(s => s.type === 'dot' && s.row === i && s.col === j);
+
+              if (step_idx > prob_step_idx && prob_step_idx !== -1) {
+                cell_cls += ' prob';
+                cell_content = attn_mat[i][j];
+                if (cur_type === 'val' && cur_r === i) {
+                  cell_cls += ' active';
+                }
+              } else if (is_cur_cell && cur_type === 'prob') {
+                cell_cls += ' active';
+                cell_content = '?';
+              } else if (step_idx > exp_step_idx && exp_step_idx !== -1) {
+                cell_cls += ' exp';
+                cell_content = exp_mat[i][j];
+              } else if (is_cur_cell && cur_type === 'exp') {
+                cell_cls += ' active';
+                cell_content = '?';
+              } else if (step_idx > dot_step_idx && dot_step_idx !== -1) {
+                cell_cls += ' sim';
+                cell_content = sim[i][j];
+              } else if (is_cur_cell && cur_type === 'dot') {
+                cell_cls += ' active';
+                cell_content = '?';
+              }
+            }
+            row_html += `<td class="attn-cell-td"><div class="${cell_cls}">${cell_content}</div></td>`;
+          }
+
+          // Sum cell
+          let sum_cls = 'attn-row-sum';
+          let sum_content = '&middot;';
+          const sum_step_idx = steps.findIndex(s => s.type === 'sum' && s.row === i);
+          const has_passed_sum = (step_idx > sum_step_idx && sum_step_idx !== -1);
+          const has_passed_prob = steps.some(s => s.type === 'prob' && s.row === i && step_idx > steps.indexOf(s));
+
+          if (is_done || has_passed_prob) {
+            sum_cls += ' done';
+            sum_content = `1.0`;
+          } else if (cur_type === 'sum' && cur_r === i) {
+            sum_cls += ' active';
+            sum_content = `?`;
+          } else if (has_passed_sum) {
+            sum_cls += ' done';
+            sum_content = `${row_sums[i]}`;
+          }
+          row_html += `<td class="attn-cell-td sum-cell"><div class="${sum_cls}">${sum_content}</div></td>`;
+
+          // Output cell
+          let out_cls = 'full-attn-out-val';
+          let out_content = '&middot;';
+          const val_step0_idx = steps.findIndex(s => s.type === 'val' && s.row === i && s.dim === 0);
+          const val_step1_idx = steps.findIndex(s => s.type === 'val' && s.row === i && s.dim === 1);
+          const has_passed_val0 = (step_idx > val_step0_idx && val_step0_idx !== -1);
+          const has_passed_val1 = (step_idx > val_step1_idx && val_step1_idx !== -1);
+
+          if (is_done || (has_passed_val0 && has_passed_val1)) {
+            out_cls += ' done';
+            out_content = `[${out_mat[i][0]}, ${out_mat[i][1]}]`;
+          } else if (cur_type === 'val' && cur_r === i) {
+            out_cls += ' active';
+            if (cur_dim === 0) {
+              out_content = `[?, &middot;]`;
+            } else {
+              out_content = `[${out_mat[i][0]}, ?]`;
+            }
+          } else if (has_passed_val0) {
+            out_content = `[${out_mat[i][0]}, &middot;]`;
+          }
+          row_html += `<td class="attn-cell-td out-cell"><div class="${out_cls}">${out_content}</div></td>`;
+
+          body_rows += `<tr>${row_html}</tr>`;
+        }
+
+        return `<div class="attn-quiz-grid-wrap"><table class="attn-quiz-table"><thead><tr>${hdr_cells}</tr></thead><tbody>${body_rows}</tbody></table></div>`;
+      }
+
+      function next_problem() {
+        is_answered = false;
+        feedback_el.textContent = '';
+        feedback_el.className = 'feedback';
+        input_el.value = '';
+        submit_btn.className = 'submit-btn';
+        submit_btn.textContent = 'Check';
+
+        const pool = presets_by_size[size] || presets_by_size[1];
+        const chosen = rand_choice(pool);
+
+        q = chosen.q;
+        k = chosen.k;
+        v = chosen.v;
+        sim = chosen.sim;
+        exp_mat = chosen.exp;
+        row_sums = chosen.sums;
+        attn_mat = chosen.attn;
+        out_mat = chosen.out;
+
+        build_steps();
+        step_idx = 0;
+        render_step();
+      }
+
+      function render_step() {
+        input_el.value = '';
+        submit_btn.classList.remove('ready-green');
+
+        if (is_answered) {
+          const qkv_html = render_qkv_blocks(-1, -1, '', -1);
+          const matrix_html = render_matrix_table(null, true);
+          problem_el.innerHTML = `<div class="attn-quiz-container" style="max-width:480px;">${qkv_html}<div class="attn-op-card"><div class="attn-op-top"><span class="attn-op-badge op-val">Complete</span><span class="attn-op-step" style="color:#3fb950; font-weight:600;">Attention Y = softmax(QKᵀ)V solved &middot; row sums = 1.0</span></div></div>${matrix_html}</div>`;
+          return;
+        }
+
+        const cur_step = steps[step_idx];
+        target = cur_step.target;
+        target_tolerance = cur_step.tolerance;
+
+        let badge_cls = '';
+        let badge_text = '';
+        let formula_html = '';
+
+        if (cur_step.type === 'dot') {
+          badge_cls = 'op-dot';
+          badge_text = `dot product \u00b7 S${subscript(cur_step.row + 1)}${subscript(cur_step.col + 1)}`;
+          const q_vec = vec_box(q[cur_step.row], -1, 'orange', 'orange');
+          const k_vec = vec_box(k[cur_step.col], -1, 'orange', 'orange');
+          formula_html = `<span style="color:#f0883e; font-weight:600;">q${subscript(cur_step.row + 1)} &middot; k${subscript(cur_step.col + 1)}</span> = ${q_vec} &middot; ${k_vec} = <span class="attn-op-target">?</span>`;
+        } else if (cur_step.type === 'exp') {
+          badge_cls = 'op-exp';
+          badge_text = `exponentiate \u00b7 exp(S${subscript(cur_step.row + 1)}${subscript(cur_step.col + 1)})`;
+          const active_sim = num_circle(sim[cur_step.row][cur_step.col], 'orange');
+          formula_html = `<span style="color:#f85149; font-weight:600;">exp( S${subscript(cur_step.row + 1)}${subscript(cur_step.col + 1)} )</span> = <span class="op-exp">exp</span>( ${active_sim} ) = <span class="attn-op-target">?</span>`;
+        } else if (cur_step.type === 'sum') {
+          badge_cls = 'op-sum';
+          badge_text = `row ${cur_step.row + 1} sum \u00b7 denominator &sum;`;
+          const sum_terms = exp_mat[cur_step.row].map(val => num_circle(val, 'red')).join(' + ');
+          formula_html = `<span style="color:#3fb950; font-weight:600;">row ${cur_step.row + 1} sum</span> = ${sum_terms} = <span class="attn-op-target">?</span>`;
+        } else if (cur_step.type === 'prob') {
+          badge_cls = 'op-prob';
+          badge_text = `softmax probability \u00b7 A${subscript(cur_step.row + 1)}${subscript(cur_step.col + 1)}`;
+          const exp_c = num_circle(exp_mat[cur_step.row][cur_step.col], 'purple');
+          const sum_c = num_circle(row_sums[cur_step.row], 'green');
+          formula_html = `<span style="color:#58a6ff; font-weight:600;">A${subscript(cur_step.row + 1)}${subscript(cur_step.col + 1)}</span> = ${exp_c} &divide; ${sum_c} = <span class="attn-op-target">?</span>`;
+        } else if (cur_step.type === 'val') {
+          badge_cls = 'op-val';
+          const dimNum = cur_step.dim + 1;
+          badge_text = `output vector \u00b7 y${subscript(cur_step.row + 1)} (dim ${dimNum})`;
+
+          let terms = [];
+          for (let j = 0; j < size; j++) {
+            const a_val = num_circle(attn_mat[cur_step.row][j], 'purple');
+            const v_val = num_circle(v[j][cur_step.dim], 'green');
+            terms.push(`${a_val}&times;${v_val}`);
+          }
+          const terms_str = terms.join(' + ');
+          formula_html = `<span style="color:#79c0ff; font-weight:600;">y${subscript(cur_step.row + 1)}[${dimNum}]</span> = ${terms_str} = <span class="attn-op-target">?</span>`;
+        }
+
+        const qkv_html = render_qkv_blocks(cur_step.row, cur_step.col, cur_step.type, cur_step.dim);
+        const matrix_html = render_matrix_table(cur_step, false);
+
+        problem_el.innerHTML = `<div class="attn-quiz-container" style="max-width:480px;">${qkv_html}<div class="attn-op-card"><div class="attn-op-top"><span class="attn-op-badge ${badge_cls}">${badge_text}</span><span class="attn-op-step">step ${step_idx + 1} of ${steps.length}</span></div><div class="attn-op-formula">${formula_html}</div></div>${matrix_html}</div>`;
+        setTimeout(() => input_el.focus(), 50);
+      }
+
+      function check_answer() {
+        const raw = input_el.value.trim().replace(',', '.');
+        if (!raw) return;
+        const val = parseFloat(raw);
+        if (isNaN(val)) {
+          feedback_el.className = 'feedback incorrect';
+          feedback_el.textContent = 'enter a valid number';
+          return;
+        }
+
+        const is_correct = Math.abs(val - target) <= target_tolerance;
+
+        if (is_correct) {
+          if (step_idx < steps.length - 1) {
+            feedback_el.className = 'feedback correct';
+            feedback_el.innerHTML = `&#10003; correct: ${target}`;
+            step_idx++;
+            render_step();
+            input_el.focus();
+          } else {
+            is_answered = true;
+            streak++;
+            solved++;
+            feedback_el.className = 'feedback correct';
+            feedback_el.innerHTML = `&#10003; complete! Attention Y = softmax(QKᵀ)V solved`;
+            submit_btn.className = 'submit-btn ready-green';
+            submit_btn.textContent = 'New quiz \u2192';
+            streak_el.textContent = streak;
+            solved_el.textContent = solved;
+            render_step();
+          }
+        } else {
+          streak = 0;
+          streak_el.textContent = streak;
+          feedback_el.className = 'feedback incorrect';
+          feedback_el.innerHTML = `&#10005; target was ${target}`;
+        }
+      }
+
+      filter_btns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (btn.dataset.size) {
+            filter_btns.forEach(b => { if (b.dataset.size) b.classList.remove('active'); });
+            btn.classList.add('active');
+            size = parseInt(btn.dataset.size, 10);
+            next_problem();
+          }
+        });
+      });
+
+      if (new_btn) {
+        new_btn.addEventListener('click', () => {
+          next_problem();
+        });
+      }
+
+      bind_quiz_input(input_el, submit_btn, check_answer, () => is_answered, next_problem);
+
+      window.__fullAttnQuiz = {
+        getStep: () => steps[step_idx],
+        getTarget: () => target,
+        getStepIdx: () => step_idx,
+        getSteps: () => steps,
+        isAnswered: () => is_answered,
+        nextProblem: next_problem
+      };
+    }
+
+    create_full_attn_quiz();
 
     function init_calculator() {
       const toggle_btn = document.getElementById('calc-toggle-btn');
@@ -3295,29 +3945,7 @@
           const bracketL = -bracketW / 2;
           const bracketR = bracketW / 2;
 
-          function drawBracket(x, y, h, isLeft, alpha = 1, color = "#484f58") {
-            if (alpha <= 0) return;
-            ctx.save();
-            ctx.translate(centerX + x, centerY + y);
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 1.0;
-            ctx.globalAlpha = alpha;
-            ctx.beginPath();
-            const wing = 6;
-            if (isLeft) {
-              ctx.moveTo(wing, -h / 2);
-              ctx.lineTo(0, -h / 2);
-              ctx.lineTo(0, h / 2);
-              ctx.lineTo(wing, h / 2);
-            } else {
-              ctx.moveTo(-wing, -h / 2);
-              ctx.lineTo(0, -h / 2);
-              ctx.lineTo(0, h / 2);
-              ctx.lineTo(-wing, h / 2);
-            }
-            ctx.stroke();
-            ctx.restore();
-          }
+          const drawBracket = (x, y, h, isLeft, alpha = 1, color = "#484f58") => drawCanvasBracket(ctx, centerX + x, centerY + y, h, isLeft, alpha, color, 6);
 
           function drawDotBatch(positions, yBase, easeY, easeX, scale, stroke, fill, glow = 0, glowColor = null, alpha = 1, labels = null, textColor = '#ffffff') {
             if (alpha <= 0) return;
@@ -3756,29 +4384,7 @@
           const bracketL = -bracketW / 2;
           const bracketR = bracketW / 2;
 
-          function drawBracket(x, y, h, isLeft, alpha = 1, color = "#484f58") {
-            if (alpha <= 0) return;
-            ctx.save();
-            ctx.translate(centerX + x, centerY + y);
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 1.0;
-            ctx.globalAlpha = alpha;
-            ctx.beginPath();
-            const wing = 6;
-            if (isLeft) {
-              ctx.moveTo(wing, -h / 2);
-              ctx.lineTo(0, -h / 2);
-              ctx.lineTo(0, h / 2);
-              ctx.lineTo(wing, h / 2);
-            } else {
-              ctx.moveTo(-wing, -h / 2);
-              ctx.lineTo(0, -h / 2);
-              ctx.lineTo(0, h / 2);
-              ctx.lineTo(-wing, h / 2);
-            }
-            ctx.stroke();
-            ctx.restore();
-          }
+          const drawBracket = (x, y, h, isLeft, alpha = 1, color = "#484f58") => drawCanvasBracket(ctx, centerX + x, centerY + y, h, isLeft, alpha, color, 6);
 
           function drawDotBatch(positions, yBase, easeY, easeX, scale, stroke, fill, glow = 0, glowColor = null, alpha = 1, labels = null, textColor = '#ffffff') {
             if (alpha <= 0) return;
@@ -4782,57 +5388,7 @@
           };
         }
 
-        function getVectorLayout(count, isVertical, length, s = 1, maxCircleR = 999) {
-          const points = [];
-          if (count === 1) {
-            const r = Math.min(13.0 * s, maxCircleR);
-            return {
-              points: [{ x: 0, y: 0, r }],
-              r,
-              length: 2 * r,
-              extentW: 2 * r,
-              extentH: 2 * r
-            };
-          }
-          if (count <= 8) {
-            const spacing = length / count;
-            const targetR = count <= 2 ? 12.0 * s : (count <= 4 ? 10.0 * s : 5.5 * s);
-            const maxR = Math.min(targetR, maxCircleR);
-            const r = Math.max(1.5, Math.min(maxR, (spacing * 0.84) / 2));
-            const start = -length / 2 + spacing / 2;
-            for (let i = 0; i < count; i++) {
-              const offset = start + i * spacing;
-              points.push({
-                x: isVertical ? 0 : offset,
-                y: isVertical ? offset : 0,
-                r: r
-              });
-            }
-            const extentH = isVertical ? (points[count - 1].y - points[0].y) + 2 * r : 2 * r;
-            const extentW = isVertical ? 2 * r : (points[count - 1].x - points[0].x) + 2 * r;
-            return { points, r, length, extentW, extentH };
-          }
-          const maxPts = Math.min(count, 48);
-          const spacing = length / maxPts;
-          const r = Math.max(0.6, Math.min(Math.min(1.8, maxCircleR), (spacing * 0.8) / 2));
-          const start = -length / 2 + spacing / 2;
-          for (let i = 0; i < count; i++) {
-            const idx = i % 48;
-            const lane = Math.floor(i / 48);
-            const offset = start + idx * spacing;
-            const laneOffset = (lane - (Math.ceil(count / 48) - 1) / 2) * (r * 2.4);
-            points.push({
-              x: isVertical ? laneOffset : offset,
-              y: isVertical ? offset : laneOffset,
-              r: r
-            });
-          }
-          const extentH = isVertical ? length + 2 * r : 20 * s;
-          const extentW = isVertical ? 20 * s : length + 2 * r;
-          return { points, r, length, extentW, extentH };
-        }
-
-        const TOTAL_DURATION = 16600;
+        const TOTAL_DURATION = 17400;
         let startTime = performance.now();
         window.__setAttnTime = (t) => { startTime = performance.now() - t; };
 
@@ -4873,28 +5429,7 @@
           const cellVecLen = Math.min(vecLenHoriz * 0.65, (geom.stepX ? geom.stepX * 0.72 : 36 * s));
           const cellLayout = getVectorLayout(d, false, cellVecLen, s, geom.cellR * 0.68);
 
-          function drawBracket(x, y, h, isLeft, alpha = 1, color = "#484f58", wing = 5) {
-            if (alpha <= 0) return;
-            ctx.save();
-            ctx.translate(centerX + x, centerY + y);
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 1.0;
-            ctx.globalAlpha = alpha;
-            ctx.beginPath();
-            if (isLeft) {
-              ctx.moveTo(wing, -h / 2);
-              ctx.lineTo(0, -h / 2);
-              ctx.lineTo(0, h / 2);
-              ctx.lineTo(wing, h / 2);
-            } else {
-              ctx.moveTo(-wing, -h / 2);
-              ctx.lineTo(0, -h / 2);
-              ctx.lineTo(0, h / 2);
-              ctx.lineTo(-wing, h / 2);
-            }
-            ctx.stroke();
-            ctx.restore();
-          }
+          const drawBracket = (x, y, h, isLeft, alpha = 1, color = "#484f58", wing = 5) => drawCanvasBracket(ctx, centerX + x, centerY + y, h, isLeft, alpha, color, wing);
 
           function drawCircle(x, y, r, stroke, fill, text = null, glow = 0, glowColor = null, alpha = 1, textColor = "#e6edf3", category = 'default') {
             if (alpha <= 0) return;
@@ -5065,18 +5600,7 @@
             }
           }
 
-          function drawLabel(text, x, y, color = "#7d8590", align = "center", font = null, alpha = 1) {
-            if (alpha <= 0) return;
-            ctx.save();
-            ctx.translate(centerX + x, centerY + y);
-            ctx.globalAlpha = alpha;
-            ctx.font = font || `400 ${Math.round(10.5 * s)}px ui-monospace, SFMono-Regular, Menlo, monospace`;
-            ctx.fillStyle = color;
-            ctx.textAlign = align;
-            ctx.textBaseline = 'middle';
-            ctx.fillText(text, 0, 0);
-            ctx.restore();
-          }
+          const drawLabel = (text, x, y, color = "#7d8590", align = "center", font = null, alpha = 1) => drawCanvasLabel(ctx, text, centerX + x, centerY + y, color, align, font || `400 ${Math.round(10.5 * s)}px ui-monospace, SFMono-Regular, Menlo, monospace`, alpha);
 
           function drawGridOutline(alpha) {
             if (alpha <= 0) return;
@@ -5648,20 +6172,48 @@
             return;
           }
 
-          if (ms >= 7600 && ms < 9000) {
+          // PHASE 5b: Pause between Dot Product and Softmax (7600 to 8400ms)
+          if (ms >= 7600 && ms < 8400) {
+            updateAttnMathHighlight('qk-green');
+            caption.innerHTML = '<span class="caption-op add">Dot Product</span>: <span class="caption-op add">+ sum</span> &rarr; similarity scores';
+
+            const labelY = geom.matTop - 30 * s;
+            drawLabel("dot product", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
+
+            drawBracket(geom.matL, geom.matCenterY, geom.matHBrack, true, 1, '#3fb950', 7);
+            drawBracket(geom.matR, geom.matCenterY, geom.matHBrack, false, 1, '#3fb950', 7);
+
+            if (!isWebGL) {
+              for (let i = 0; i < T; i++) {
+                for (let j = 0; j < T; j++) {
+                  const cx = geom.colX[j];
+                  const cy = geom.rowY[i];
+                  const simRow = (data && data.sim) ? data.sim[i % data.sim.length] : null;
+                  const simVal = simRow ? simRow[j % simRow.length] : (i === j ? '2.0' : '1.0');
+                  drawCircle(cx, cy, geom.cellR, '#3fb950', 'rgba(63, 185, 80, 0.22)', simVal, 0, null, 1, '#e6edf3', 'sim');
+                }
+              }
+            } else {
+              threeAttn.renderFrame(T, d, ms, geom, width, height, s);
+            }
+            return;
+          }
+
+          if (ms >= 8400 && ms < 9800) {
             updateAttnMathHighlight('softmax-red');
             caption.innerHTML = '<span class="caption-op exp">Softmax</span> (step 1): <span class="caption-op exp">exp</span> elementwise on each row';
 
             const labelY = geom.matTop - 30 * s;
             drawLabel("softmax", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
 
-            const p = (ms - 7600) / 1400;
+            const p = (ms - 8400) / 1400;
             const flash = Math.sin(p * Math.PI);
             const rMult = 1 + 0.14 * flash;
             const redBg = `rgba(248, 81, 73, ${0.15 + 0.30 * flash})`;
 
             const expVals = (p > 0.25 && data) ? data.exp : (data ? data.sim : null);
             drawMatrix('#f85149', redBg, expVals, 0, null, 1, '#e6edf3', rMult, false, 'exp');
+            drawRpgExpFloat(ctx, geom, T, ms, 8400, s, centerX, centerY);
 
             if (isWebGL) {
               threeAttn.renderFrame(T, d, ms, geom, width, height, s);
@@ -5669,14 +6221,14 @@
             return;
           }
 
-          if (ms >= 9000 && ms < 10600) {
+          if (ms >= 9800 && ms < 11400) {
             updateAttnMathHighlight('softmax-red');
             caption.innerHTML = '<span class="caption-op exp">Softmax</span> (step 2): <span class="caption-op add">+ sum</span> each row &rarr; denominators';
 
             const labelY = geom.matTop - 30 * s;
             drawLabel("softmax", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
 
-            const p = (ms - 9000) / 1600;
+            const p = (ms - 9800) / 1600;
             const sumProg = Math.min(1, p / 0.72);
             const easeSum = sumProg * sumProg * (3 - 2 * sumProg);
 
@@ -5725,14 +6277,14 @@
             return;
           }
 
-          if (ms >= 10600 && ms < 12200) {
+          if (ms >= 11400 && ms < 13000) {
             updateAttnMathHighlight('softmax-purple');
             caption.innerHTML = '<span class="caption-op exp">Softmax</span> (step 3): <span class="caption-op div">&divide; divide</span> each row by its sum';
 
             const labelY = geom.matTop - 30 * s;
             drawLabel("softmax", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
 
-            const p = (ms - 10600) / 1600;
+            const p = (ms - 11400) / 1600;
             const isDivided = p >= 0.40;
             const flash = Math.sin(p * Math.PI);
 
@@ -5773,17 +6325,17 @@
             return;
           }
 
-          if (ms >= 12200 && ms < 15600) {
+          if (ms >= 13000 && ms < 16400) {
             updateAttnMathHighlight('blue');
             caption.style.opacity = '1';
 
-            const labelFade = Math.min(1, (ms - 12200) / 350);
+            const labelFade = Math.min(1, (ms - 13000) / 350);
             const labelY = geom.matTop - 30 * s;
             drawLabel("Attention Matrix", 0, labelY, "#58a6ff", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, labelFade);
 
             let greenAlpha = 1.0;
-            if (ms >= 13400) {
-              greenAlpha = Math.max(0, 1 - (ms - 13400) / 800);
+            if (ms >= 14200) {
+              greenAlpha = Math.max(0, 1 - (ms - 14200) / 800);
             }
 
             if (greenAlpha > 0.05) {
@@ -5833,9 +6385,9 @@
             return;
           }
 
-          if (ms >= 15600) {
+          if (ms >= 16400) {
             updateAttnMathHighlight(null);
-            const fade = Math.max(0, 1 - (ms - 15600) / 1000);
+            const fade = Math.max(0, 1 - (ms - 16400) / 1000);
             caption.style.opacity = `${fade}`;
 
             const labelY = geom.matTop - 30 * s;
@@ -5872,10 +6424,6 @@
       // Attention(Q, K, V) = softmax(Q K^T) V
       // ==========================================
       (() => {
-        const exists = v => v !== null && v !== undefined;
-        const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
-        const lerp = (a, b, t) => a + (b - a) * t;
-        const easeInOut = t => t * t * (3 - 2 * t);
         const cubicBezier = (p0, p1, p2, p3, t) => {
           const u = 1 - t;
           return u * u * u * p0 + 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t * p3;
@@ -6501,38 +7049,7 @@
           return { matW, matH, matL, matR, matTop: Y_mat_top - centerY_canvas, matBot: Y_mat_bot - centerY_canvas, matHBrack, matCenterY, colX, rowY, cellW: stepX * (tCount <= 4 ? 0.92 : 0.96), cellH: stepY * (tCount <= 4 ? 0.88 : 0.96), cellR, stepX, stepY, T_calc, leftQueryX, topKeyY, topValY, valParkedY, rightSumX, rightOutX };
         }
 
-        function getVectorLayout(count, isVertical, length, s = 1, maxCircleR = 999) {
-          const points = [];
-          if (count === 1) {
-            const r = Math.min(13.0 * s, maxCircleR);
-            return { points: [{ x: 0, y: 0, r }], r, length: 2 * r, extentW: 2 * r, extentH: 2 * r };
-          }
-          if (count <= 8) {
-            const spacing = length / count;
-            const targetR = count <= 2 ? 12.0 * s : (count <= 4 ? 10.0 * s : 5.5 * s);
-            const r = Math.max(1.5, Math.min(Math.min(targetR, maxCircleR), (spacing * 0.84) / 2));
-            const start = -length / 2 + spacing / 2;
-            for (let i = 0; i < count; i++) {
-              const offset = start + i * spacing;
-              points.push({ x: isVertical ? 0 : offset, y: isVertical ? offset : 0, r });
-            }
-            return { points, r, length, extentW: isVertical ? 2 * r : length + 2 * r, extentH: isVertical ? length + 2 * r : 2 * r };
-          }
-          const maxPts = Math.min(count, 48);
-          const spacing = length / maxPts;
-          const r = Math.max(0.6, Math.min(Math.min(1.8, maxCircleR), (spacing * 0.8) / 2));
-          const start = -length / 2 + spacing / 2;
-          for (let i = 0; i < count; i++) {
-            const idx = i % 48;
-            const lane = Math.floor(i / 48);
-            const offset = start + idx * spacing;
-            const laneOffset = (lane - (Math.ceil(count / 48) - 1) / 2) * (r * 2.4);
-            points.push({ x: isVertical ? laneOffset : offset, y: isVertical ? offset : laneOffset, r });
-          }
-          return { points, r, length, extentW: isVertical ? 20 * s : length + 2 * r, extentH: isVertical ? length + 2 * r : 20 * s };
-        }
-
-        const TOTAL_DURATION = 25000;
+        const TOTAL_DURATION = 25800;
         let startTime = performance.now();
 
         function render(ms) {
@@ -6565,19 +7082,7 @@
           const rowBracketH = (isDepthMode ? (Math.abs(-0.57) * depthLen + 10 * s) : layoutHoriz.extentH) + 8 * s;
           const rowBracketW = (isDepthMode ? (Math.abs(-0.82) * depthLen + 10 * s) : layoutHoriz.extentW) + 10 * s;
 
-          function drawBracket(x, y, h, isLeft, alpha = 1, color = "#484f58", wing = 5) {
-            if (alpha <= 0) return;
-            ctx.save();
-            ctx.translate(centerX + x, centerY + y);
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 1.0;
-            ctx.globalAlpha = alpha;
-            ctx.beginPath();
-            if (isLeft) { ctx.moveTo(wing, -h / 2); ctx.lineTo(0, -h / 2); ctx.lineTo(0, h / 2); ctx.lineTo(wing, h / 2); }
-            else { ctx.moveTo(-wing, -h / 2); ctx.lineTo(0, -h / 2); ctx.lineTo(0, h / 2); ctx.lineTo(-wing, h / 2); }
-            ctx.stroke();
-            ctx.restore();
-          }
+          const drawBracket = (x, y, h, isLeft, alpha = 1, color = "#484f58", wing = 5) => drawCanvasBracket(ctx, centerX + x, centerY + y, h, isLeft, alpha, color, wing);
 
           function drawBrackets(x, y, w, h, alpha = 1, color = "#484f58", wing = 5) {
             drawBracket(x - w / 2 - 4 * s, y, h, true, alpha, color, wing);
@@ -6594,7 +7099,7 @@
             let finalStroke = stroke;
             let finalTextColor = textColor;
 
-            if (exists(text) && category !== 'fixed' && category !== 'prob-vector') {
+            if (exists(text) && category !== 'fixed' && category !== 'prob-vector' && category !== 'flash') {
               const magInfo = createMagnitudeGradient(ctx, 0, 0, r, text, stroke, alpha, category);
               finalFill = magInfo.grad;
               finalStroke = magInfo.strokeColor;
@@ -6617,7 +7122,7 @@
               ctx.fill();
             }
             if (finalStroke) {
-              ctx.lineWidth = 0.75;
+              ctx.lineWidth = category === 'flash' ? 1.5 : 0.75;
               ctx.strokeStyle = finalStroke;
               ctx.stroke();
             }
@@ -6812,18 +7317,7 @@
             }
           }
 
-          function drawLabel(text, x, y, color = "#7d8590", align = "center", font = null, alpha = 1) {
-            if (alpha <= 0) return;
-            ctx.save();
-            ctx.translate(centerX + x, centerY + y);
-            ctx.globalAlpha = alpha;
-            ctx.font = font || `400 ${Math.round(10.5 * s)}px ui-monospace, SFMono-Regular, Menlo, monospace`;
-            ctx.fillStyle = color;
-            ctx.textAlign = align;
-            ctx.textBaseline = 'middle';
-            ctx.fillText(text, 0, 0);
-            ctx.restore();
-          }
+          const drawLabel = (text, x, y, color = "#7d8590", align = "center", font = null, alpha = 1) => drawCanvasLabel(ctx, text, centerX + x, centerY + y, color, align, font || `400 ${Math.round(10.5 * s)}px ui-monospace, SFMono-Regular, Menlo, monospace`, alpha);
 
           function drawGridOutline(alpha) {
             if (alpha <= 0) return;
@@ -7401,9 +7895,39 @@
           }
 
           // ==========================================
-          // PHASE 6: Softmax Step 1: Exp (7600 to 9000ms)
+          // PHASE 5b: Pause between Dot Product and Softmax (7600 to 8400ms)
           // ==========================================
-          if (ms >= 7600 && ms < 9000) {
+          if (ms >= 7600 && ms < 8400) {
+            updateMathHighlight('qk-green');
+            caption.innerHTML = '<span class="caption-op add">Dot Product</span>: <span class="caption-op add">+ sum</span> &rarr; similarity scores';
+
+            const labelY = geom.matTop - 30 * s;
+            drawLabel("dot product", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
+            drawValuesAtPosition(geom.valParkedY, 1.0);
+
+            drawBracket(geom.matL, geom.matCenterY, geom.matHBrack, true, 1, '#3fb950', 7);
+            drawBracket(geom.matR, geom.matCenterY, geom.matHBrack, false, 1, '#3fb950', 7);
+
+            if (!isWebGL) {
+              for (let i = 0; i < T; i++) {
+                for (let j = 0; j < T; j++) {
+                  const cx = geom.colX[j];
+                  const cy = geom.rowY[i];
+                  const simRow = (data && data.sim) ? data.sim[i % data.sim.length] : null;
+                  const simVal = simRow ? simRow[j % simRow.length] : (i === j ? '2.0' : '1.0');
+                  drawCircle(cx, cy, geom.cellR, '#3fb950', 'rgba(63, 185, 80, 0.22)', simVal, 0, null, 1, '#e6edf3', 'sim');
+                }
+              }
+            } else {
+              threeFullAttn.renderFrame(T, d, ms, geom, width, height, s);
+            }
+            return;
+          }
+
+          // ==========================================
+          // PHASE 6: Softmax Step 1: Exp (8400 to 9800ms)
+          // ==========================================
+          if (ms >= 8400 && ms < 9800) {
             updateMathHighlight('softmax-red');
             caption.innerHTML = '<span class="caption-op exp">Softmax</span> (step 1): <span class="caption-op exp">exp</span> elementwise on each row';
 
@@ -7411,13 +7935,14 @@
             drawLabel("softmax", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
             drawValuesAtPosition(geom.valParkedY, 1.0);
 
-            const p = (ms - 7600) / 1400;
+            const p = (ms - 8400) / 1400;
             const flash = Math.sin(p * Math.PI);
             const rMult = 1 + 0.14 * flash;
             const redBg = `rgba(248, 81, 73, ${0.15 + 0.30 * flash})`;
 
             const expVals = (p > 0.25 && data) ? data.exp : (data ? data.sim : null);
             drawMatrix('#f85149', redBg, expVals, 0, null, 1, '#e6edf3', rMult, false, 'exp');
+            drawRpgExpFloat(ctx, geom, T, ms, 8400, s, centerX, centerY);
 
             if (isWebGL) {
               threeFullAttn.renderFrame(T, d, ms, geom, width, height, s);
@@ -7426,9 +7951,9 @@
           }
 
           // ==========================================
-          // PHASE 7: Softmax Step 2: Row Sum (9000 to 10600ms)
+          // PHASE 7: Softmax Step 2: Row Sum (9800 to 11400ms)
           // ==========================================
-          if (ms >= 9000 && ms < 10600) {
+          if (ms >= 9800 && ms < 11400) {
             updateMathHighlight('softmax-red');
             caption.innerHTML = '<span class="caption-op exp">Softmax</span> (step 2): <span class="caption-op add">+ sum</span> each row &rarr; denominators';
 
@@ -7436,7 +7961,7 @@
             drawLabel("softmax", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
             drawValuesAtPosition(geom.valParkedY, 1.0);
 
-            const p = (ms - 9000) / 1600;
+            const p = (ms - 9800) / 1600;
             const easeSum = easeInOut(Math.min(1, p / 0.72));
             const isSummed = p >= 0.72;
             const flash = isSummed ? Math.sin(((p - 0.72) / 0.28) * Math.PI) : 0;
@@ -7493,9 +8018,9 @@
           }
 
           // ==========================================
-          // PHASE 8: Softmax Step 3: PURPLE Dividing (10600 to 12200ms)
+          // PHASE 8: Softmax Step 3: PURPLE Dividing (11400 to 13000ms)
           // ==========================================
-          if (ms >= 10600 && ms < 12200) {
+          if (ms >= 11400 && ms < 13000) {
             updateMathHighlight('softmax-purple');
             caption.innerHTML = '<span class="caption-op exp" style="color:#a371f7;">Softmax</span> (step 3): <span class="caption-op div" style="color:#a371f7;">&divide; divide</span> each row by its sum &rarr; <span style="color:#a371f7;">Attention Matrix A</span>';
 
@@ -7503,7 +8028,7 @@
             drawLabel("softmax", 0, labelY, "#a371f7", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
             drawValuesAtPosition(geom.valParkedY, 1.0);
 
-            const p = (ms - 10600) / 1600;
+            const p = (ms - 11400) / 1600;
             const isDivided = p >= 0.40;
             const flash = Math.sin(p * Math.PI);
 
@@ -7560,18 +8085,18 @@
           }
 
           // ==========================================
-          // PHASE 8b: Attention Matrix A (12200 to 14000ms)
+          // PHASE 8b: Attention Matrix A (13000 to 14800ms)
           // ==========================================
-          if (ms >= 12200 && ms < 14000) {
+          if (ms >= 13000 && ms < 14800) {
             updateMathHighlight('softmax-purple');
             caption.style.opacity = '1';
 
-            const labelFade = Math.min(1, (ms - 12200) / 350);
+            const labelFade = Math.min(1, (ms - 13000) / 350);
             const labelY = geom.matTop - 30 * s;
             drawLabel("Attention Matrix", 0, labelY, "#58a6ff", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, labelFade);
             drawValuesAtPosition(geom.valParkedY, 1.0);
 
-            const greenAlpha = ms >= 13400 ? Math.max(0, 1 - (ms - 13400) / 600) : 1.0;
+            const greenAlpha = ms >= 14200 ? Math.max(0, 1 - (ms - 14200) / 600) : 1.0;
 
             if (greenAlpha > 0.05) {
               caption.innerHTML = `= Attention Matrix A = <span class="caption-op exp">softmax</span>(Q &middot; K<sup>T</sup>) <span style="color:rgba(63, 185, 80, ${greenAlpha.toFixed(2)}); font-weight:400;">(row sum = 1.0)</span>`;
@@ -7621,11 +8146,11 @@
           }
 
           // ==========================================
-          // PHASE 9: Values slide down & multiply with orange flash (14000 to 17200ms)
+          // PHASE 9: Values slide down & multiply with orange flash (14800 to 18000ms)
           // ==========================================
-          if (ms >= 14000 && ms < 17200) {
+          if (ms >= 14800 && ms < 18000) {
             updateMathHighlight('val-orange');
-            const p = (ms - 14000) / 3200;
+            const p = (ms - 14800) / 3200;
             caption.innerHTML = '<span class="caption-op val" style="color:#58a6ff;">weight and sum values using attention matrix</span> &rarr; <span class="caption-op mul">&times; multiply</span> values by attention weights';
             drawGridOutline(0.75);
 
@@ -7703,11 +8228,11 @@
           }
 
           // ==========================================
-          // PHASE 10: Sum Reduce (Green) to Output (17200 to 20200ms)
+          // PHASE 10: Sum Reduce (Green) to Output (18000 to 21000ms)
           // ==========================================
-          if (ms >= 17200 && ms < 20200) {
+          if (ms >= 18000 && ms < 21000) {
             updateMathHighlight('val-green');
-            const p = (ms - 17200) / 3000;
+            const p = (ms - 18000) / 3000;
             caption.innerHTML = '<span class="caption-op val" style="color:#58a6ff;">weight and sum values using attention matrix</span> &rarr; <span class="caption-op add">&sum; sum</span> &rarr; output vectors <span class="caption-op out">O</span>';
             drawGridOutline(0.5);
 
@@ -7742,21 +8267,14 @@
                 const oLabels = (data && data.out) ? data.out[i] : null;
                 if (isGreenFlash) {
                   const strokeColor = '#3fb950';
-                  const fillColor = 'rgba(63, 185, 80, 0.35)';
+                  const fillColor = `rgba(63, 185, 80, ${(0.28 + 0.35 * greenPulse).toFixed(3)})`;
+                  const flashGlow = 14 * greenPulse;
+                  const scaleR = 1.05 + 0.22 * greenPulse;
                   if (isDepthMode) {
-                    drawDepthVector(geom.rightOutX + (0.82 * depthLen) / 2, ry + (0.57 * depthLen) / 2, d, depthLen, strokeColor, fillColor, oLabels, 1, 0, 1.1 + 0.25 * greenPulse, 'sum');
+                    drawDepthVector(geom.rightOutX + (0.82 * depthLen) / 2, ry + (0.57 * depthLen) / 2, d, depthLen, strokeColor, fillColor, oLabels, 1, 0, scaleR, 'flash', flashGlow, '#3fb950');
                   } else {
-                    drawVector(geom.rightOutX, ry, layoutHoriz, strokeColor, fillColor, oLabels, 20 * greenPulse, '#3fb950', 1, '#ffffff', 1.05 + 0.2 * greenPulse, 'sum');
+                    drawVector(geom.rightOutX, ry, layoutHoriz, strokeColor, fillColor, oLabels, flashGlow, '#3fb950', 1, '#ffffff', scaleR, 'flash');
                   }
-
-                  ctx.save();
-                  ctx.translate(centerX + geom.rightOutX, centerY + ry);
-                  ctx.strokeStyle = `rgba(63, 185, 80, ${0.80 * greenPulse})`;
-                  ctx.lineWidth = 1.6;
-                  ctx.beginPath();
-                  ctx.arc(0, 0, (geom.cellR * 1.6) + 14 * greenPulse, 0, Math.PI * 2);
-                  ctx.stroke();
-                  ctx.restore();
                 } else {
                   if (isDepthMode) {
                     drawDepthVector(geom.rightOutX + (0.82 * depthLen) / 2, ry + (0.57 * depthLen) / 2, d, depthLen, '#79c0ff', 'rgba(121, 192, 255, 0.22)', oLabels, 1, 0, 1, 'vector');
@@ -7796,11 +8314,11 @@
           }
 
           // ==========================================
-          // PHASE 11: Loopback (20200 to 25000ms)
+          // PHASE 11: Loopback (21000 to 25800ms)
           // ==========================================
-          if (ms >= 20200) {
+          if (ms >= 21000) {
             updateMathHighlight(null);
-            const p = (ms - 20200) / 4800;
+            const p = (ms - 21000) / 4800;
             caption.innerHTML = 'output vectors <span class="caption-op out">O</span> loop back &rarr; a <span style="color:#79c0ff; font-weight:600;">Transformer</span> is just attention done in a loop';
 
             const outFade = Math.max(0, 1 - (p / 0.40));

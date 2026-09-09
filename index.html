@@ -6771,7 +6771,7 @@
               }
             }
 
-            const isDepthMode = (d_val >= 8) || (T_val >= 4 && d_val >= 2);
+            const isDepthMode = (d_val >= 4) || (T_val >= 4 && d_val >= 2);
             if (isDepthMode) {
               qAlpha = 0;
               kAlpha = 0;
@@ -7039,7 +7039,7 @@
           const stepX = matW / T_calc;
           const stepY = matH / T_calc;
 
-          const isDepthMode = (d >= 8) || (tCount >= 4 && d >= 2);
+          const isDepthMode = (d >= 4) || (tCount >= 4 && d >= 2);
           const depthLen = d >= 256 ? clamp(matW * 0.42, 38 * s, 68 * s)
             : (d >= 64 ? clamp(matW * 0.34, 28 * s, 54 * s)
             : (d >= 16 ? clamp(matW * 0.30, 22 * s, 44 * s)
@@ -7050,7 +7050,7 @@
 
           let colBracketH;
           if (isDepthMode) {
-            colBracketH = Math.abs(-0.57) * depthLen + 10 * s;
+            colBracketH = Math.abs(-0.57) * depthLen + 12 * s;
           } else if (d === 1) {
             colBracketH = 2 * Math.min(13 * s, maxKeyCircleR) + 10 * s;
           } else {
@@ -7062,13 +7062,13 @@
 
           const vLabelH = (tCount <= 4 && !isDepthMode ? 22 * s : 14 * s);
           const kLabelH = (tCount <= 4 && !isDepthMode ? 22 * s : 14 * s);
-          const gapValKey = (tCount <= 2 ? 22 * s : 18 * s);
-          const gapKeyMat = (tCount <= 2 ? 20 * s : 16 * s);
+          const gapValKey = isDepthMode ? 24 * s : (tCount <= 2 ? 24 * s : 20 * s);
+          const gapKeyMat = isDepthMode ? 58 * s : (tCount <= 2 ? 40 * s : 30 * s);
           const loopbackArea = 40 * s;
 
           const stackH = vLabelH + colBracketH + gapValKey + kLabelH + colBracketH + gapKeyMat + matH;
           const freeH = actualCanvasH - stackH - loopbackArea;
-          const topMargin = clamp(freeH * 0.45, 22 * s, 48 * s);
+          const topMargin = clamp(freeH * 0.25, 20 * s, 34 * s);
 
           const Y_val_top = topMargin;
           const Y_val_center = Y_val_top + vLabelH + colBracketH / 2;
@@ -7096,9 +7096,11 @@
           const topValY = Y_val_center - centerY_canvas;
           const matCenterY = Y_mat_center - centerY_canvas;
 
-          // Stop short of the Attention Matrix label so values never collides with it
-          const stopShort = (tCount <= 2 ? 26 * s : 20 * s);
-          const valParkedY = topKeyY - stopShort;
+          // Values takes the place of keys, with comfortable clearance above the attention matrix container
+          const labelY = (Y_mat_top - centerY_canvas) - 30 * s;
+          const safeParkedY = labelY - colBracketH / 2 - (isDepthMode ? 26 * s : 22 * s);
+          const defaultParkedY = topKeyY - (isDepthMode ? 4 * s : 6 * s);
+          const valParkedY = Math.min(defaultParkedY, safeParkedY);
 
           const leftQueryX = matL - estQueryW / 2 - (tCount <= 2 ? 22 * s : 18 * s);
           const rightSumX = matR + (tCount <= 2 ? 46 * s : (tCount <= 4 ? 40 * s : 32 * s));
@@ -7120,11 +7122,11 @@
           const data = current_full_attn_data;
           const isWebGL = (T >= 64 && threeFullAttn !== null);
           const showNumbers = !isWebGL && (T <= 8 && d <= 8);
-          const isDepthMode = (d >= 8) || (T >= 4 && d >= 2);
-          const depthLen = d >= 256 ? clamp(geom.matW * 0.44, 40 * s, 72 * s)
-            : (d >= 64 ? clamp(geom.matW * 0.36, 30 * s, 58 * s)
-            : (d >= 16 ? clamp(geom.matW * 0.32, 22 * s, 48 * s)
-            : clamp(geom.matW * 0.28, 16 * s, 40 * s)));
+          const isDepthMode = (d >= 4) || (T >= 4 && d >= 2);
+          const depthLen = d >= 256 ? clamp(geom.matW * 0.42, 38 * s, 68 * s)
+            : (d >= 64 ? clamp(geom.matW * 0.34, 28 * s, 54 * s)
+            : (d >= 16 ? clamp(geom.matW * 0.30, 22 * s, 44 * s)
+            : clamp(geom.matW * 0.26, 16 * s, 36 * s)));
 
           const maxQueryCircleR = geom.stepY ? (geom.stepY * 0.44) : (13 * s);
           const maxKeyCircleR = geom.stepX ? (geom.stepX * 0.44) : (13 * s);
@@ -7135,7 +7137,7 @@
           const cellVecLen = Math.min(vecLenHoriz * 0.65, (geom.stepX ? geom.stepX * 0.72 : 36 * s));
           const cellLayout = getVectorLayout(d, false, cellVecLen, s, geom.cellR * 0.68);
 
-          const colBracketH = (isDepthMode ? (Math.abs(-0.57) * depthLen + 10 * s) : layoutVert.extentH) + 10 * s;
+          const colBracketH = isDepthMode ? (Math.abs(-0.57) * depthLen + 12 * s) : (layoutVert.extentH + 10 * s);
           const colBracketW = (isDepthMode ? (Math.abs(-0.82) * depthLen + 10 * s) : layoutVert.extentW) + 8 * s;
           const rowBracketH = (isDepthMode ? (Math.abs(-0.57) * depthLen + 10 * s) : layoutHoriz.extentH) + 8 * s;
           const rowBracketW = (isDepthMode ? (Math.abs(-0.82) * depthLen + 10 * s) : layoutHoriz.extentW) + 10 * s;
@@ -8229,7 +8231,8 @@
                   const vx = geom.colX[j];
                   const vLabels = (data && data.v && data.v[j]) ? data.v[j] : null;
                   if (isDepthMode) {
-                    drawDepthVector(vx, curY, d, depthLen, '#58a6ff', 'rgba(88, 166, 255, 0.18)', vLabels, 1, 0, 1, 'vector');
+                    const curX = vx + (0.82 * depthLen) / 2 * (1 - easeSub);
+                    drawDepthVector(curX, curY, d, depthLen, '#58a6ff', 'rgba(88, 166, 255, 0.18)', vLabels, 1, 0, 1, 'vector');
                   } else {
                     const isHoriz = easeSub > 0.6;
                     drawVector(vx, curY, isHoriz ? cellLayout : layoutVert, '#58a6ff', 'rgba(88, 166, 255, 0.18)', vLabels, 0, null, 1, '#ffffff', 1, 'vector');

@@ -29,3 +29,15 @@ The feeling I will attempt to evoke is, "Is that all?" and the answer should be 
     url     = {https://arxiv.org/abs/1706.03762}
 }
 ```
+
+```bibtex
+@misc{ramsauer2021hopfieldnetworksneed,
+    title   = {Hopfield Networks is All You Need},
+    author  = {Hubert Ramsauer and Bernhard Schäfl and Johannes Lehner and Philipp Seidl and Michael Widrich and Thomas Adler and Lukas Gruber and Markus Holzleitner and Milena Pavlović and Geir Kjetil Sandve and Victor Greiff and David Kreil and Michael Kopp and Günter Klambauer and Johannes Brandstetter and Sepp Hochreiter},
+    year    = {2021},
+    eprint  = {2008.02217},
+    archivePrefix = {arXiv},
+    primaryClass = {cs.NE},
+    url     = {https://arxiv.org/abs/2008.02217},
+}
+```

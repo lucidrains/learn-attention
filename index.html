@@ -295,6 +295,7 @@
       border-radius: 6px;
       margin: 0.35rem 0;
       position: relative;
+      cursor: pointer;
       transition: all 0.25s ease;
     }
     .graphical-locked-bar:hover {
@@ -3723,6 +3724,7 @@
             is_answered = true;
             streak++;
             solved++;
+            if (window.unlockGraphicalAttention) window.unlockGraphicalAttention(true);
             feedback_el.className = 'feedback correct';
             feedback_el.innerHTML = `&#10003; complete! Attention Y = softmax(QKᵀ)V solved`;
             submit_btn.className = 'submit-btn ready-green';
@@ -9724,7 +9726,10 @@
             localStorage.setItem('learn_attention_graphical_unlocked', 'true');
           } catch(e) {}
           updateLockedUI();
-          resize();
+          requestAnimationFrame(() => {
+            resize();
+            startTime = performance.now();
+          });
           if (fromQuiz) {
             const toast = document.createElement('div');
             toast.className = 'graphical-unlock-toast';
@@ -9737,13 +9742,20 @@
 
         updateLockedUI();
 
-        if (lockWrap) {
-          lockWrap.addEventListener('click', (e) => {
-            e.stopPropagation();
+        if (window.ResizeObserver) {
+          const ro = new ResizeObserver(() => {
+            if (!isLocked) resize();
+          });
+          ro.observe(canvasStage);
+        }
+
+        if (lockedBar) {
+          lockedBar.addEventListener('click', (e) => {
+            if (e.target.closest('#mini-quiz-link') || e.target.closest('#mini-unlock-link')) return;
             if (confirmBox) {
               const isHidden = confirmBox.style.display === 'none';
               confirmBox.style.display = isHidden ? 'flex' : 'none';
-              lockWrap.style.display = isHidden ? 'none' : 'flex';
+              if (lockWrap) lockWrap.style.display = isHidden ? 'none' : 'flex';
             }
           });
         }
@@ -9777,8 +9789,11 @@
 
         function animate(now) {
           if (isLocked && window.__freezeGraphicalAttnMs === null) {
-            requestAnimationFrame(animate);
             return;
+          }
+          if (width <= 0 || height <= 0) {
+            resize();
+            if (width <= 0 || height <= 0) return;
           }
           if (!startTime) startTime = now;
           let totalElapsed = now - startTime;

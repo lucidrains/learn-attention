@@ -276,11 +276,34 @@
       position: relative;
       height: 540px;
     }
-    #full-attn-graphical-canvas-stage {
-      height: 600px;
-    }
     #full-attn-graphical-card {
       position: relative;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .graphical-main-content {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      box-sizing: border-box;
+    }
+    #full-attn-graphical-canvas-stage {
+      width: 100%;
+      height: 600px;
+      min-height: 600px;
+      max-height: 600px;
+      box-sizing: border-box;
+      position: relative;
+      overflow: hidden;
+    }
+    #full-attn-graphical-card .full-attn-math-wrap {
+      height: 38px;
+      min-height: 38px;
+      max-height: 38px;
+      box-sizing: border-box;
+      margin: 0 auto;
     }
     
     /* Mysterious, Minimal Rectangular Lock Container */
@@ -664,12 +687,17 @@
     #full-attn-graphical-caption {
       font-size: 0.8rem;
       white-space: normal;
-      height: auto;
-      min-height: 1.4rem;
-      display: block;
+      height: 2.8rem;
+      min-height: 2.8rem;
+      max-height: 2.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       line-height: 1.4;
       text-align: center;
       padding: 0 0.5rem;
+      box-sizing: border-box;
+      overflow: hidden;
     }
 
     .card {
@@ -8910,6 +8938,27 @@
           q[13] = [0.2, 1.5, 0.3, 1.4];
           k[10] = [0.3, 1.4, 0.2, 1.3];
 
+          // 16 Attention Targets: Primary cross-modal pairs match attending arcs (9->1, 5->12, 3->6, 13->10)
+          // Every row has exactly one distinct salient attending target
+          const ROW_TARGETS = [
+            2,  // 0: all (text) -> tion (text)
+            2,  // 1: Atten (text) -> tion (text)
+            1,  // 2: tion (text) -> Atten (text)
+            6,  // 3: connects (text) -> patch 3 (vision) [ARC 3]
+            5,  // 4: patch 1 (vision) -> patch 2 (vision)
+            12, // 5: patch 2 (vision) -> Carbon (atoms) [ARC 2]
+            7,  // 6: patch 3 (vision) -> patch 4 (vision)
+            4,  // 7: patch 4 (vision) -> patch 1 (vision)
+            9,  // 8: 60 Hz (sound) -> 440 Hz (sound)
+            1,  // 9: 440 Hz (sound) -> Atten (text) [ARC 1]
+            11, // 10: 1.8 kHz (sound) -> 8 kHz (sound)
+            8,  // 11: 8 kHz (sound) -> 60 Hz (sound)
+            14, // 12: Carbon (atoms) -> Nitrogen (atoms)
+            10, // 13: Oxygen (atoms) -> 1.8 kHz (sound) [ARC 4]
+            15, // 14: Nitrogen (atoms) -> Hydrogen (atoms)
+            13  // 15: Hydrogen (atoms) -> Oxygen (atoms)
+          ];
+
           // Compute Q * K^T, exp, sum, softmax, output
           const sim = [];
           const simNums = [];
@@ -8927,24 +8976,30 @@
             simNums.push([]);
             exp.push([]);
             expNums.push([]);
-            let rowSum = 0;
+            const tgt = ROW_TARGETS[i];
 
             for (let j = 0; j < 16; j++) {
               let dot = 0;
               for (let m = 0; m < 4; m++) {
                 dot += q[i][m] * k[j][m];
               }
-              const score = Math.round(dot * 10) / 10;
+              // Attention score: target token has prominent affinity score (3.6 to 3.9)
+              // while other tokens are low (-0.5 to 0.4)
+              let score;
+              if (j === tgt) {
+                score = Math.round((3.6 + ((i * 3) % 4) * 0.1) * 10) / 10;
+              } else {
+                score = Math.round(Math.max(-0.5, Math.min(0.4, dot * 0.25 - 0.2)) * 10) / 10;
+              }
               sim[i].push(score);
               simNums[i].push(score);
 
-              const eVal = Math.round(Math.exp(score * 0.4) * 10) / 10;
+              const eVal = Math.round(Math.exp(score) * 10) / 10;
               exp[i].push(eVal);
               expNums[i].push(eVal);
-              rowSum += eVal;
             }
 
-            rowSum = Math.round(rowSum * 10) / 10;
+            const rowSum = Math.round(exp[i].reduce((a, b) => a + b, 0) * 10) / 10;
             sum.push(rowSum);
             sumNums.push(rowSum);
 
@@ -8963,6 +9018,10 @@
                 prob[i][j] = probNums[i][j];
               }
             }
+            // Ensure target absorbs any rounding difference so row sum is exactly 1.00
+            const finalSum = probNums[i].reduce((a, b) => a + b, 0);
+            probNums[i][tgt] = Math.round((probNums[i][tgt] + (1.00 - finalSum)) * 100) / 100;
+            prob[i][tgt] = probNums[i][tgt];
 
             broadcast.push([]);
             for (let j = 0; j < 16; j++) {
@@ -9009,16 +9068,17 @@
 
           if (category === 'prob') {
             const p = Math.min(1.0, Math.max(0.0, isNaN(num) ? 0.0 : num));
-            const fillA = Math.min(0.95, (0.04 + 0.88 * Math.pow(p, 1.25))) * alpha;
+            const isBright = p >= 0.50;
+            const fillA = Math.min(0.95, (0.04 + 0.90 * Math.pow(p, 1.25))) * alpha;
             const strokeA = Math.min(1.0, (0.12 + 0.88 * p)) * alpha;
-            const R = Math.round(40 + (125 - 40) * Math.pow(p, 0.85));
-            const G = Math.round(90 + (205 - 90) * Math.pow(p, 0.85));
+            const R = Math.round(40 + (135 - 40) * Math.pow(p, 0.85));
+            const G = Math.round(90 + (215 - 90) * Math.pow(p, 0.85));
             const B = 255;
             const grad = `rgba(${R}, ${G}, ${B}, ${fillA.toFixed(3)})`;
             const strokeColor = `rgba(${R}, ${G}, ${B}, ${strokeA.toFixed(3)})`;
-            const textColor = p > 0.55 ? '#ffffff' : (p > 0.20 ? '#c9d1d9' : '#7d8590');
-            const glowBlur = p > 0.45 ? Math.round(8 * (p - 0.45) * 1.8) : 0;
-            const glowColor = p > 0.45 ? `rgba(121, 192, 255, ${(0.65 * p).toFixed(2)})` : null;
+            const textColor = isBright ? '#ffffff' : (p > 0.15 ? '#b8c2cc' : '#656c76');
+            const glowBlur = isBright ? Math.round(14 * Math.min(1.0, (p - 0.40) / 0.45)) : 0;
+            const glowColor = isBright ? `rgba(121, 192, 255, ${(0.80 * p).toFixed(2)})` : null;
             return { grad, strokeColor, glowBlur, glowColor, textColor, t: p };
           }
 
@@ -9125,8 +9185,12 @@
 
         function resize() {
           const rect = canvasStage.getBoundingClientRect();
-          width = rect.width;
-          height = rect.height;
+          const newW = rect.width;
+          const newH = rect.height;
+          if (newW <= 0 || newH <= 0) return;
+          if (width === newW && height === newH && canvas.width === Math.round(newW * dpr)) return;
+          width = newW;
+          height = newH;
           centerX = width / 2;
           centerY = height / 2;
           s = clamp(Math.min(width / 480, height / 580), 0.75, 1.25);
@@ -9371,10 +9435,11 @@
         function drawValuesAtPosition(yPos, alpha = 1.0, scaleR = 1.0) {
           if (alpha <= 0) return;
           for (let j = 0; j < 16; j++) {
-            const x = geom.colX[j];
+            const x = geom.colX[j] + (0.82 * geom.depthLen) / 2;
+            const curY = yPos + (0.57 * geom.depthLen) / 2;
             const vColor = getModalityColor(j);
             const vFill = getModalityFill(j);
-            drawDepthVector(x, yPos, d, geom.depthLen, vColor, vFill, data.v[j], alpha, 0, scaleR, 'vector');
+            drawDepthVector(x, curY, d, geom.depthLen, vColor, vFill, data.v[j], alpha, 0, scaleR, 'vector');
           }
           const leftV = geom.colX[0] - colBracketW / 2 - 4 * s;
           const rightV = geom.colX[15] + colBracketW / 2 + 4 * s;
@@ -9397,6 +9462,7 @@
           const topQ = geom.rowY[0] - rowBracketH / 2;
           const botQ = geom.rowY[15] + rowBracketH / 2;
           drawBracket(geom.leftQueryX - rowBracketW / 2 - 4 * s, (topQ + botQ) / 2, botQ - topQ, true, alpha);
+          drawBracket(geom.leftQueryX + rowBracketW / 2 + 4 * s, (topQ + botQ) / 2, botQ - topQ, false, alpha);
 
           const textY = (geom.rowY[0] + geom.rowY[3]) / 2;
           const visionY = (geom.rowY[4] + geom.rowY[7]) / 2;
@@ -10824,12 +10890,18 @@
             const qHeaderY = geom.rowY[0] - rowBracketH / 2 - 14 * s;
             drawLabel("queries", curQX, qHeaderY, "#58a6ff", "center", null, ease);
 
-            const curKY = lerp(geom.matCenterY, geom.topKeyY, ease);
-            drawLabel("keys", 0, curKY - colBracketH / 2 - 14 * s, "#58a6ff", "center", null, ease);
+            // Modality row indicators stay attached to queries and glide with them
+            const textY = (geom.rowY[0] + geom.rowY[3]) / 2;
+            const visionY = (geom.rowY[4] + geom.rowY[7]) / 2;
+            const soundY = (geom.rowY[8] + geom.rowY[11]) / 2;
+            const atomsY = (geom.rowY[12] + geom.rowY[15]) / 2;
 
-            const curVY = lerp(geom.matCenterY, geom.topValY, ease);
-            drawValuesAtPosition(curVY, ease);
+            drawModalityRowIndicator("text", textY, "#e3b341", geom.rowY[0], geom.rowY[3], curQX);
+            drawModalityRowIndicator("vision", visionY, "#3fb950", geom.rowY[4], geom.rowY[7], curQX);
+            drawModalityRowIndicator("sound", soundY, "#a371f7", geom.rowY[8], geom.rowY[11], curQX);
+            drawModalityRowIndicator("atoms", atomsY, "#58a6ff", geom.rowY[12], geom.rowY[15], curQX);
 
+            // Queries (Q) glide left
             for (let i = 0; i < 16; i++) {
               const qy = geom.rowY[i];
               const qLabels = data.q[i];
@@ -10842,18 +10914,37 @@
             drawBracket(curQX - rowBracketW / 2 - 4 * s, (topQ + botQ) / 2, botQ - topQ, true);
             drawBracket(curQX + rowBracketW / 2 + 4 * s, (topQ + botQ) / 2, botQ - topQ, false);
 
+            // Keys (K) glide up and fan out to columns
+            const curKY = lerp((geom.rowY[0] + geom.rowY[15]) / 2, geom.topKeyY, ease);
             for (let j = 0; j < 16; j++) {
               const kx = lerp(0, geom.colX[j], ease);
               const ky = lerp(geom.rowY[j], geom.topKeyY, ease);
               const kLabels = data.k[j];
               const kColor = getModalityColor(j);
               const kFill = getModalityFill(j);
-              drawDepthVector(kx + (0.82 * geom.depthLen) / 2 * ease, ky + (0.57 * geom.depthLen) / 2, d, geom.depthLen, kColor, kFill, kLabels, 1, 0, 1, 'vector');
+              drawDepthVector(kx + (0.82 * geom.depthLen) / 2, ky + (0.57 * geom.depthLen) / 2, d, geom.depthLen, kColor, kFill, kLabels, 1, 0, 1, 'vector');
             }
-            const leftK = lerp(0, geom.colX[0], ease) - colBracketW / 2 - 4 * s;
-            const rightK = lerp(0, geom.colX[15], ease) + colBracketW / 2 + 4 * s;
+            const leftK = lerp(-colBracketW / 2 - 4 * s, geom.colX[0] - colBracketW / 2 - 4 * s, ease);
+            const rightK = lerp(colBracketW / 2 + 4 * s, geom.colX[15] + colBracketW / 2 + 4 * s, ease);
             drawBracket(leftK, curKY, colBracketH, true, ease);
             drawBracket(rightK, curKY, colBracketH, false, ease);
+            drawLabel("keys", 0, curKY - colBracketH / 2 - 14 * s, "#58a6ff", "center", null, ease);
+
+            // Values (V) glide up above keys and fan out to columns
+            const curVY = lerp((geom.rowY[0] + geom.rowY[15]) / 2, geom.topValY, ease);
+            for (let j = 0; j < 16; j++) {
+              const vx = lerp(0, geom.colX[j], ease);
+              const vy = lerp(geom.rowY[j], geom.topValY, ease);
+              const vColor = getModalityColor(j);
+              const vFill = getModalityFill(j);
+              drawDepthVector(vx + (0.82 * geom.depthLen) / 2, vy + (0.57 * geom.depthLen) / 2, d, geom.depthLen, vColor, vFill, data.v[j], ease, 0, 1, 'vector');
+            }
+            const leftV = lerp(-colBracketW / 2 - 4 * s, geom.colX[0] - colBracketW / 2 - 4 * s, ease);
+            const rightV = lerp(colBracketW / 2 + 4 * s, geom.colX[15] + colBracketW / 2 + 4 * s, ease);
+            drawBracket(leftV, curVY, colBracketH, true, ease);
+            drawBracket(rightV, curVY, colBracketH, false, ease);
+            drawLabel("values", 0, curVY - colBracketH / 2 - 14 * s, "#58a6ff", "center", null, ease);
+
             return;
           }
 
@@ -10887,7 +10978,6 @@
             const outerAlpha = Math.max(0.20, 1 - pMove * 0.80);
             if (outerAlpha > 0.05) {
               drawStaticHeaders(outerAlpha);
-              drawValuesAtPosition(geom.topValY, outerAlpha);
             }
 
             const curVY = lerp(geom.topValY, geom.valParkedY, easeInOut(Math.min(1, p / 0.85)));
@@ -11134,35 +11224,58 @@
           }
 
           // ==========================================
-          // PHASE 9: Values slide down & multiply with orange flash (22400 to 25600ms)
+          // PHASE 9: Values slide down all the way through all rows & multiply with orange flash (22400 to 25600ms)
           // ==========================================
           if (p2_time >= 22400 && p2_time < 25600) {
             updateMathHighlight('val-orange');
             const p = (p2_time - 22400) / 3200;
-            caption.innerHTML = '<span class="caption-op val" style="color:#58a6ff;">weight values using attention matrix</span> &rarr; <span class="caption-op mul">&times; multiply</span> values by attention weights';
+            caption.innerHTML = '<span class="caption-op val" style="color:#58a6ff;">weight values using attention matrix</span> &rarr; <span class="caption-op mul" style="color:#f0883e;">&times; multiply</span> values by attention weights';
 
             drawGridOutline(0.75);
-            const isSlide = p < 0.60;
+            const isDescent = p < 0.45;
+            const isCollision = p >= 0.45 && p < 0.72;
 
-            if (isSlide) {
-              const pSlide = easeInOut(p / 0.60);
-              for (let j = 0; j < 16; j++) {
-                const kx = geom.colX[j];
-                const curY = lerp(geom.valParkedY, geom.rowY[0], pSlide);
-                const vColor = getModalityColor(j);
-                const vFill = getModalityFill(j);
-                drawDepthVector(kx + (0.82 * geom.depthLen) / 2, curY + (0.57 * geom.depthLen) / 2, d, geom.depthLen, vColor, vFill, data.v[j], 1, 0, 1, 'vector');
+            if (isDescent) {
+              const easeSub = easeInOut(p / 0.45);
+              // Attention Matrix visible underneath
+              drawMatrix('#58a6ff', 'rgba(88, 166, 255, 0.18)', data.prob, 0, null, 0.75, '#e6edf3', 1, true, 'prob');
+
+              // Values slide all the way down across all rows i=0..15!
+              for (let i = 0; i < 16; i++) {
+                const curY = lerp(geom.valParkedY, geom.rowY[i], easeSub);
+                for (let j = 0; j < 16; j++) {
+                  const vx = geom.colX[j];
+                  const curX = vx + (0.82 * geom.depthLen) / 2 * (1 - easeSub);
+                  const vColor = getModalityColor(j);
+                  const vFill = getModalityFill(j);
+                  drawDepthVector(curX, curY + (0.57 * geom.depthLen) / 2 * easeSub, d, geom.depthLen, vColor, vFill, data.v[j], 1, 0, 1, 'vector');
+                }
               }
               const leftV = geom.colX[0] - colBracketW / 2 - 4 * s;
               const rightV = geom.colX[15] + colBracketW / 2 + 4 * s;
-              const curY = lerp(geom.valParkedY, geom.rowY[0], pSlide);
-              drawBracket(leftV, curY, colBracketH, true);
-              drawBracket(rightV, curY, colBracketH, false);
-            } else {
-              const pFlash = (p - 0.60) / 0.40;
-              const flash = Math.sin(pFlash * Math.PI);
-              const glow = 14 * flash;
+              const topY = lerp(geom.valParkedY, geom.rowY[0], easeSub);
+              const botY = lerp(geom.valParkedY, geom.rowY[15], easeSub);
+              drawBracket(leftV, (topY + botY) / 2, Math.max(colBracketH, botY - topY + colBracketH), true);
+              drawBracket(rightV, (topY + botY) / 2, Math.max(colBracketH, botY - topY + colBracketH), false);
+            } else if (isCollision) {
+              const orangePulse = Math.sin(((p - 0.45) / 0.27) * Math.PI);
+              const strokeColor = '#f0883e';
+              const fillColor = `rgba(240, 136, 62, ${(0.28 + 0.45 * orangePulse).toFixed(3)})`;
+              const flashGlow = 16 * orangePulse;
+              const scaleR = 1.05 + 0.22 * orangePulse;
 
+              for (let i = 0; i < 16; i++) {
+                for (let j = 0; j < 16; j++) {
+                  const cx = geom.colX[j];
+                  const cy = geom.rowY[i];
+                  const bLabels = (data.broadcast && data.broadcast[i] && data.broadcast[i][j]) ? data.broadcast[i][j] : null;
+                  drawDepthVector(cx, cy, d, geom.depthLen, strokeColor, fillColor, bLabels, 1, 0, scaleR, 'flash', flashGlow, '#f0883e');
+                }
+              }
+              drawBracket(geom.matL, geom.matCenterY, geom.matHBrack, true, 1.0, '#f0883e');
+              drawBracket(geom.matR, geom.matCenterY, geom.matHBrack, false, 1.0, '#f0883e');
+            } else {
+              // Settle into weighted vectors
               for (let i = 0; i < 16; i++) {
                 for (let j = 0; j < 16; j++) {
                   const cx = geom.colX[j];

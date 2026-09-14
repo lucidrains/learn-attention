@@ -10974,7 +10974,7 @@
               const phaseT = totalElapsed - 20600;
               const p = phaseT / 2400;
 
-              caption.innerHTML = 'all 4 modalities converge into a sequence of <span style="color:#58a6ff; font-weight:600;">16 vectors (tokens)</span> &rarr; feeds into Transformer';
+              caption.innerHTML = 'all 4 modalities converge into a sequence of <span style="color:#58a6ff; font-weight:600;">16 vectors (tokens)</span> &rarr; feeds into Multimodal Transformer';
 
               // Bottom 16 vectors remain fully docked
               drawDockedModalityVectors(4, 1.0);
@@ -11534,7 +11534,7 @@
           // ==========================================
           if (p2_time >= 29200) {
             updateMathHighlight(null);
-            caption.innerHTML = 'output vectors <span style="color:#58a6ff; font-weight:600;">O</span> loop back &rarr; a <span style="color:#58a6ff; font-weight:600;">Transformer</span> is just attention done in a loop';
+            caption.innerHTML = 'output vectors <span style="color:#58a6ff; font-weight:600;">O</span> loop back &rarr; a <span style="color:#58a6ff; font-weight:600;">Multimodal Transformer</span> is just attention done in a loop';
 
             const p = (p2_time - 29200) / 3800;
             const easeP = easeInOut(Math.min(1, p));

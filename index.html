@@ -656,6 +656,22 @@
       .full-attn-math-wrap {
         font-size: 0.95rem;
       }
+      .stage-caption {
+        font-size: 0.78rem;
+        min-height: 3.2rem;
+        padding: 0.2rem 0.45rem;
+        line-height: 1.45;
+      }
+      #caption,
+      #softmax-caption {
+        min-height: 2.0rem;
+      }
+      #attn-caption,
+      #full-attn-caption,
+      #full-attn-graphical-caption {
+        font-size: 0.78rem;
+        min-height: 3.4rem;
+      }
     }
 
     canvas {
@@ -668,10 +684,27 @@
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 0.85rem;
       color: #7d8590;
-      height: 1.3rem;
+      width: 100%;
+      max-width: 680px;
+      margin: 0.5rem auto 0;
+      min-height: 2.8rem;
+      height: auto;
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
-      gap: 0.4rem;
+      justify-content: center;
+      line-height: 1.45;
+      text-align: center;
+      padding: 0.25rem 0.6rem;
+      box-sizing: border-box;
+      gap: 0.2rem 0.4rem;
+    }
+
+    .stage-caption br {
+      flex-basis: 100%;
+      width: 100%;
+      height: 0;
+      margin: 0;
     }
 
     .caption-op { font-weight: 600; }
@@ -682,22 +715,16 @@
     .caption-op.val { color: #58a6ff; }
     .caption-op.out { color: #79c0ff; }
 
+    #caption,
+    #softmax-caption {
+      min-height: 1.8rem;
+    }
+
     #attn-caption,
     #full-attn-caption,
     #full-attn-graphical-caption {
-      font-size: 0.8rem;
-      white-space: normal;
-      height: 2.8rem;
+      font-size: 0.82rem;
       min-height: 2.8rem;
-      max-height: 2.8rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      line-height: 1.4;
-      text-align: center;
-      padding: 0 0.5rem;
-      box-sizing: border-box;
-      overflow: hidden;
     }
 
     .card {
@@ -759,6 +786,10 @@
     @media (max-width: 440px) {
       .attn-qk-container {
         grid-template-columns: 1fr;
+      }
+      .stage-caption {
+        font-size: 0.74rem;
+        min-height: 3.6rem;
       }
     }
 
@@ -8837,7 +8868,7 @@
         const PRIMARY_ATTENTION_ARCS = [
           {
             src: 9, tgt: 1,
-            srcMod: 'sound', srcTok: '440 Hz',
+            srcMod: 'sound', srcTok: 'frame 2 (t₂)',
             tgtMod: 'text', tgtTok: 'Atten',
             color: '#a371f7', tgtColor: '#e3b341'
           },
@@ -8856,7 +8887,7 @@
           {
             src: 13, tgt: 10,
             srcMod: 'atoms', srcTok: 'Oxygen',
-            tgtMod: 'sound', tgtTok: '1.8 kHz',
+            tgtMod: 'sound', tgtTok: 'frame 3 (t₃)',
             color: '#58a6ff', tgtColor: '#a371f7'
           }
         ];
@@ -9315,7 +9346,7 @@
           }
 
           const isMatrixCell = (category === 'sim' || category === 'exp' || category === 'sum' || category === 'prob' || category === 'binary' || category === 'flash');
-          const shouldShowNumber = (isMatrixCell || category === 'vector' || category === 'docked') && exists(text) && r >= 2.4 * s;
+          const shouldShowNumber = (isMatrixCell || category === 'vector' || category === 'docked' || category === 'prob-vector') && exists(text) && r >= 2.4 * s;
 
           if (shouldShowNumber) {
             ctx.shadowBlur = 0;
@@ -9389,8 +9420,10 @@
         }
 
         function drawWeightedVector(cx, cy, pWeight, bLabels, alpha = 1, dLen = 0) {
-          const scaleR = 0.85 + 0.35 * Math.min(1, pWeight * 2.2);
-          drawDepthVector(cx, cy, d, dLen || geom.depthLen, '#58a6ff', 'rgba(88, 166, 255, 0.22)', bLabels, alpha, 0, scaleR, 'fixed');
+          const p = Math.min(1.0, Math.max(0.0, typeof pWeight === 'number' ? pWeight : parseFloat(pWeight) || 0));
+          const pGrad = createMagnitudeGradient(ctx, 0, 0, geom.cellR, p, '#58a6ff', alpha, 'prob');
+          const scaleR = 0.82 + 0.38 * Math.pow(p, 0.7);
+          drawDepthVector(cx, cy, d, dLen || geom.depthLen, pGrad.strokeColor, pGrad.grad, bLabels, alpha, 0, scaleR, 'prob-vector', pGrad.glowBlur, pGrad.glowColor);
         }
 
         function drawGridOutline(alpha) {
@@ -9634,6 +9667,116 @@
           ctx.closePath();
           ctx.fillStyle = color;
           ctx.fill();
+          ctx.restore();
+        }
+
+        // Draw faded token doing a hemicircle liftoff then descending into the source token
+        function drawTokenHemicircleLiftoff(valIdx, srcIdx, progress, color, alpha = 1.0) {
+          if (alpha <= 0.01 || valIdx === undefined || srcIdx === undefined) return;
+          const p = clamp(progress, 0, 1);
+          if (p <= 0.01 || p > 1.0) return;
+
+          const startX = geom.tokX[valIdx];
+          const endX = geom.tokX[srcIdx];
+          const baseY = geom.vecY;
+          const dist = Math.abs(endX - startX);
+          const arcH = Math.min(68 * s, 26 * s + dist * 0.32);
+
+          // Easing for smooth liftoff, flight, and descent
+          const easeP = easeInOut(p);
+          const curX = lerp(startX, endX, easeP);
+          // Hemicircle vertical trajectory: y = baseY - arcH * sin(p * PI)
+          const sinArch = Math.sin(p * Math.PI);
+          const curY = baseY - arcH * sinArch;
+
+          const tokAlpha = alpha * 0.72 * Math.pow(sinArch, 0.45);
+          if (tokAlpha <= 0.01) return;
+
+          ctx.save();
+          ctx.translate(centerX, centerY);
+
+          // 1. Ghost motion trails (2 trailing echoes)
+          for (let trail = 2; trail >= 1; trail--) {
+            const pTrail = Math.max(0, p - trail * 0.045);
+            const easeTrail = easeInOut(pTrail);
+            const trailX = lerp(startX, endX, easeTrail);
+            const trailY = baseY - arcH * Math.sin(pTrail * Math.PI);
+            const trailAlpha = tokAlpha * (0.28 / trail);
+
+            if (trailAlpha > 0.02) {
+              for (let m = 0; m < 4; m++) {
+                const cy = trailY + (m - 1.5) * 11 * s;
+                ctx.beginPath();
+                ctx.arc(trailX, cy, 3.6 * s, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.globalAlpha = trailAlpha * 0.35;
+                ctx.fill();
+                ctx.strokeStyle = color;
+                ctx.globalAlpha = trailAlpha * 0.6;
+                ctx.lineWidth = 0.8;
+                ctx.stroke();
+              }
+            }
+          }
+
+          // 2. Faded token vector circles with glowing halo
+          ctx.globalAlpha = tokAlpha;
+          ctx.shadowBlur = 12 * s;
+          ctx.shadowColor = color;
+
+          for (let m = 0; m < 4; m++) {
+            const cy = curY + (m - 1.5) * 11 * s;
+            const r = 4.2 * s;
+            const val = BASE_VECTORS[valIdx] && BASE_VECTORS[valIdx][m] !== undefined ? BASE_VECTORS[valIdx][m] : null;
+
+            // Base circle
+            ctx.beginPath();
+            ctx.arc(curX, cy, r, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(13, 17, 23, 0.85)';
+            ctx.fill();
+
+            // Inner fill tinted with modality color
+            ctx.fillStyle = color;
+            ctx.globalAlpha = tokAlpha * 0.38;
+            ctx.fill();
+
+            // Glowing border
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.4;
+            ctx.globalAlpha = tokAlpha;
+            ctx.stroke();
+
+            // Value text
+            if (exists(val) && r >= 2.4 * s) {
+              ctx.shadowBlur = 0;
+              let strVal = String(val);
+              if (typeof val === 'number') {
+                strVal = Number(val).toFixed(1);
+                if (strVal.endsWith('.0')) strVal = strVal.slice(0, -2);
+              }
+              ctx.font = `600 ${Math.max(3, Math.floor(6.5 * s))}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillStyle = '#ffffff';
+              ctx.fillText(strVal, curX, cy);
+            }
+          }
+
+          // 3. Arrival absorption ripple when descending into source token
+          if (p >= 0.70) {
+            const absorbP = (p - 0.70) / 0.30;
+            const ringR = (4.2 + absorbP * 28) * s;
+            const ringAlpha = (1 - absorbP) * 0.90 * alpha;
+            ctx.shadowBlur = 8 * s;
+            ctx.shadowColor = color;
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.6 * (1 - absorbP * 0.5);
+            ctx.globalAlpha = ringAlpha;
+            ctx.beginPath();
+            ctx.arc(endX, baseY, ringR, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+
           ctx.restore();
         }
 
@@ -10346,10 +10489,10 @@
             }
 
             // ----------------------------------------------------
-            // Phase 3: Sound Breakout -> Mel-Spectrogram Bands -> Vectors (11800 to 16200ms)
+            // Phase 3: Sound Breakout -> Spectrogram Temporal Frames -> Vectors (11800 to 16200ms)
             // ----------------------------------------------------
             if (totalElapsed >= 11800 && totalElapsed < 16200) {
-              caption.innerHTML = '<span style="color:#a371f7; font-weight:600;">Sound</span> &rarr; audio waveform &rarr; frequency domain &rarr; frame projection &rarr; <span style="color:#a371f7; font-weight:600;">4 token vectors</span>';
+              caption.innerHTML = '<span style="color:#a371f7; font-weight:600;">Sound</span> &rarr; audio waveform &rarr; spectrogram frames (time &times; freq) &rarr; frame projection &rarr; <span style="color:#a371f7; font-weight:600;">4 token vectors</span>';
 
               // Text and Vision docked vectors at bottom
               drawDockedModalityVectors(2, 1.0);
@@ -10361,7 +10504,7 @@
 
               // Centered Lucidrains-esque Architecture Plaque
               const plaqueAlpha = easeInOut(Math.min(1, phaseT / 500));
-              drawModalityPlaque('Sound ──> audio waveform ──> frequency domain ──> frame projection', '#a371f7', [163, 113, 247], plaqueAlpha);
+              drawModalityPlaque('Sound ──> audio waveform ──> STFT spectrogram frames (time × freq) ──> projection', '#a371f7', [163, 113, 247], plaqueAlpha);
 
               const podStart = getPodOrbitPos(2, 11800, earthR);
 
@@ -10423,36 +10566,79 @@
                 return;
               }
 
-              const melLabels = ["60 Hz", "440 Hz", "1.8 kHz", "8 kHz"];
+              const soundFrameLabels = ["frame t₁", "frame t₂", "frame t₃", "frame t₄"];
+              const soundTimeWindows = ["0-25ms", "25-50ms", "50-75ms", "75-100ms"];
 
-              // Helper to draw Mel Spectrogram Filter Band
-              function drawMelBand(cx, cy, w, h, alpha, bandIdx) {
+              // Helper to draw STFT / Mel-Spectrogram Temporal Frame with vertical spectral tiers
+              function drawSpectrogramFrame(cx, cy, w, h, alpha, frameIdx) {
                 ctx.save();
                 ctx.translate(cx, cy);
                 ctx.globalAlpha = alpha;
 
-                const grad = ctx.createLinearGradient(0, -h / 2, 0, h / 2);
-                if (bandIdx === 0) { grad.addColorStop(0, '#f0883e'); grad.addColorStop(1, '#58a6ff'); }
-                else if (bandIdx === 1) { grad.addColorStop(0, '#d2a8ff'); grad.addColorStop(1, '#1f6feb'); }
-                else if (bandIdx === 2) { grad.addColorStop(0, '#bc8cff'); grad.addColorStop(1, '#388bfd'); }
-                else { grad.addColorStop(0, '#a371f7'); grad.addColorStop(1, '#79c0ff'); }
-
-                ctx.fillStyle = grad;
+                // Frame background card
+                ctx.fillStyle = 'rgba(13, 17, 23, 0.90)';
                 ctx.beginPath();
                 ctx.roundRect(-w / 2, -h / 2, w, h, 3 * s);
                 ctx.fill();
+
+                // Draw 4 frequency spectrum energy tiers from high (top) to low (bottom)
+                // 3: 8 kHz (treble), 2: 1.8 kHz (mid-high), 1: 440 Hz (mid-low), 0: 60 Hz (bass)
+                const tierH = h / 4;
+                const tierColors = [
+                  ['rgba(88, 166, 255, 0.75)', 'rgba(56, 139, 253, 0.35)'],   // 60 Hz bass
+                  ['rgba(163, 113, 247, 0.75)', 'rgba(110, 64, 201, 0.35)'],  // 440 Hz mid-low
+                  ['rgba(210, 168, 255, 0.75)', 'rgba(188, 140, 255, 0.35)'], // 1.8 kHz mid-high
+                  ['rgba(240, 136, 62, 0.75)', 'rgba(219, 109, 40, 0.35)']     // 8 kHz treble
+                ];
+
+                for (let tier = 0; tier < 4; tier++) {
+                  const tierY = h / 2 - (tier + 1) * tierH;
+                  const [strokeC, fillC] = tierColors[tier];
+                  ctx.fillStyle = fillC;
+                  ctx.fillRect(-w / 2 + 1.5 * s, tierY + 1 * s, w - 3 * s, tierH - 2 * s);
+                  
+                  ctx.strokeStyle = strokeC;
+                  ctx.lineWidth = 0.9;
+                  ctx.beginPath();
+                  const tickCount = 3;
+                  for (let tc = 1; tc <= tickCount; tc++) {
+                    const tx = -w / 2 + (w / (tickCount + 1)) * tc;
+                    ctx.moveTo(tx, tierY + 2 * s);
+                    ctx.lineTo(tx, tierY + tierH - 2 * s);
+                  }
+                  ctx.stroke();
+                }
+
+                // Outer border
                 ctx.strokeStyle = '#a371f7';
                 ctx.lineWidth = 1.0;
+                ctx.beginPath();
+                ctx.roundRect(-w / 2, -h / 2, w, h, 3 * s);
                 ctx.stroke();
 
+                // Top label: Frame name (e.g. frame t₁)
                 ctx.font = `600 ${Math.round(8.5 * s)}px ui-monospace, SFMono-Regular, Menlo, monospace`;
                 ctx.textAlign = 'center';
                 ctx.fillStyle = '#ffffff';
-                ctx.fillText(melLabels[bandIdx], 0, -h / 2 - 6 * s);
+                ctx.fillText(soundFrameLabels[frameIdx], 0, -h / 2 - 6 * s);
+
+                // Bottom label: Time window (e.g. 0-25ms)
+                ctx.font = `500 ${Math.round(7.5 * s)}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+                ctx.fillStyle = '#a371f7';
+                ctx.fillText(soundTimeWindows[frameIdx], 0, h / 2 + 10 * s);
+
+                // Frequency axis indicator on leftmost frame
+                if (frameIdx === 0) {
+                  ctx.font = `600 ${Math.round(7.0 * s)}px ui-monospace, monospace`;
+                  ctx.textAlign = 'right';
+                  ctx.fillStyle = '#8b949e';
+                  ctx.fillText('freq ↑', -w / 2 - 4 * s, 0);
+                }
+
                 ctx.restore();
               }
 
-              // 3c. Splits into 4 Mel-spectrogram frequency bands (1700 to 2800ms)
+              // 3c. Slices into 4 temporal spectrogram frames across time (1700 to 2800ms)
               if (phaseT >= 1700 && phaseT < 2800) {
                 const p = (phaseT - 1700) / 1100;
                 const splitEase = easeInOut(p);
@@ -10460,12 +10646,12 @@
                 const startXs = [-60 * s, -20 * s, 20 * s, 60 * s];
                 for (let k = 0; k < 4; k++) {
                   const curX = lerp(startXs[k], activeTargetsX[k], splitEase);
-                  drawMelBand(centerX + curX, centerY + itemRowY, 36 * s, 26 * s, 1.0, k);
+                  drawSpectrogramFrame(centerX + curX, centerY + itemRowY, 36 * s, 26 * s, 1.0, k);
                 }
                 return;
               }
 
-              // 3d. Mel bands project downward -> 4 vectors emerge -> glide to bottom dock [8..11] (2800 to 4400ms)
+              // 3d. Spectrogram frames project downward -> 4 vectors emerge -> glide to bottom dock [8..11] (2800 to 4400ms)
               const p = (phaseT - 2800) / 1600;
               const emergeP = easeInOut(Math.min(1, p / 0.45));
               const glideP = easeInOut(Math.max(0, (p - 0.45) / 0.55));
@@ -10473,7 +10659,7 @@
               for (let k = 0; k < 4; k++) {
                 const curX = activeTargetsX[k];
                 const bandAlpha = Math.max(0.20, 1 - glideP * 0.70);
-                drawMelBand(centerX + curX, centerY + itemRowY, 36 * s, 26 * s, bandAlpha, k);
+                drawSpectrogramFrame(centerX + curX, centerY + itemRowY, 36 * s, 26 * s, bandAlpha, k);
 
                 if (glideP < 0.90) {
                   ctx.save();
@@ -11316,6 +11502,19 @@
                   const pWeight = data.probNums[i][j];
                   const bLabels = (data.broadcast && data.broadcast[i] && data.broadcast[i][j]) ? data.broadcast[i][j] : null;
                   drawWeightedVector(curX, cy, pWeight, bLabels, 1, geom.depthLen * 0.75);
+                }
+              }
+            }
+
+            if (!isSummed && PRIMARY_ATTENTION_ARCS && PRIMARY_ATTENTION_ARCS.length) {
+              const pNorm = Math.min(1, p / 0.65);
+              for (let k = 0; k < PRIMARY_ATTENTION_ARCS.length; k++) {
+                const arc = PRIMARY_ATTENTION_ARCS[k];
+                const startOffset = k * 0.045;
+                const duration = 0.86;
+                const localP = clamp((pNorm - startOffset) / duration, 0, 1);
+                if (localP > 0.01 && localP <= 1.0) {
+                  drawTokenHemicircleLiftoff(arc.tgt, arc.src, localP, arc.tgtColor || arc.color, 1.0);
                 }
               }
             }

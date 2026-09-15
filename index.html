@@ -1178,9 +1178,9 @@
 
     .attn-col-th.out-col,
     .attn-cell-td.out-cell {
-      width: 68px;
-      min-width: 68px;
-      max-width: 68px;
+      width: 76px;
+      min-width: 76px;
+      max-width: 76px;
     }
 
     .attn-col-hdr.out-hdr {
@@ -1220,6 +1220,94 @@
       background: rgba(121, 192, 255, 0.12);
       border-color: rgba(121, 192, 255, 0.35);
       font-weight: 600;
+    }
+
+    .quiz-controls-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+      padding: 0.35rem 0.65rem;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      box-sizing: border-box;
+      max-width: 100%;
+    }
+
+    .quiz-filter-group {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .quiz-filter-label {
+      font-size: 0.72rem;
+      color: #7d8590;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .quiz-filter-pills {
+      display: inline-flex;
+      gap: 2px;
+      background: #161b22;
+      padding: 2px;
+      border-radius: 6px;
+      border: 1px solid #30363d;
+    }
+
+    .quiz-filter-pills .filter-btn {
+      padding: 0.2rem 0.55rem;
+      font-size: 0.8rem;
+      border-radius: 4px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: #8b949e;
+      min-width: 24px;
+      text-align: center;
+      box-shadow: none;
+    }
+
+    .quiz-filter-pills .filter-btn:hover {
+      color: #fff;
+      border-color: rgba(139, 148, 158, 0.4);
+    }
+
+    .quiz-filter-pills .filter-btn.active {
+      background: #30363d;
+      color: #58a6ff;
+      border-color: rgba(88, 166, 255, 0.35);
+      font-weight: 700;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    .quiz-filter-divider {
+      width: 1px;
+      height: 18px;
+      background: #30363d;
+      margin: 0 0.1rem;
+    }
+
+    .quiz-action-btn {
+      padding: 0.22rem 0.65rem;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      background: #161b22;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .quiz-action-btn:hover {
+      color: #fff;
+      border-color: #58a6ff;
+      background: rgba(88, 166, 255, 0.1);
     }
 
     .filters {
@@ -1943,11 +2031,25 @@
       <div class="stage-caption" id="full-attn-caption">vectors &middot; 2 &middot; dim 2</div>
 
       <div class="quiz-panel" id="full-attn-quiz-panel" style="display: none;">
-        <div class="filters">
-          <button class="filter-btn active" data-size="1">1</button>
-          <button class="filter-btn" data-size="2">2</button>
-          <button class="filter-btn" data-size="4">4</button>
-          <button class="filter-btn" id="full-attn-new-btn">new quiz</button>
+        <div class="quiz-controls-toolbar">
+          <div class="quiz-filter-group">
+            <span class="quiz-filter-label">dim</span>
+            <div class="quiz-filter-pills" id="full-attn-dim-filters">
+              <button class="filter-btn active" data-dim="1">1</button>
+              <button class="filter-btn" data-dim="2">2</button>
+            </div>
+          </div>
+          <div class="quiz-filter-divider"></div>
+          <div class="quiz-filter-group">
+            <span class="quiz-filter-label">context length</span>
+            <div class="quiz-filter-pills" id="full-attn-len-filters">
+              <button class="filter-btn active" data-len="1">1</button>
+              <button class="filter-btn" data-len="2">2</button>
+              <button class="filter-btn" data-len="4">4</button>
+            </div>
+          </div>
+          <div class="quiz-filter-divider"></div>
+          <button class="quiz-action-btn" id="full-attn-new-btn">new quiz</button>
         </div>
 
         <div class="problem" id="full-attn-problem">...</div>
@@ -3434,7 +3536,8 @@
     create_attn_quiz();
 
     function create_full_attn_quiz() {
-      let size = 1;
+      let dim = 1;
+      let len = 1;
       let is_answered = false;
       let streak = 0;
       let solved = 0;
@@ -3460,18 +3563,197 @@
       const feedback_el = document.getElementById('full-attn-feedback');
       const streak_el = document.getElementById('full-attn-stat-streak');
       const solved_el = document.getElementById('full-attn-stat-solved');
-      const filter_btns = document.querySelectorAll('#full-attn-quiz-panel .filter-btn');
+      const dim_btns = document.querySelectorAll('#full-attn-dim-filters .filter-btn');
+      const len_btns = document.querySelectorAll('#full-attn-len-filters .filter-btn');
       const new_btn = document.getElementById('full-attn-new-btn');
 
       setup_quiz_accordion(toggle_btn, panel_el, input_el, () => { if (steps.length === 0) next_problem(); });
 
-      const presets_by_size = SHARED_ATTN_PRESETS;
+      const presets_by_config = {
+        '1x1': [
+          { q: [[2]], k: [[1]], v: [[3]], sim: [[2]], exp: [[7.4]], sums: [7.4], attn: [[1.0]], out: [[3.0]] },
+          { q: [[1]], k: [[2]], v: [[1]], sim: [[2]], exp: [[7.4]], sums: [7.4], attn: [[1.0]], out: [[1.0]] },
+          { q: [[2]], k: [[-1]], v: [[2]], sim: [[-2]], exp: [[0.1]], sums: [0.1], attn: [[1.0]], out: [[2.0]] },
+          { q: [[1]], k: [[1]], v: [[4]], sim: [[1]], exp: [[2.7]], sums: [2.7], attn: [[1.0]], out: [[4.0]] },
+          { q: [[-1]], k: [[2]], v: [[-2]], sim: [[-2]], exp: [[0.1]], sums: [0.1], attn: [[1.0]], out: [[-2.0]] },
+          { q: [[2]], k: [[0]], v: [[3]], sim: [[0]], exp: [[1.0]], sums: [1.0], attn: [[1.0]], out: [[3.0]] },
+          { q: [[3]], k: [[1]], v: [[2]], sim: [[3]], exp: [[20.1]], sums: [20.1], attn: [[1.0]], out: [[2.0]] },
+          { q: [[1]], k: [[0]], v: [[5]], sim: [[0]], exp: [[1.0]], sums: [1.0], attn: [[1.0]], out: [[5.0]] }
+        ],
+        '1x2': [
+          {
+            q: [[1], [2]],
+            k: [[1], [0]],
+            v: [[2], [1]],
+            sim: [[1, 0], [2, 0]],
+            exp: [[2.7, 1.0], [7.4, 1.0]],
+            sums: [3.7, 8.4],
+            attn: [[0.73, 0.27], [0.88, 0.12]],
+            out: [[1.73], [1.88]]
+          },
+          {
+            q: [[2], [1]],
+            k: [[0], [1]],
+            v: [[1], [3]],
+            sim: [[0, 2], [0, 1]],
+            exp: [[1.0, 7.4], [1.0, 2.7]],
+            sums: [8.4, 3.7],
+            attn: [[0.12, 0.88], [0.27, 0.73]],
+            out: [[2.76], [2.46]]
+          },
+          {
+            q: [[1], [0]],
+            k: [[1], [-1]],
+            v: [[2], [0]],
+            sim: [[1, -1], [0, 0]],
+            exp: [[2.7, 0.4], [1.0, 1.0]],
+            sums: [3.1, 2.0],
+            attn: [[0.87, 0.13], [0.50, 0.50]],
+            out: [[1.74], [1.00]]
+          },
+          {
+            q: [[2], [-1]],
+            k: [[1], [0]],
+            v: [[0], [2]],
+            sim: [[2, 0], [-1, 0]],
+            exp: [[7.4, 1.0], [0.4, 1.0]],
+            sums: [8.4, 1.4],
+            attn: [[0.88, 0.12], [0.29, 0.71]],
+            out: [[0.24], [1.42]]
+          },
+          {
+            q: [[1], [1]],
+            k: [[2], [0]],
+            v: [[2], [1]],
+            sim: [[2, 0], [2, 0]],
+            exp: [[7.4, 1.0], [7.4, 1.0]],
+            sums: [8.4, 8.4],
+            attn: [[0.88, 0.12], [0.88, 0.12]],
+            out: [[1.88], [1.88]]
+          },
+          {
+            q: [[0], [2]],
+            k: [[1], [1]],
+            v: [[1], [2]],
+            sim: [[0, 0], [2, 2]],
+            exp: [[1.0, 1.0], [7.4, 7.4]],
+            sums: [2.0, 14.8],
+            attn: [[0.50, 0.50], [0.50, 0.50]],
+            out: [[1.50], [1.50]]
+          }
+        ],
+        '1x4': [
+          {
+            q: [[1], [0], [-1], [2]],
+            k: [[1], [0], [-1], [0]],
+            v: [[2], [0], [-2], [1]],
+            sim: [
+              [1, 0, -1, 0],
+              [0, 0, 0, 0],
+              [-1, 0, 1, 0],
+              [2, 0, -2, 0]
+            ],
+            exp: [
+              [2.7, 1.0, 0.4, 1.0],
+              [1.0, 1.0, 1.0, 1.0],
+              [0.4, 1.0, 2.7, 1.0],
+              [7.4, 1.0, 0.1, 1.0]
+            ],
+            sums: [5.1, 4.0, 5.1, 9.5],
+            attn: [
+              [0.53, 0.20, 0.08, 0.20],
+              [0.25, 0.25, 0.25, 0.25],
+              [0.08, 0.20, 0.53, 0.20],
+              [0.78, 0.11, 0.01, 0.11]
+            ],
+            out: [[1.10], [0.25], [-0.70], [1.65]]
+          },
+          {
+            q: [[1], [2], [0], [-1]],
+            k: [[0], [1], [1], [0]],
+            v: [[1], [2], [0], [-1]],
+            sim: [
+              [0, 1, 1, 0],
+              [0, 2, 2, 0],
+              [0, 0, 0, 0],
+              [0, -1, -1, 0]
+            ],
+            exp: [
+              [1.0, 2.7, 2.7, 1.0],
+              [1.0, 7.4, 7.4, 1.0],
+              [1.0, 1.0, 1.0, 1.0],
+              [1.0, 0.4, 0.4, 1.0]
+            ],
+            sums: [7.4, 16.8, 4.0, 2.8],
+            attn: [
+              [0.14, 0.36, 0.36, 0.14],
+              [0.06, 0.44, 0.44, 0.06],
+              [0.25, 0.25, 0.25, 0.25],
+              [0.36, 0.14, 0.14, 0.36]
+            ],
+            out: [[0.72], [0.88], [0.50], [0.28]]
+          },
+          {
+            q: [[2], [1], [-1], [0]],
+            k: [[1], [0], [0], [-1]],
+            v: [[0], [2], [1], [0]],
+            sim: [
+              [2, 0, 0, -2],
+              [1, 0, 0, -1],
+              [-1, 0, 0, 1],
+              [0, 0, 0, 0]
+            ],
+            exp: [
+              [7.4, 1.0, 1.0, 0.1],
+              [2.7, 1.0, 1.0, 0.4],
+              [0.4, 1.0, 1.0, 2.7],
+              [1.0, 1.0, 1.0, 1.0]
+            ],
+            sums: [9.5, 5.1, 5.1, 4.0],
+            attn: [
+              [0.78, 0.11, 0.11, 0.01],
+              [0.53, 0.20, 0.20, 0.08],
+              [0.08, 0.20, 0.20, 0.53],
+              [0.25, 0.25, 0.25, 0.25]
+            ],
+            out: [[0.33], [0.60], [0.60], [0.75]]
+          },
+          {
+            q: [[1], [1], [-1], [0]],
+            k: [[1], [0], [-1], [1]],
+            v: [[2], [1], [-1], [0]],
+            sim: [
+              [1, 0, -1, 1],
+              [1, 0, -1, 1],
+              [-1, 0, 1, -1],
+              [0, 0, 0, 0]
+            ],
+            exp: [
+              [2.7, 1.0, 0.4, 2.7],
+              [2.7, 1.0, 0.4, 2.7],
+              [0.4, 1.0, 2.7, 0.4],
+              [1.0, 1.0, 1.0, 1.0]
+            ],
+            sums: [6.8, 6.8, 4.5, 4.0],
+            attn: [
+              [0.40, 0.15, 0.06, 0.40],
+              [0.40, 0.15, 0.06, 0.40],
+              [0.09, 0.22, 0.60, 0.09],
+              [0.25, 0.25, 0.25, 0.25]
+            ],
+            out: [[0.89], [0.89], [-0.20], [0.50]]
+          }
+        ],
+        '2x1': SHARED_ATTN_PRESETS[1],
+        '2x2': SHARED_ATTN_PRESETS[2],
+        '2x4': SHARED_ATTN_PRESETS[4]
+      };
 
       function build_steps() {
         steps = [];
         // 1. Dot products
-        for (let i = 0; i < size; i++) {
-          for (let j = 0; j < size; j++) {
+        for (let i = 0; i < len; i++) {
+          for (let j = 0; j < len; j++) {
             steps.push({
               type: 'dot',
               row: i,
@@ -3483,8 +3765,8 @@
           }
         }
         // 2. Softmax per row
-        for (let i = 0; i < size; i++) {
-          for (let j = 0; j < size; j++) {
+        for (let i = 0; i < len; i++) {
+          for (let j = 0; j < len; j++) {
             const vVal = sim[i][j];
             const tol = vVal === 1 ? 0.15 : (vVal === 2 ? 0.45 : (vVal === -1 ? 0.10 : 0.06));
             steps.push({
@@ -3503,7 +3785,7 @@
             tolerance: 0.15,
             desc: `row ${i + 1}: denominator sum`
           });
-          for (let j = 0; j < size; j++) {
+          for (let j = 0; j < len; j++) {
             steps.push({
               type: 'prob',
               row: i,
@@ -3515,43 +3797,39 @@
           }
         }
         // 3. Values weighting -> Output vectors y_i = sum_j A_ij v_j
-        for (let i = 0; i < size; i++) {
-          steps.push({
-            type: 'val',
-            row: i,
-            dim: 0,
-            target: out_mat[i][0],
-            tolerance: 0.12,
-            desc: `row ${i + 1} output: y${subscript(i + 1)}[1] = &sum; A${subscript(i + 1)}ⱼ &middot; vⱼ[1]`
-          });
-          steps.push({
-            type: 'val',
-            row: i,
-            dim: 1,
-            target: out_mat[i][1],
-            tolerance: 0.12,
-            desc: `row ${i + 1} output: y${subscript(i + 1)}[2] = &sum; A${subscript(i + 1)}ⱼ &middot; vⱼ[2]`
-          });
+        for (let i = 0; i < len; i++) {
+          for (let d = 0; d < dim; d++) {
+            steps.push({
+              type: 'val',
+              row: i,
+              dim: d,
+              target: out_mat[i][d],
+              tolerance: 0.12,
+              desc: dim === 1
+                ? `row ${i + 1} output: y${subscript(i + 1)} = &sum; A${subscript(i + 1)}ⱼ &middot; vⱼ`
+                : `row ${i + 1} output: y${subscript(i + 1)}[${d + 1}] = &sum; A${subscript(i + 1)}ⱼ &middot; vⱼ[${d + 1}]`
+            });
+          }
         }
       }
 
       function render_qkv_blocks(cur_r, cur_c, cur_type, cur_dim) {
         let q_rows = '';
-        for (let i = 0; i < size; i++) {
+        for (let i = 0; i < len; i++) {
           const is_active = (cur_r === i);
           const circles = q[i].map(val => num_circle(val, is_active ? 'orange' : 'blue')).join(' ');
           q_rows += `<div class="full-attn-qkv-row${is_active ? ' active-q' : ''}"><span class="attn-vec-tag">q${subscript(i + 1)}</span><span class="quiz-vec">${circles}</span></div>`;
         }
 
         let k_rows = '';
-        for (let j = 0; j < size; j++) {
+        for (let j = 0; j < len; j++) {
           const is_active = (cur_c === j && (cur_type === 'dot' || cur_type === 'prob' || cur_type === 'exp'));
           const circles = k[j].map(val => num_circle(val, is_active ? 'orange' : 'blue')).join(' ');
           k_rows += `<div class="full-attn-qkv-row${is_active ? ' active-k' : ''}"><span class="attn-vec-tag">k${subscript(j + 1)}</span><span class="quiz-vec">${circles}</span></div>`;
         }
 
         let v_rows = '';
-        for (let j = 0; j < size; j++) {
+        for (let j = 0; j < len; j++) {
           const is_active = (cur_type === 'val');
           const circles = v[j].map((val, dIdx) => num_circle(val, (is_active && cur_dim === dIdx) ? 'orange' : (is_active ? 'green' : 'blue'))).join(' ');
           v_rows += `<div class="full-attn-qkv-row${is_active ? ' active-v' : ''}"><span class="attn-vec-tag">v${subscript(j + 1)}</span><span class="quiz-vec">${circles}</span></div>`;
@@ -3571,7 +3849,7 @@
         const cur_dim = cur_step ? cur_step.dim : -1;
 
         let hdr_cells = '<th class="attn-corner-th"></th>';
-        for (let j = 0; j < size; j++) {
+        for (let j = 0; j < len; j++) {
           const is_col_active = (cur_c === j && (cur_type === 'dot' || cur_type === 'prob' || cur_type === 'exp')) || (cur_type === 'val');
           const k_cls = 'attn-col-hdr' + (is_col_active ? ' active' : '');
           hdr_cells += `<th class="attn-col-th"><div class="${k_cls}">k${subscript(j + 1)}<span style="font-size:0.6rem; opacity:0.8; margin-left:1px;">/v${subscript(j + 1)}</span></div></th>`;
@@ -3580,12 +3858,12 @@
         hdr_cells += '<th class="attn-col-th out-col"><div class="attn-col-hdr out-hdr">output y</div></th>';
 
         let body_rows = '';
-        for (let i = 0; i < size; i++) {
+        for (let i = 0; i < len; i++) {
           const is_q_active = (cur_r === i);
           const q_cls = 'attn-row-hdr' + (is_q_active ? ' active' : '');
           let row_html = `<td class="attn-row-td"><div class="${q_cls}">q${subscript(i + 1)}</div></td>`;
 
-          for (let j = 0; j < size; j++) {
+          for (let j = 0; j < len; j++) {
             let cell_cls = 'attn-matrix-cell';
             let cell_content = '&middot;';
 
@@ -3646,23 +3924,36 @@
           // Output cell
           let out_cls = 'full-attn-out-val';
           let out_content = '&middot;';
-          const val_step0_idx = steps.findIndex(s => s.type === 'val' && s.row === i && s.dim === 0);
-          const val_step1_idx = steps.findIndex(s => s.type === 'val' && s.row === i && s.dim === 1);
-          const has_passed_val0 = (step_idx > val_step0_idx && val_step0_idx !== -1);
-          const has_passed_val1 = (step_idx > val_step1_idx && val_step1_idx !== -1);
 
-          if (is_done || (has_passed_val0 && has_passed_val1)) {
-            out_cls += ' done';
-            out_content = `[${out_mat[i][0]}, ${out_mat[i][1]}]`;
-          } else if (cur_type === 'val' && cur_r === i) {
-            out_cls += ' active';
-            if (cur_dim === 0) {
-              out_content = `[?, &middot;]`;
-            } else {
-              out_content = `[${out_mat[i][0]}, ?]`;
+          if (dim === 1) {
+            const val_step_idx = steps.findIndex(s => s.type === 'val' && s.row === i);
+            const has_passed_val = (step_idx > val_step_idx && val_step_idx !== -1);
+            if (is_done || has_passed_val) {
+              out_cls += ' done';
+              out_content = `[${out_mat[i][0]}]`;
+            } else if (cur_type === 'val' && cur_r === i) {
+              out_cls += ' active';
+              out_content = `[?]`;
             }
-          } else if (has_passed_val0) {
-            out_content = `[${out_mat[i][0]}, &middot;]`;
+          } else {
+            const val_step0_idx = steps.findIndex(s => s.type === 'val' && s.row === i && s.dim === 0);
+            const val_step1_idx = steps.findIndex(s => s.type === 'val' && s.row === i && s.dim === 1);
+            const has_passed_val0 = (step_idx > val_step0_idx && val_step0_idx !== -1);
+            const has_passed_val1 = (step_idx > val_step1_idx && val_step1_idx !== -1);
+
+            if (is_done || (has_passed_val0 && has_passed_val1)) {
+              out_cls += ' done';
+              out_content = `[${out_mat[i][0]}, ${out_mat[i][1]}]`;
+            } else if (cur_type === 'val' && cur_r === i) {
+              out_cls += ' active';
+              if (cur_dim === 0) {
+                out_content = `[?, &middot;]`;
+              } else {
+                out_content = `[${out_mat[i][0]}, ?]`;
+              }
+            } else if (has_passed_val0) {
+              out_content = `[${out_mat[i][0]}, &middot;]`;
+            }
           }
           row_html += `<td class="attn-cell-td out-cell"><div class="${out_cls}">${out_content}</div></td>`;
 
@@ -3680,7 +3971,8 @@
         submit_btn.className = 'submit-btn';
         submit_btn.textContent = 'Check';
 
-        const pool = presets_by_size[size] || presets_by_size[1];
+        const key = `${dim}x${len}`;
+        const pool = presets_by_config[key] || presets_by_config['1x1'];
         const chosen = rand_choice(pool);
 
         q = chosen.q;
@@ -3741,16 +4033,20 @@
         } else if (cur_step.type === 'val') {
           badge_cls = 'op-val';
           const dimNum = cur_step.dim + 1;
-          badge_text = `output vector \u00b7 y${subscript(cur_step.row + 1)} (dim ${dimNum})`;
+          badge_text = dim === 1
+            ? `output vector \u00b7 y${subscript(cur_step.row + 1)}`
+            : `output vector \u00b7 y${subscript(cur_step.row + 1)} (dim ${dimNum})`;
 
           let terms = [];
-          for (let j = 0; j < size; j++) {
+          for (let j = 0; j < len; j++) {
             const a_val = num_circle(attn_mat[cur_step.row][j], 'purple');
             const v_val = num_circle(v[j][cur_step.dim], 'green');
             terms.push(`${a_val}&times;${v_val}`);
           }
           const terms_str = terms.join(' + ');
-          formula_html = `<span style="color:#79c0ff; font-weight:600;">y${subscript(cur_step.row + 1)}[${dimNum}]</span> = ${terms_str} = <span class="attn-op-target">?</span>`;
+          formula_html = dim === 1
+            ? `<span style="color:#79c0ff; font-weight:600;">y${subscript(cur_step.row + 1)}</span> = ${terms_str} = <span class="attn-op-target">?</span>`
+            : `<span style="color:#79c0ff; font-weight:600;">y${subscript(cur_step.row + 1)}[${dimNum}]</span> = ${terms_str} = <span class="attn-op-target">?</span>`;
         }
 
         const qkv_html = render_qkv_blocks(cur_step.row, cur_step.col, cur_step.type, cur_step.dim);
@@ -3800,12 +4096,23 @@
         }
       }
 
-      filter_btns.forEach(btn => {
+      dim_btns.forEach(btn => {
         btn.addEventListener('click', () => {
-          if (btn.dataset.size) {
-            filter_btns.forEach(b => { if (b.dataset.size) b.classList.remove('active'); });
-            btn.classList.add('active');
-            size = parseInt(btn.dataset.size, 10);
+          const d = parseInt(btn.dataset.dim, 10);
+          if (d && d !== dim) {
+            dim_btns.forEach(b => b.classList.toggle('active', parseInt(b.dataset.dim, 10) === d));
+            dim = d;
+            next_problem();
+          }
+        });
+      });
+
+      len_btns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const l = parseInt(btn.dataset.len, 10);
+          if (l && l !== len) {
+            len_btns.forEach(b => b.classList.toggle('active', parseInt(b.dataset.len, 10) === l));
+            len = l;
             next_problem();
           }
         });
@@ -3820,6 +4127,18 @@
       bind_quiz_input(input_el, submit_btn, check_answer, () => is_answered, next_problem);
 
       window.__fullAttnQuiz = {
+        getDim: () => dim,
+        getLen: () => len,
+        setDim: (d) => {
+          dim = d;
+          dim_btns.forEach(b => b.classList.toggle('active', parseInt(b.dataset.dim, 10) === d));
+          next_problem();
+        },
+        setLen: (l) => {
+          len = l;
+          len_btns.forEach(b => b.classList.toggle('active', parseInt(b.dataset.len, 10) === l));
+          next_problem();
+        },
         getStep: () => steps[step_idx],
         getTarget: () => target,
         getStepIdx: () => step_idx,

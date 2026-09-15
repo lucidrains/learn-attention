@@ -4079,9 +4079,15 @@
             is_answered = true;
             streak++;
             solved++;
-            if (window.unlockGraphicalAttention) window.unlockGraphicalAttention(true);
+            const graphical_card_el = document.getElementById('full-attn-graphical-card');
+            const already_unlocked = !!(graphical_card_el && graphical_card_el.classList.contains('is-unlocked'));
+            if (len >= 2) {
+              if (window.unlockGraphicalAttention) window.unlockGraphicalAttention(true);
+            }
             feedback_el.className = 'feedback correct';
-            feedback_el.innerHTML = `&#10003; complete! Attention Y = softmax(QKᵀ)V solved`;
+            feedback_el.innerHTML = (len >= 2 || already_unlocked)
+              ? `&#10003; complete! Attention Y = softmax(QKᵀ)V solved`
+              : `&#10003; solved! now complete context length 2 to unlock the animation`;
             submit_btn.className = 'submit-btn ready-green';
             submit_btn.textContent = 'New quiz \u2192';
             streak_el.textContent = streak;

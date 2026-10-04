@@ -31,6 +31,7 @@
       --accent-red: #f85149;
       --accent-purple: #a371f7;
       --accent-gold: #e3b341;
+      --accent-pink: #f778ba;
       --accent-cyan: #79c0ff;
       --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -9135,7 +9136,7 @@
         const dpr = window.devicePixelRatio || 1;
         const SANS_FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
 
-        const T = 16;
+        const T = 20;
         const d = 4;
         let width = 0;
         let height = 0;
@@ -9150,28 +9151,30 @@
         let drawBracket = null;
         let drawLabel = null;
 
-        // 4 Modalities Color Coding: 4 tokens per modality
-        // "text", "vision", "sound", "atoms"
-        const MODALITY_COLORS = ['#e3b341', '#3fb950', '#a371f7', '#58a6ff'];
-        const MODALITY_NAMES = ['text', 'vision', 'sound', 'atoms'];
+        // 5 Modalities Color Coding: 4 tokens per modality
+        // "text", "vision", "sound", "atoms", "action chunk"
+        const MODALITY_COLORS = ['#e3b341', '#3fb950', '#a371f7', '#58a6ff', '#f778ba'];
+        const MODALITY_NAMES = ['text', 'vision', 'sound', 'atoms', 'action chunk'];
         const MODALITY_FILLS = [
           'rgba(227, 179, 65, 0.18)',
           'rgba(63, 185, 80, 0.18)',
           'rgba(163, 113, 247, 0.18)',
-          'rgba(88, 166, 255, 0.18)'
+          'rgba(88, 166, 255, 0.18)',
+          'rgba(247, 120, 186, 0.18)'
         ];
         const MODALITY_RGBS = [
           [227, 179, 65],
           [63, 185, 80],
           [163, 113, 247],
-          [88, 166, 255]
+          [88, 166, 255],
+          [247, 120, 186]
         ];
 
         function getModalityColor(idx) {
-          return MODALITY_COLORS[Math.floor(idx / 4) % 4];
+          return MODALITY_COLORS[Math.floor(idx / 4) % 5];
         }
         function getModalityFill(idx) {
-          return MODALITY_FILLS[Math.floor(idx / 4) % 4];
+          return MODALITY_FILLS[Math.floor(idx / 4) % 5];
         }
 
         // Universe Starfield (120 stable stars with twinkling phase)
@@ -9194,7 +9197,7 @@
           });
         }
 
-        // Base 16 Multimodal Vectors
+        // Base 20 Multimodal Vectors (4 tokens x 5 modalities)
         const BASE_VECTORS = [
           [0.8, -0.3, 0.5, 1.2],   // 0: all (text)
           [1.4, 0.2, -0.7, 0.9],   // 1: Atten (text)
@@ -9211,7 +9214,11 @@
           [1.5, -0.4, 0.8, 0.6],   // 12: Carbon (atoms)
           [-0.8, 1.3, -0.5, 0.7],  // 13: Oxygen (atoms)
           [0.4, 0.7, 1.2, -0.6],   // 14: Nitrogen (atoms)
-          [0.6, -0.9, 0.3, 0.8]    // 15: Hydrogen (atoms)
+          [0.6, -0.9, 0.3, 0.8],   // 15: Hydrogen (atoms)
+          [-0.7, 1.2, 0.6, 0.4],   // 16: action t₁ (action chunk)
+          [1.3, -0.4, 0.9, 0.5],   // 17: action t₂ (action chunk)
+          [0.5, 1.0, -0.6, 1.3],   // 18: action t₃ (action chunk)
+          [-0.2, 0.8, 1.1, -0.5]   // 19: action t₄ (action chunk)
         ];
 
         // Dictionary for Text token lookup
@@ -9239,16 +9246,22 @@
             color: '#3fb950', tgtColor: '#58a6ff'
           },
           {
+            src: 16, tgt: 5,
+            srcMod: 'action chunk', srcTok: 'action t₁',
+            tgtMod: 'vision', tgtTok: 'patch 2',
+            color: '#f778ba', tgtColor: '#3fb950'
+          },
+          {
             src: 3, tgt: 6,
             srcMod: 'text', srcTok: 'connects',
             tgtMod: 'vision', tgtTok: 'patch 3',
             color: '#e3b341', tgtColor: '#3fb950'
           },
           {
-            src: 13, tgt: 10,
-            srcMod: 'atoms', srcTok: 'Oxygen',
-            tgtMod: 'sound', tgtTok: 'frame 3 (t₃)',
-            color: '#58a6ff', tgtColor: '#a371f7'
+            src: 18, tgt: 3,
+            srcMod: 'action chunk', srcTok: 'action t₃',
+            tgtMod: 'text', tgtTok: 'connects',
+            color: '#f778ba', tgtColor: '#e3b341'
           }
         ];
 
@@ -9291,13 +9304,13 @@
           }
         }
 
-        // Generate deterministic mathematical Transformer Attention Data (16 tokens, dim 4)
+        // Generate deterministic mathematical Transformer Attention Data (20 tokens, dim 4)
         function generateTransformerData() {
           const q = [];
           const k = [];
           const v = [];
 
-          for (let i = 0; i < 16; i++) {
+          for (let i = 0; i < 20; i++) {
             const bv = BASE_VECTORS[i];
             q.push([
               Math.round((bv[0] * 1.1 + bv[1] * 0.2) * 10) / 10,
@@ -9324,18 +9337,22 @@
           k[1] = [1.5, 0.3, 1.1, 0.6];
           q[5] = [0.4, 1.8, 0.9, 0.2];
           k[12] = [0.5, 1.7, 0.8, 0.3];
+          q[16] = [0.6, 1.7, 1.0, 0.3];
+          k[5] = [0.5, 1.8, 0.9, 0.4];
           q[3] = [1.1, 0.2, 1.4, 1.2];
           k[6] = [1.0, 0.1, 1.3, 1.1];
+          q[18] = [1.2, 0.3, 0.9, 1.4];
+          k[3] = [1.1, 0.2, 1.0, 1.3];
           q[13] = [0.2, 1.5, 0.3, 1.4];
           k[10] = [0.3, 1.4, 0.2, 1.3];
 
-          // 16 Attention Targets: Primary cross-modal pairs match attending arcs (9->1, 5->12, 3->6, 13->10)
+          // 20 Attention Targets: Primary cross-modal pairs match attending arcs (9->1, 5->12, 16->5, 3->6, 18->3)
           // Every row has exactly one distinct salient attending target
           const ROW_TARGETS = [
             2,  // 0: all (text) -> tion (text)
             2,  // 1: Atten (text) -> tion (text)
             1,  // 2: tion (text) -> Atten (text)
-            6,  // 3: connects (text) -> patch 3 (vision) [ARC 3]
+            6,  // 3: connects (text) -> patch 3 (vision) [ARC 4]
             5,  // 4: patch 1 (vision) -> patch 2 (vision)
             12, // 5: patch 2 (vision) -> Carbon (atoms) [ARC 2]
             7,  // 6: patch 3 (vision) -> patch 4 (vision)
@@ -9345,9 +9362,13 @@
             11, // 10: 1.8 kHz (sound) -> 8 kHz (sound)
             8,  // 11: 8 kHz (sound) -> 60 Hz (sound)
             14, // 12: Carbon (atoms) -> Nitrogen (atoms)
-            10, // 13: Oxygen (atoms) -> 1.8 kHz (sound) [ARC 4]
+            10, // 13: Oxygen (atoms) -> 1.8 kHz (sound)
             15, // 14: Nitrogen (atoms) -> Hydrogen (atoms)
-            13  // 15: Hydrogen (atoms) -> Oxygen (atoms)
+            13, // 15: Hydrogen (atoms) -> Oxygen (atoms)
+            5,  // 16: action t₁ (action chunk) -> patch 2 (vision) [ARC 3: visual servoing]
+            16, // 17: action t₂ (action chunk) -> action t₁ (action chunk)
+            3,  // 18: action t₃ (action chunk) -> connects (text) [ARC 5: instruction conditioning]
+            18  // 19: action t₄ (action chunk) -> action t₃ (action chunk)
           ];
 
           // Compute Q * K^T, exp, sum, softmax, output
@@ -9362,20 +9383,18 @@
           const broadcast = [];
           const out = [];
 
-          for (let i = 0; i < 16; i++) {
+          for (let i = 0; i < 20; i++) {
             sim.push([]);
             simNums.push([]);
             exp.push([]);
             expNums.push([]);
             const tgt = ROW_TARGETS[i];
 
-            for (let j = 0; j < 16; j++) {
+            for (let j = 0; j < 20; j++) {
               let dot = 0;
               for (let m = 0; m < 4; m++) {
                 dot += q[i][m] * k[j][m];
               }
-              // Attention score: target token has prominent affinity score (3.6 to 3.9)
-              // while other tokens are low (-0.5 to 0.4)
               let score;
               if (j === tgt) {
                 score = Math.round((3.6 + ((i * 3) % 4) * 0.1) * 10) / 10;
@@ -9396,7 +9415,7 @@
 
             prob.push([]);
             probNums.push([]);
-            for (let j = 0; j < 16; j++) {
+            for (let j = 0; j < 20; j++) {
               const p = Math.max(0.01, Math.round((exp[i][j] / rowSum) * 100) / 100);
               prob[i].push(p);
               probNums[i].push(p);
@@ -9404,18 +9423,17 @@
 
             const pRowSum = probNums[i].reduce((a, b) => a + b, 0);
             if (pRowSum > 0) {
-              for (let j = 0; j < 16; j++) {
+              for (let j = 0; j < 20; j++) {
                 probNums[i][j] = Math.round((probNums[i][j] / pRowSum) * 100) / 100;
                 prob[i][j] = probNums[i][j];
               }
             }
-            // Ensure target absorbs any rounding difference so row sum is exactly 1.00
             const finalSum = probNums[i].reduce((a, b) => a + b, 0);
             probNums[i][tgt] = Math.round((probNums[i][tgt] + (1.00 - finalSum)) * 100) / 100;
             prob[i][tgt] = probNums[i][tgt];
 
             broadcast.push([]);
-            for (let j = 0; j < 16; j++) {
+            for (let j = 0; j < 20; j++) {
               const pVal = probNums[i][j];
               broadcast[i].push(v[j].map(val => Math.round(val * pVal * 10) / 10));
             }
@@ -9423,7 +9441,7 @@
             const oVec = [0, 0, 0, 0];
             for (let m = 0; m < 4; m++) {
               let acc = 0;
-              for (let j = 0; j < 16; j++) {
+              for (let j = 0; j < 20; j++) {
                 acc += probNums[i][j] * v[j][m];
               }
               oVec[m] = Math.round(acc * 10) / 10;
@@ -9491,6 +9509,8 @@
             rgb = [248, 81, 73];
           } else if (baseColor === '#a371f7' || (typeof baseColor === 'string' && baseColor.includes('163, 113, 247'))) {
             rgb = [163, 113, 247];
+          } else if (baseColor === '#f778ba' || (typeof baseColor === 'string' && baseColor.includes('247, 120, 186'))) {
+            rgb = [247, 120, 186];
           }
 
           const [R, G, B] = rgb;
@@ -9522,13 +9542,13 @@
         }
 
         function calculateGeometry() {
-          const matW = clamp(width * 0.40, 160 * s, 210 * s);
+          const matW = clamp(width * 0.44, 175 * s, 225 * s);
           const matH = matW;
-          const cellR = Math.max(3.6 * s, (matW / 16) * 0.40);
+          const cellR = Math.max(3.0 * s, (matW / 20) * 0.40);
 
-          const stepX = matW / 16;
-          const stepY = matH / 16;
-          const depthLen = clamp(matW * 0.24, 15 * s, 30 * s);
+          const stepX = matW / 20;
+          const stepY = matH / 20;
+          const depthLen = clamp(matW * 0.22, 14 * s, 28 * s);
 
           const colBracketH = Math.abs(-0.57) * depthLen + 10 * s;
           const kLabelH = 12 * s;
@@ -9536,7 +9556,7 @@
           const gapKeyMat = 44 * s;
 
           // Matrix is positioned in the upper center
-          const matCenterY = -62 * s;
+          const matCenterY = -52 * s;
           const matTop = matCenterY - matH / 2;
           const matBot = matCenterY + matH / 2;
           const topKeyY = matTop - gapKeyMat + colBracketH / 2;
@@ -9550,20 +9570,20 @@
           const matHBrack = matH + 10 * s;
 
           const estQueryW = Math.abs(-0.82) * depthLen + 10 * s + 8 * s;
-          const leftQueryX = matL - estQueryW / 2 - 16 * s;
-          const rightSumX = matR + 28 * s;
-          const rightOutX = matR + estQueryW / 2 + 20 * s;
+          const leftQueryX = matL - estQueryW / 2 - 20 * s;
+          const rightSumX = matR + 26 * s;
+          const rightOutX = matR + estQueryW / 2 + 18 * s;
 
           const colX = [];
           const rowY = [];
-          for (let j = 0; j < 16; j++) colX.push(-matW / 2 + (j + 0.5) * stepX);
-          for (let i = 0; i < 16; i++) rowY.push(matTop + (i + 0.5) * stepY);
+          for (let j = 0; j < 20; j++) colX.push(-matW / 2 + (j + 0.5) * stepX);
+          for (let i = 0; i < 20; i++) rowY.push(matTop + (i + 0.5) * stepY);
 
-          // Lower 16 constituent tokens horizontal positions
+          // Lower 20 constituent tokens horizontal positions
           const vecY = 168 * s;
-          const tokSpacing = Math.min(22 * s, (width - 40 * s) / 16);
+          const tokSpacing = Math.min(20.5 * s, (width - 36 * s) / 20);
           const tokX = [];
-          for (let i = 0; i < 16; i++) tokX.push((i - 7.5) * tokSpacing);
+          for (let i = 0; i < 20; i++) tokX.push((i - 9.5) * tokSpacing);
 
           return {
             matW, matH, matL, matR, matTop, matBot, matCenterY, matHBrack,
@@ -9646,7 +9666,6 @@
           const boxX = -boxW / 2;
           const boxY = -142 * s;
 
-          // Plaque dark background with subtle colored border
           ctx.fillStyle = 'rgba(13, 17, 23, 0.92)';
           ctx.beginPath();
           ctx.roundRect(boxX, boxY, boxW, boxH, 6 * s);
@@ -9656,7 +9675,6 @@
           ctx.lineWidth = 1.2;
           ctx.stroke();
 
-          // Single centered line in Arial (SANS_FONT)
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.font = `600 ${Math.round(11 * s)}px ${SANS_FONT}`;
@@ -9755,7 +9773,6 @@
           const projX = -0.82;
           const projY = -0.57;
 
-          // 1. Draw depth spine line cleanly from (centerX + baseX, centerY + baseY)
           if (collapse < 0.95 && count > 1 && curLen > 2) {
             ctx.save();
             ctx.translate(centerX + baseX, centerY + baseY);
@@ -9769,7 +9786,6 @@
             ctx.restore();
           }
 
-          // 2. Draw circles along spine: px and py are relative to (centerX, centerY)
           for (let m = count - 1; m >= 0; m--) {
             const off = m * step;
             const px = baseX + projX * off;
@@ -9794,8 +9810,8 @@
           ctx.strokeStyle = 'rgba(110, 118, 129, 0.20)';
           ctx.lineWidth = 0.5;
 
-          for (let j = 0; j < 16; j++) {
-            for (let i = 0; i < 16; i++) {
+          for (let j = 0; j < 20; j++) {
+            for (let i = 0; i < 20; i++) {
               const x = geom.colX[j];
               const y = geom.rowY[i];
               ctx.beginPath();
@@ -9812,8 +9828,8 @@
         function drawMatrix(stroke, fill, cellValues, glow = 0, glowColor = null, alpha = 1, textColor = "#ffffff", rMult = 1, isFinalProb = false, category = 'default') {
           if (alpha <= 0) return;
           drawGridOutline(alpha * 0.45);
-          for (let i = 0; i < 16; i++) {
-            for (let j = 0; j < 16; j++) {
+          for (let i = 0; i < 20; i++) {
+            for (let j = 0; j < 20; j++) {
               const cx = geom.colX[j];
               const cy = geom.rowY[i];
               const val = (cellValues && cellValues[i] && cellValues[i][j] !== undefined) ? cellValues[i][j] : null;
@@ -9827,7 +9843,7 @@
 
         function drawValuesAtPosition(yPos, alpha = 1.0, scaleR = 1.0) {
           if (alpha <= 0) return;
-          for (let j = 0; j < 16; j++) {
+          for (let j = 0; j < 20; j++) {
             const x = geom.colX[j] + (0.82 * geom.depthLen) / 2;
             const curY = yPos + (0.57 * geom.depthLen) / 2;
             const vColor = getModalityColor(j);
@@ -9835,7 +9851,7 @@
             drawDepthVector(x, curY, d, geom.depthLen, vColor, vFill, data.v[j], alpha, 0, scaleR, 'vector');
           }
           const leftV = geom.colX[0] - colBracketW / 2 - 4 * s;
-          const rightV = geom.colX[15] + colBracketW / 2 + 4 * s;
+          const rightV = geom.colX[19] + colBracketW / 2 + 4 * s;
           drawBracket(leftV, yPos, colBracketH, true, alpha);
           drawBracket(rightV, yPos, colBracketH, false, alpha);
           drawLabel("values", 0, yPos - colBracketH / 2 - 12 * s, "#58a6ff", "center", null, alpha);
@@ -9845,7 +9861,7 @@
           if (alpha <= 0) return;
           drawGridOutline(alpha * 0.45);
 
-          for (let i = 0; i < 16; i++) {
+          for (let i = 0; i < 20; i++) {
             const qy = geom.rowY[i];
             const qLabels = data.q[i];
             const qColor = getModalityColor(i);
@@ -9853,7 +9869,7 @@
             drawDepthVector(geom.leftQueryX + (0.82 * geom.depthLen) / 2, qy + (0.57 * geom.depthLen) / 2, d, geom.depthLen, qColor, qFill, qLabels, alpha, 0, 1, 'vector');
           }
           const topQ = geom.rowY[0] - rowBracketH / 2;
-          const botQ = geom.rowY[15] + rowBracketH / 2;
+          const botQ = geom.rowY[19] + rowBracketH / 2;
           drawBracket(geom.leftQueryX - rowBracketW / 2 - 4 * s, (topQ + botQ) / 2, botQ - topQ, true, alpha);
           drawBracket(geom.leftQueryX + rowBracketW / 2 + 4 * s, (topQ + botQ) / 2, botQ - topQ, false, alpha);
 
@@ -9861,13 +9877,15 @@
           const visionY = (geom.rowY[4] + geom.rowY[7]) / 2;
           const soundY = (geom.rowY[8] + geom.rowY[11]) / 2;
           const atomsY = (geom.rowY[12] + geom.rowY[15]) / 2;
+          const actionY = (geom.rowY[16] + geom.rowY[19]) / 2;
 
           drawModalityRowIndicator("text", textY, "#e3b341", geom.rowY[0], geom.rowY[3], geom.leftQueryX, alpha);
           drawModalityRowIndicator("vision", visionY, "#3fb950", geom.rowY[4], geom.rowY[7], geom.leftQueryX, alpha);
           drawModalityRowIndicator("sound", soundY, "#a371f7", geom.rowY[8], geom.rowY[11], geom.leftQueryX, alpha);
           drawModalityRowIndicator("atoms", atomsY, "#58a6ff", geom.rowY[12], geom.rowY[15], geom.leftQueryX, alpha);
+          drawModalityRowIndicator("action chunk", actionY, "#f778ba", geom.rowY[16], geom.rowY[19], geom.leftQueryX, alpha);
 
-          for (let j = 0; j < 16; j++) {
+          for (let j = 0; j < 20; j++) {
             const kx = geom.colX[j];
             const kLabels = data.k[j];
             const kColor = getModalityColor(j);
@@ -9875,7 +9893,7 @@
             drawDepthVector(kx + (0.82 * geom.depthLen) / 2, geom.topKeyY + (0.57 * geom.depthLen) / 2, d, geom.depthLen, kColor, kFill, kLabels, alpha, 0, 1, 'vector');
           }
           const leftK = geom.colX[0] - colBracketW / 2 - 4 * s;
-          const rightK = geom.colX[15] + colBracketW / 2 + 4 * s;
+          const rightK = geom.colX[19] + colBracketW / 2 + 4 * s;
           drawBracket(leftK, geom.topKeyY, colBracketH, true, alpha);
           drawBracket(rightK, geom.topKeyY, colBracketH, false, alpha);
         }
@@ -9905,11 +9923,11 @@
           ctx.restore();
         }
 
-        // Draw 16 Constituent Modality Docked Vectors at the bottom with sleek accent line & pill badge
-        function drawDockedModalityVectors(completedModalityCount = 4, alpha = 1.0, activePair = null) {
+        // Draw Constituent Modality Docked Vectors at the bottom with sleek accent line & pill badge (Up to 20 vectors, 5 modalities)
+        function drawDockedModalityVectors(completedModalityCount = 5, alpha = 1.0, activePair = null) {
           if (alpha <= 0.01 || completedModalityCount <= 0) return;
 
-          const totalTokens = Math.min(16, completedModalityCount * 4);
+          const totalTokens = Math.min(20, completedModalityCount * 4);
 
           for (let i = 0; i < totalTokens; i++) {
             const x = geom.tokX[i];
@@ -9944,13 +9962,14 @@
             }
           }
 
-          // Clean accent line and pill badge (NO brackets pointing left!)
+          // Clean accent line and pill badge
           const barY = geom.vecY + 23 * s;
           const modalities = [
             { name: "text (4)", color: "#e3b341", rgb: [227, 179, 65], start: 0, end: 3 },
             { name: "vision (4)", color: "#3fb950", rgb: [63, 185, 80], start: 4, end: 7 },
             { name: "sound (4)", color: "#a371f7", rgb: [163, 113, 247], start: 8, end: 11 },
-            { name: "atoms (4)", color: "#58a6ff", rgb: [88, 166, 255], start: 12, end: 15 }
+            { name: "atoms (4)", color: "#58a6ff", rgb: [88, 166, 255], start: 12, end: 15 },
+            { name: "action chunk (4)", color: "#f778ba", rgb: [247, 120, 186], start: 16, end: 19 }
           ];
 
           for (let m = 0; m < completedModalityCount; m++) {
@@ -9973,7 +9992,7 @@
             ctx.stroke();
 
             // 2. Clean pill badge underneath
-            const pillW = Math.max(52 * s, w * 0.88);
+            const pillW = Math.min(76 * s, Math.max(50 * s, w * 0.94));
             const pillH = 15 * s;
             const pillY = barY + 6 * s;
 
@@ -9986,7 +10005,14 @@
             ctx.lineWidth = 0.8;
             ctx.stroke();
 
-            ctx.font = `600 ${Math.round(9.5 * s)}px ${SANS_FONT}`;
+            let fontSize = 8.5 * s;
+            ctx.font = `600 ${Math.round(fontSize)}px ${SANS_FONT}`;
+            const measuredW = ctx.measureText(mod.name).width;
+            if (measuredW > pillW - 6 * s) {
+              fontSize = Math.floor(fontSize * ((pillW - 6 * s) / measuredW));
+              ctx.font = `600 ${Math.round(fontSize)}px ${SANS_FONT}`;
+            }
+
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillStyle = mod.color;
@@ -10042,10 +10068,8 @@
           const dist = Math.abs(endX - startX);
           const arcH = Math.min(68 * s, 26 * s + dist * 0.32);
 
-          // Easing for smooth liftoff, flight, and descent
           const easeP = easeInOut(p);
           const curX = lerp(startX, endX, easeP);
-          // Hemicircle vertical trajectory: y = baseY - arcH * sin(p * PI)
           const sinArch = Math.sin(p * Math.PI);
           const curY = baseY - arcH * sinArch;
 
@@ -10089,24 +10113,20 @@
             const r = 4.2 * s;
             const val = BASE_VECTORS[valIdx] && BASE_VECTORS[valIdx][m] !== undefined ? BASE_VECTORS[valIdx][m] : null;
 
-            // Base circle
             ctx.beginPath();
             ctx.arc(curX, cy, r, 0, Math.PI * 2);
             ctx.fillStyle = 'rgba(13, 17, 23, 0.85)';
             ctx.fill();
 
-            // Inner fill tinted with modality color
             ctx.fillStyle = color;
             ctx.globalAlpha = tokAlpha * 0.38;
             ctx.fill();
 
-            // Glowing border
             ctx.strokeStyle = color;
             ctx.lineWidth = 1.4;
             ctx.globalAlpha = tokAlpha;
             ctx.stroke();
 
-            // Value text
             if (exists(val) && r >= 2.4 * s) {
               ctx.shadowBlur = 0;
               let strVal = String(val);
@@ -10140,7 +10160,151 @@
           ctx.restore();
         }
 
-        // Procedural Earth Renderer with Rotating Continents & Modality Pods
+        // Procedural Tiny Robot Arm Renderer
+        function drawRobotArm(baseX, baseY, scale, a1, a2, a3, gripperOpen, hasPayload, color = '#f778ba', alpha = 1.0) {
+          if (alpha <= 0.01) return;
+          ctx.save();
+          ctx.translate(centerX + baseX, centerY + baseY);
+          ctx.globalAlpha = alpha;
+
+          // 1. Base Pedestal
+          const baseW = 28 * scale;
+          const baseH = 8 * scale;
+          ctx.fillStyle = '#161b22';
+          ctx.strokeStyle = '#30363d';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.roundRect(-baseW / 2, -baseH, baseW, baseH, 3 * scale);
+          ctx.fill();
+          ctx.stroke();
+
+          // Base LED accent strip
+          ctx.shadowBlur = 6 * scale;
+          ctx.shadowColor = color;
+          ctx.fillStyle = color;
+          ctx.fillRect(-baseW * 0.35, -2.5 * scale, baseW * 0.7, 1.5 * scale);
+          ctx.shadowBlur = 0;
+
+          // Turntable dome
+          ctx.fillStyle = '#21262d';
+          ctx.beginPath();
+          ctx.arc(0, -baseH, 7 * scale, Math.PI, 0);
+          ctx.fill();
+          ctx.stroke();
+
+          // Joint 1 (Shoulder) center
+          const j1x = 0;
+          const j1y = -baseH - 4 * scale;
+
+          // Joint 2 (Elbow) center
+          const L1 = 30 * scale;
+          const j2x = j1x + L1 * Math.cos(a1);
+          const j2y = j1y + L1 * Math.sin(a1);
+
+          // Joint 3 (Wrist) center
+          const L2 = 26 * scale;
+          const a2_abs = a1 + a2;
+          const j3x = j2x + L2 * Math.cos(a2_abs);
+          const j3y = j2y + L2 * Math.sin(a2_abs);
+
+          // Gripper orientation
+          const a3_abs = a2_abs + a3;
+
+          // Upper Arm Link (L1) - Dual Spar Segment
+          ctx.strokeStyle = '#30363d';
+          ctx.lineWidth = 5.5 * scale;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(j1x, j1y);
+          ctx.lineTo(j2x, j2y);
+          ctx.stroke();
+
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 1.8 * scale;
+          ctx.beginPath();
+          ctx.moveTo(j1x + (j2x - j1x) * 0.15, j1y + (j2y - j1y) * 0.15);
+          ctx.lineTo(j1x + (j2x - j1x) * 0.85, j1y + (j2y - j1y) * 0.85);
+          ctx.stroke();
+
+          // Forearm Link (L2)
+          ctx.strokeStyle = '#21262d';
+          ctx.lineWidth = 4.5 * scale;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(j2x, j2y);
+          ctx.lineTo(j3x, j3y);
+          ctx.stroke();
+
+          ctx.strokeStyle = '#8b949e';
+          ctx.lineWidth = 1.4 * scale;
+          ctx.beginPath();
+          ctx.moveTo(j2x + (j3x - j2x) * 0.2, j2y + (j3y - j2y) * 0.2);
+          ctx.lineTo(j2x + (j3x - j2x) * 0.8, j2y + (j3y - j2y) * 0.8);
+          ctx.stroke();
+
+          // Joint pivots
+          [ [j1x, j1y, 5.2 * scale], [j2x, j2y, 4.4 * scale], [j3x, j3y, 3.6 * scale] ].forEach(([jx, jy, r]) => {
+            ctx.fillStyle = '#161b22';
+            ctx.strokeStyle = '#484f58';
+            ctx.lineWidth = 1.0;
+            ctx.beginPath();
+            ctx.arc(jx, jy, r, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(jx, jy, 1.5 * scale, 0, Math.PI * 2);
+            ctx.fill();
+          });
+
+          // Gripper Assembly at j3
+          ctx.save();
+          ctx.translate(j3x, j3y);
+          ctx.rotate(a3_abs);
+
+          ctx.fillStyle = '#30363d';
+          ctx.fillRect(0, -5 * scale, 3 * scale, 10 * scale);
+
+          const spread = (3.5 + gripperOpen * 3.5) * scale;
+          ctx.strokeStyle = '#c9d1d9';
+          ctx.lineWidth = 1.4 * scale;
+          ctx.lineCap = 'round';
+
+          ctx.beginPath();
+          ctx.moveTo(3 * scale, -spread);
+          ctx.lineTo(10 * scale, -spread);
+          ctx.lineTo(12 * scale, -spread + 1.5 * scale);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(3 * scale, spread);
+          ctx.lineTo(10 * scale, spread);
+          ctx.lineTo(12 * scale, spread - 1.5 * scale);
+          ctx.stroke();
+
+          if (hasPayload) {
+            const bSize = 6.5 * scale;
+            ctx.shadowBlur = 8 * scale;
+            ctx.shadowColor = color;
+            ctx.fillStyle = 'rgba(247, 120, 186, 0.45)';
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.roundRect(8 * scale - bSize / 2, -bSize / 2, bSize, bSize, 1.5 * scale);
+            ctx.fill();
+            ctx.stroke();
+          }
+
+          ctx.restore();
+          ctx.restore();
+
+          const tipX = baseX + j3x + 8 * scale * Math.cos(a3_abs);
+          const tipY = baseY + j3y + 8 * scale * Math.sin(a3_abs);
+          return { tipX, tipY };
+        }
+
+        // Procedural Earth Renderer with Rotating Continents & Modality Pods (5 pods)
         function drawEarth(cx, cy, r, rot, alpha, now, activePodIdx = -1) {
           if (alpha <= 0) return;
           ctx.save();
@@ -10189,7 +10353,7 @@
           }
           ctx.restore();
 
-          // Orbiting Modality Pods
+          // Orbiting Modality Pods (5 pods)
           const orbitA = r * 1.8;
           const orbitB = r * 0.65;
           ctx.strokeStyle = 'rgba(110, 118, 129, 0.22)';
@@ -10200,9 +10364,9 @@
           ctx.stroke();
           ctx.setLineDash([]);
 
-          for (let m = 0; m < 4; m++) {
+          for (let m = 0; m < 5; m++) {
             if (activePodIdx === m) continue;
-            const angle = now * 0.0008 + (m * Math.PI / 2);
+            const angle = now * 0.0008 + (m * Math.PI * 2 / 5);
             const ox = Math.cos(angle) * orbitA;
             const oy = Math.sin(angle) * orbitB;
             const rotAngle = -0.22;
@@ -10222,7 +10386,8 @@
             ctx.font = `600 ${Math.round(8.5 * s)}px ${SANS_FONT}`;
             ctx.fillStyle = col;
             ctx.textAlign = 'center';
-            ctx.fillText(MODALITY_NAMES[m].charAt(0).toUpperCase() + MODALITY_NAMES[m].slice(1), px, py - 7 * s);
+            const podName = m === 4 ? 'Action' : (MODALITY_NAMES[m].charAt(0).toUpperCase() + MODALITY_NAMES[m].slice(1));
+            ctx.fillText(podName, px, py - 7 * s);
           }
           ctx.restore();
         }
@@ -10230,7 +10395,7 @@
         function getPodOrbitPos(podIdx, now, r) {
           const orbitA = r * 1.8;
           const orbitB = r * 0.65;
-          const angle = now * 0.0008 + (podIdx * Math.PI / 2);
+          const angle = now * 0.0008 + (podIdx * Math.PI * 2 / 5);
           const ox = Math.cos(angle) * orbitA;
           const oy = Math.sin(angle) * orbitB;
           const rotAngle = -0.22;
@@ -10241,17 +10406,16 @@
 
         // ----------------------------------------------------
         // Animation Loop Timings & Lifecycle
-        // Part 1: 0 to 23000ms (Universe, 4 Modalities break up into vectors)
-        // Part 2: 23000ms+ (Transformer Attention Loop, slowed-down attention arcs, loops forever!)
+        // Part 1: 0 to 27600ms (Universe, 5 Modalities break up into 20 vectors)
+        // Part 2: 27600ms+ (Transformer Attention Loop, 20x20 attention, loops forever!)
         // ----------------------------------------------------
-        const PART1_DURATION = 23000;
-        const PART2_DURATION = 33000; // Extended for slow, readable attention arcs
+        const PART1_DURATION = 27600;
+        const PART2_DURATION = 35000;
 
         let startTime = null;
         let paused = false;
 
         window.__freezeGraphicalAttnMs = null;
-
 
         // ----------------------------------------------------
         // Gating & Unlock Logic (Mysterious & Minimal Lock with Tooltip & Confirmation)
@@ -10285,7 +10449,7 @@
           } else {
             graphicalCard.classList.remove('is-locked');
             graphicalCard.classList.add('is-unlocked');
-            if (headerDim) headerDim.innerHTML = '4 modalities &middot; 16 vec &middot; dim 4';
+            if (headerDim) headerDim.innerHTML = '5 modalities &middot; 20 vec &middot; dim 4';
           }
         }
 
@@ -10355,7 +10519,6 @@
           });
         }
 
-
         function animate(now) {
           if (isLocked && window.__freezeGraphicalAttnMs === null) {
             return;
@@ -10399,7 +10562,7 @@
           rowBracketH = 10 * s;
 
           // ----------------------------------------------------
-          // PART 1: THE ORIGIN OF TOKENS (0 to 23000ms)
+          // PART 1: THE ORIGIN OF TOKENS (0 to 27600ms)
           // ----------------------------------------------------
           if (totalElapsed < PART1_DURATION) {
             updateMathHighlight(null);
@@ -10434,13 +10597,11 @@
               const earthRot = totalElapsed * 0.0004;
               drawEarth(0, -95 * s, earthR, earthRot, 0.20, totalElapsed, 0);
 
-              // Centered Lucidrains-esque Architecture Plaque
               const plaqueAlpha = easeInOut(Math.min(1, phaseT / 500));
               drawModalityPlaque('Text ──> sentence ──> subwords ──> embedding matrix', '#e3b341', [227, 179, 65], plaqueAlpha);
 
               const podStart = getPodOrbitPos(0, 3000, earthR);
 
-              // 1a. Pod glides to center (0 to 800ms)
               if (phaseT < 800) {
                 const p = phaseT / 800;
                 const easeP = easeInOut(p);
@@ -10466,7 +10627,6 @@
                 return;
               }
 
-              // 1b. Whole sentence "all Attention connects" (800 to 1700ms)
               if (phaseT >= 800 && phaseT < 1700) {
                 const p = (phaseT - 800) / 900;
                 const inAlpha = easeInOut(Math.min(1, p * 2.0));
@@ -10494,7 +10654,6 @@
                 return;
               }
 
-              // 1c. Sentence breaks into 4 distinct token words (1700 to 2800ms)
               if (phaseT >= 1700 && phaseT < 2800) {
                 const p = (phaseT - 1700) / 1100;
                 const splitEase = easeInOut(p);
@@ -10528,13 +10687,11 @@
                 return;
               }
 
-              // 1d. Broken words shoot tracer rays down -> 4 vectors emerge -> glide to bottom dock (2800 to 4400ms)
               const p = (phaseT - 2800) / 1600;
               const emergeP = easeInOut(Math.min(1, p / 0.45));
               const glideP = easeInOut(Math.max(0, (p - 0.45) / 0.55));
               const words = ["all", "Atten", "tion", "connects"];
 
-              // Display the 4 broken-up word tokens at top
               ctx.save();
               for (let k = 0; k < 4; k++) {
                 const curX = activeTargetsX[k];
@@ -10556,7 +10713,6 @@
                 ctx.fillStyle = '#ffffff';
                 ctx.fillText(words[k], centerX + curX, centerY + itemRowY + 1);
 
-                // Dotted tracer beam down to vector emergence line
                 if (glideP < 0.90) {
                   ctx.strokeStyle = `rgba(227, 179, 65, ${(0.45 * (1 - glideP)).toFixed(2)})`;
                   ctx.lineWidth = 1.0;
@@ -10570,7 +10726,6 @@
               }
               ctx.restore();
 
-              // 4 Text vectors emerge at vecRowY, then glide to bottom docked slots [0..3]
               for (let k = 0; k < 4; k++) {
                 const destX = geom.tokX[k];
                 const destY = geom.vecY;
@@ -10584,7 +10739,6 @@
                 }
               }
 
-              // Once docked, show clean accent line and pill badge
               if (glideP >= 0.85) {
                 const bAlpha = (glideP - 0.85) / 0.15;
                 const xStart = geom.tokX[0];
@@ -10630,7 +10784,6 @@
             if (totalElapsed >= 7400 && totalElapsed < 11800) {
               caption.innerHTML = '<span style="color:#3fb950; font-weight:600;">Vision</span> &rarr; 2D image &rarr; image patches &rarr; linear projection &rarr; <span style="color:#3fb950; font-weight:600;">4 token vectors</span>';
 
-              // Previously docked Text vectors remain visible at bottom!
               drawDockedModalityVectors(1, 1.0);
 
               const phaseT = totalElapsed - 7400;
@@ -10638,13 +10791,11 @@
               const earthRot = totalElapsed * 0.0004;
               drawEarth(0, -95 * s, earthR, earthRot, 0.20, totalElapsed, 1);
 
-              // Centered Lucidrains-esque Architecture Plaque
               const plaqueAlpha = easeInOut(Math.min(1, phaseT / 500));
               drawModalityPlaque('Vision ──> 2D image ──> image patches ──> linear projection', '#3fb950', [63, 185, 80], plaqueAlpha);
 
               const podStart = getPodOrbitPos(1, 7400, earthR);
 
-              // 2a. Pod glides to center
               if (phaseT < 800) {
                 const p = phaseT / 800;
                 const easeP = easeInOut(p);
@@ -10670,7 +10821,6 @@
                 return;
               }
 
-              // Helper to draw realistic sunflower quadrants
               function drawSunflowerImage(cx, cy, size, alpha = 1.0, quadrant = -1) {
                 ctx.save();
                 ctx.translate(cx, cy);
@@ -10698,7 +10848,6 @@
 
                 ctx.translate(originX, originY);
 
-                // Green stem
                 ctx.strokeStyle = '#238636';
                 ctx.lineWidth = size * 0.08;
                 ctx.beginPath();
@@ -10706,7 +10855,6 @@
                 ctx.quadraticCurveTo(-size * 0.15, size * 0.5, -size * 0.7, size * 0.7);
                 ctx.stroke();
 
-                // Golden sunflower petals
                 const numPetals = 16;
                 for (let p = 0; p < numPetals; p++) {
                   const pAngle = (p / numPetals) * Math.PI * 2;
@@ -10719,7 +10867,6 @@
                   ctx.restore();
                 }
 
-                // Brown seed core with concentric rings
                 const coreGrad = ctx.createRadialGradient(0, 0, 2, 0, 0, size * 0.14);
                 coreGrad.addColorStop(0, '#5c3818');
                 coreGrad.addColorStop(0.7, '#3d240e');
@@ -10740,7 +10887,6 @@
                 ctx.restore();
               }
 
-              // 2b. Whole continuous 2D sunflower image (800 to 1700ms)
               if (phaseT >= 800 && phaseT < 1700) {
                 const p = (phaseT - 800) / 900;
                 const inAlpha = easeInOut(Math.min(1, p * 2.0));
@@ -10748,7 +10894,6 @@
                 return;
               }
 
-              // 2c. Image breaks up into 4 spatial patches (1700 to 2800ms)
               if (phaseT >= 1700 && phaseT < 2800) {
                 const p = (phaseT - 1700) / 1100;
                 const splitEase = easeInOut(p);
@@ -10773,7 +10918,6 @@
                 return;
               }
 
-              // 2d. 4 patches project downward -> 4 vectors emerge -> glide to bottom dock [4..7] (2800 to 4400ms)
               const p = (phaseT - 2800) / 1600;
               const emergeP = easeInOut(Math.min(1, p / 0.45));
               const glideP = easeInOut(Math.max(0, (p - 0.45) / 0.55));
@@ -10797,7 +10941,6 @@
                   ctx.restore();
                 }
 
-                // Vectors emerge at vecRowY, then glide to bottom docked slots [4..7]
                 const destX = geom.tokX[4 + k];
                 const destY = geom.vecY;
                 const vCurX = lerp(activeTargetsX[k], destX, glideP);
@@ -10854,7 +10997,6 @@
             if (totalElapsed >= 11800 && totalElapsed < 16200) {
               caption.innerHTML = '<span style="color:#a371f7; font-weight:600;">Sound</span> &rarr; audio waveform &rarr; spectrogram frames (time &times; freq) &rarr; frame projection &rarr; <span style="color:#a371f7; font-weight:600;">4 token vectors</span>';
 
-              // Text and Vision docked vectors at bottom
               drawDockedModalityVectors(2, 1.0);
 
               const phaseT = totalElapsed - 11800;
@@ -10862,13 +11004,11 @@
               const earthRot = totalElapsed * 0.0004;
               drawEarth(0, -95 * s, earthR, earthRot, 0.20, totalElapsed, 2);
 
-              // Centered Lucidrains-esque Architecture Plaque
               const plaqueAlpha = easeInOut(Math.min(1, phaseT / 500));
               drawModalityPlaque('Sound ──> audio waveform ──> STFT spectrogram frames (time × freq) ──> projection', '#a371f7', [163, 113, 247], plaqueAlpha);
 
               const podStart = getPodOrbitPos(2, 11800, earthR);
 
-              // 3a. Pod glides to center
               if (phaseT < 800) {
                 const p = phaseT / 800;
                 const easeP = easeInOut(p);
@@ -10894,7 +11034,6 @@
                 return;
               }
 
-              // 3b. Continuous raw audio acoustic wave (800 to 1700ms)
               if (phaseT >= 800 && phaseT < 1700) {
                 const p = (phaseT - 800) / 900;
                 const inAlpha = easeInOut(Math.min(1, p * 2.0));
@@ -10929,26 +11068,22 @@
               const soundFrameLabels = ["frame t₁", "frame t₂", "frame t₃", "frame t₄"];
               const soundTimeWindows = ["0-25ms", "25-50ms", "50-75ms", "75-100ms"];
 
-              // Helper to draw STFT / Mel-Spectrogram Temporal Frame with vertical spectral tiers
               function drawSpectrogramFrame(cx, cy, w, h, alpha, frameIdx) {
                 ctx.save();
                 ctx.translate(cx, cy);
                 ctx.globalAlpha = alpha;
 
-                // Frame background card
                 ctx.fillStyle = 'rgba(13, 17, 23, 0.90)';
                 ctx.beginPath();
                 ctx.roundRect(-w / 2, -h / 2, w, h, 3 * s);
                 ctx.fill();
 
-                // Draw 4 frequency spectrum energy tiers from high (top) to low (bottom)
-                // 3: 8 kHz (treble), 2: 1.8 kHz (mid-high), 1: 440 Hz (mid-low), 0: 60 Hz (bass)
                 const tierH = h / 4;
                 const tierColors = [
-                  ['rgba(88, 166, 255, 0.75)', 'rgba(56, 139, 253, 0.35)'],   // 60 Hz bass
-                  ['rgba(163, 113, 247, 0.75)', 'rgba(110, 64, 201, 0.35)'],  // 440 Hz mid-low
-                  ['rgba(210, 168, 255, 0.75)', 'rgba(188, 140, 255, 0.35)'], // 1.8 kHz mid-high
-                  ['rgba(240, 136, 62, 0.75)', 'rgba(219, 109, 40, 0.35)']     // 8 kHz treble
+                  ['rgba(88, 166, 255, 0.75)', 'rgba(56, 139, 253, 0.35)'],
+                  ['rgba(163, 113, 247, 0.75)', 'rgba(110, 64, 201, 0.35)'],
+                  ['rgba(210, 168, 255, 0.75)', 'rgba(188, 140, 255, 0.35)'],
+                  ['rgba(240, 136, 62, 0.75)', 'rgba(219, 109, 40, 0.35)']
                 ];
 
                 for (let tier = 0; tier < 4; tier++) {
@@ -10969,25 +11104,21 @@
                   ctx.stroke();
                 }
 
-                // Outer border
                 ctx.strokeStyle = '#a371f7';
                 ctx.lineWidth = 1.0;
                 ctx.beginPath();
                 ctx.roundRect(-w / 2, -h / 2, w, h, 3 * s);
                 ctx.stroke();
 
-                // Top label: Frame name (e.g. frame t₁)
                 ctx.font = `600 ${Math.round(8.5 * s)}px ui-monospace, SFMono-Regular, Menlo, monospace`;
                 ctx.textAlign = 'center';
                 ctx.fillStyle = '#ffffff';
                 ctx.fillText(soundFrameLabels[frameIdx], 0, -h / 2 - 6 * s);
 
-                // Bottom label: Time window (e.g. 0-25ms)
                 ctx.font = `500 ${Math.round(7.5 * s)}px ui-monospace, SFMono-Regular, Menlo, monospace`;
                 ctx.fillStyle = '#a371f7';
                 ctx.fillText(soundTimeWindows[frameIdx], 0, h / 2 + 10 * s);
 
-                // Frequency axis indicator on leftmost frame
                 if (frameIdx === 0) {
                   ctx.font = `600 ${Math.round(7.0 * s)}px ui-monospace, monospace`;
                   ctx.textAlign = 'right';
@@ -10998,7 +11129,6 @@
                 ctx.restore();
               }
 
-              // 3c. Slices into 4 temporal spectrogram frames across time (1700 to 2800ms)
               if (phaseT >= 1700 && phaseT < 2800) {
                 const p = (phaseT - 1700) / 1100;
                 const splitEase = easeInOut(p);
@@ -11011,7 +11141,6 @@
                 return;
               }
 
-              // 3d. Spectrogram frames project downward -> 4 vectors emerge -> glide to bottom dock [8..11] (2800 to 4400ms)
               const p = (phaseT - 2800) / 1600;
               const emergeP = easeInOut(Math.min(1, p / 0.45));
               const glideP = easeInOut(Math.max(0, (p - 0.45) / 0.55));
@@ -11033,7 +11162,6 @@
                   ctx.restore();
                 }
 
-                // Vectors emerge at vecRowY, then glide to bottom docked slots [8..11]
                 const destX = geom.tokX[8 + k];
                 const destY = geom.vecY;
                 const vCurX = lerp(activeTargetsX[k], destX, glideP);
@@ -11090,7 +11218,6 @@
             if (totalElapsed >= 16200 && totalElapsed < 20600) {
               caption.innerHTML = '<span style="color:#58a6ff; font-weight:600;">Atoms</span> &rarr; molecular graph &rarr; atom features (charge, mass, etc..) &rarr; MLP &rarr; <span style="color:#58a6ff; font-weight:600;">4 token vectors</span>';
 
-              // Text, Vision, and Sound docked at bottom
               drawDockedModalityVectors(3, 1.0);
 
               const phaseT = totalElapsed - 16200;
@@ -11098,13 +11225,11 @@
               const earthRot = totalElapsed * 0.0004;
               drawEarth(0, -95 * s, earthR, earthRot, 0.20, totalElapsed, 3);
 
-              // Centered Lucidrains-esque Architecture Plaque
               const plaqueAlpha = easeInOut(Math.min(1, phaseT / 500));
               drawModalityPlaque('Atoms ──> molecular graph ──> atom features (charge, mass, etc..) ──> MLP', '#58a6ff', [88, 166, 255], plaqueAlpha);
 
               const podStart = getPodOrbitPos(3, 16200, earthR);
 
-              // 4a. Pod glides to center
               if (phaseT < 800) {
                 const p = phaseT / 800;
                 const easeP = easeInOut(p);
@@ -11137,7 +11262,6 @@
                 { symbol: "H", name: "Hydrogen", col: "#a5d6ff", origX: 28 * s, origY: 18 * s }
               ];
 
-              // 4b. Continuous molecular graph with chemical bonds (800 to 1700ms)
               if (phaseT >= 800 && phaseT < 1700) {
                 const p = (phaseT - 800) / 900;
                 const inAlpha = easeInOut(Math.min(1, p * 2.0));
@@ -11146,7 +11270,6 @@
                 ctx.globalAlpha = inAlpha;
                 ctx.translate(centerX, centerY + itemRowY);
 
-                // Covalent bonds
                 ctx.strokeStyle = 'rgba(88, 166, 255, 0.45)';
                 ctx.lineWidth = 2.5 * s;
                 const bonds = [[0, 1], [0, 2], [1, 3], [2, 3]];
@@ -11157,7 +11280,6 @@
                   ctx.stroke();
                 }
 
-                // Atoms
                 for (let atom of atomNodes) {
                   ctx.shadowBlur = 10;
                   ctx.shadowColor = atom.col;
@@ -11180,14 +11302,12 @@
                 return;
               }
 
-              // 4c. Bonds dissolve into 4 isolated atomic nodes (1700 to 2800ms)
               if (phaseT >= 1700 && phaseT < 2800) {
                 const p = (phaseT - 1700) / 1100;
                 const splitEase = easeInOut(p);
                 const bondFade = Math.max(0, 1 - splitEase * 2.5);
 
                 ctx.save();
-                // Fading bonds
                 if (bondFade > 0) {
                   ctx.strokeStyle = `rgba(88, 166, 255, ${bondFade * 0.4})`;
                   ctx.lineWidth = 2.0 * s;
@@ -11204,7 +11324,6 @@
                   }
                 }
 
-                // Isolated atoms
                 for (let k = 0; k < 4; k++) {
                   const atom = atomNodes[k];
                   const curX = lerp(atom.origX, activeTargetsX[k], splitEase);
@@ -11235,7 +11354,6 @@
                 return;
               }
 
-              // 4d. Atoms project downward -> 4 vectors emerge -> glide to bottom dock [12..15] (2800 to 4400ms)
               const p = (phaseT - 2800) / 1600;
               const emergeP = easeInOut(Math.min(1, p / 0.45));
               const glideP = easeInOut(Math.max(0, (p - 0.45) / 0.55));
@@ -11276,7 +11394,6 @@
                 }
                 ctx.restore();
 
-                // Vectors emerge at vecRowY, then glide to bottom docked slots [12..15]
                 const destX = geom.tokX[12 + k];
                 const destY = geom.vecY;
                 const vCurX = lerp(activeTargetsX[k], destX, glideP);
@@ -11328,21 +11445,267 @@
             }
 
             // ----------------------------------------------------
-            // Phase 5: Convergence into 16 tokens and feed into Transformer (20600 to 23000ms)
+            // Phase 5: Action Chunk Breakout -> Robot Arm Trajectory -> Vectors (20600 to 25000ms)
             // ----------------------------------------------------
-            if (totalElapsed >= 20600 && totalElapsed < 23000) {
-              const phaseT = totalElapsed - 20600;
-              const p = phaseT / 2400;
+            if (totalElapsed >= 20600 && totalElapsed < 25000) {
+              caption.innerHTML = '<span style="color:#f778ba; font-weight:600;">Action Chunk</span> &rarr; robot arm trajectory &rarr; intermediate action tokens (t₁&ndash;t₄) &rarr; projection &rarr; <span style="color:#f778ba; font-weight:600;">4 token vectors</span>';
 
-              caption.innerHTML = 'all 4 modalities converge into a sequence of <span style="color:#58a6ff; font-weight:600;">16 vectors (tokens)</span> &rarr; feeds into Multimodal Transformer';
-
-              // Bottom 16 vectors remain fully docked
+              // Text, Vision, Sound, and Atoms docked at bottom
               drawDockedModalityVectors(4, 1.0);
+
+              const phaseT = totalElapsed - 20600;
+              const earthR = 42 * s;
+              const earthRot = totalElapsed * 0.0004;
+              drawEarth(0, -95 * s, earthR, earthRot, 0.20, totalElapsed, 4);
+
+              const plaqueAlpha = easeInOut(Math.min(1, phaseT / 500));
+              drawModalityPlaque('Action Chunk ──> robot arm trajectory ──> action chunk tokens (t₁..t₄) ──> projection', '#f778ba', [247, 120, 186], plaqueAlpha);
+
+              const podStart = getPodOrbitPos(4, 20600, earthR);
+
+              if (phaseT < 800) {
+                const p = phaseT / 800;
+                const easeP = easeInOut(p);
+                const curX = lerp(podStart.x, 0, easeP);
+                const curY = lerp(podStart.y - 45 * s, itemRowY, easeP);
+
+                ctx.save();
+                ctx.strokeStyle = 'rgba(247, 120, 186, 0.45)';
+                ctx.lineWidth = 2.0;
+                ctx.beginPath();
+                ctx.moveTo(centerX + podStart.x, centerY + podStart.y - 45 * s);
+                ctx.quadraticCurveTo(centerX + podStart.x * 0.5, centerY + itemRowY, centerX + curX, centerY + curY);
+                ctx.stroke();
+
+                const rPod = lerp(4.5, 14 * s, easeP);
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#f778ba';
+                ctx.fillStyle = '#f778ba';
+                ctx.beginPath();
+                ctx.arc(centerX + curX, centerY + curY, rPod, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+                return;
+              }
+
+              // 4 Intermediate Poses of the little robot arm across the continuous trajectory
+              function drawActionChunkPanel(alpha, splitProgress = 0, isTracer = false, glideP = 0) {
+                if (alpha <= 0.01) return;
+                const cardW = Math.min(width * 0.94, 520 * s);
+                const cardH = 175 * s;
+                const spacing = Math.min(115 * s, cardW * 0.23);
+                const armScale = Math.min(0.82 * s, (cardW / 520) * 0.82 * s);
+                const panelY = -22 * s;
+
+                ctx.save();
+                ctx.translate(centerX, centerY + panelY);
+                ctx.globalAlpha = alpha;
+
+                // Panel container
+                ctx.shadowBlur = 14 * s;
+                ctx.shadowColor = 'rgba(247, 120, 186, 0.22)';
+                ctx.fillStyle = 'rgba(13, 17, 23, 0.95)';
+                ctx.strokeStyle = '#f778ba';
+                ctx.lineWidth = 1.3;
+                ctx.beginPath();
+                ctx.roundRect(-cardW / 2, -cardH / 2, cardW, cardH, 9 * s);
+                ctx.fill();
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+
+                // Panel Title & Subtitle
+                ctx.font = `600 ${Math.round(12.5 * s)}px ${SANS_FONT}`;
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText('Action Chunk (Robot Trajectory)', 0, -cardH / 2 + 19 * s);
+
+                ctx.font = `500 ${Math.round(9.5 * s)}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+                ctx.fillStyle = '#f778ba';
+                ctx.fillText('continuous trajectory broken into intermediate positions:  t₁ → t₂ → t₃ → t₄', 0, -cardH / 2 + 34 * s);
+
+                // 4 Intermediate arm positions
+                const poses = [
+                  { x: -1.5 * spacing, y: 52 * s, a1: -Math.PI * 0.32, a2: Math.PI * 0.38, a3: -Math.PI * 0.12, grip: 0.90, payload: false, lbl: 'action t₁' },
+                  { x: -0.5 * spacing, y: 52 * s, a1: -Math.PI * 0.20, a2: Math.PI * 0.65, a3: -Math.PI * 0.50, grip: 0.15, payload: true,  lbl: 'action t₂' },
+                  { x:  0.5 * spacing, y: 52 * s, a1: -Math.PI * 0.58, a2: Math.PI * 0.45, a3: -Math.PI * 0.15, grip: 0.15, payload: true,  lbl: 'action t₃' },
+                  { x:  1.5 * spacing, y: 52 * s, a1: -Math.PI * 0.28, a2: Math.PI * 0.28, a3:  Math.PI * 0.05, grip: 0.85, payload: false, lbl: 'action t₄' }
+                ];
+
+                // Badges above each robot arm
+                poses.forEach(p => {
+                  const pillW = Math.min(60 * s, spacing * 0.82);
+                  const pillH = 16 * s;
+                  const pillY = -cardH / 2 + 50 * s;
+                  ctx.fillStyle = 'rgba(247, 120, 186, 0.12)';
+                  ctx.strokeStyle = '#f778ba';
+                  ctx.lineWidth = 1.0;
+                  ctx.beginPath();
+                  ctx.roundRect(p.x - pillW / 2, pillY, pillW, pillH, 4 * s);
+                  ctx.fill();
+                  ctx.stroke();
+
+                  ctx.font = `600 ${Math.round(9 * s)}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+                  ctx.fillStyle = '#ffffff';
+                  ctx.textAlign = 'center';
+                  ctx.textBaseline = 'middle';
+                  ctx.fillText(p.lbl, p.x, pillY + pillH / 2);
+                });
+
+                ctx.restore();
+
+                // Draw the 4 Little Robot Arms inside the panel
+                const tips = [];
+                poses.forEach((p, idx) => {
+                  const armNow = totalElapsed * 0.0025 + idx * 1.2;
+                  const a1_dyn = p.a1 + Math.sin(armNow) * 0.04;
+                  const a2_dyn = p.a2 + Math.cos(armNow) * 0.04;
+                  const tip = drawRobotArm(p.x, panelY + p.y, armScale, a1_dyn, a2_dyn, p.a3, p.grip, p.payload, '#f778ba', alpha);
+                  tips.push(tip);
+                });
+
+                // Dashed trajectory arc connecting the end-effector tips
+                if (tips.length === 4) {
+                  ctx.save();
+                  ctx.globalAlpha = alpha;
+                  ctx.strokeStyle = 'rgba(247, 120, 186, 0.60)';
+                  ctx.lineWidth = 2.0 * s;
+                  ctx.setLineDash([4 * s, 4 * s]);
+                  ctx.beginPath();
+                  ctx.moveTo(centerX + tips[0].tipX, centerY + tips[0].tipY);
+                  for (let i = 1; i < tips.length; i++) {
+                    const prev = tips[i - 1];
+                    const curr = tips[i];
+                    const midX = (prev.tipX + curr.tipX) / 2;
+                    const midY = Math.min(prev.tipY, curr.tipY) - 15 * s;
+                    ctx.quadraticCurveTo(centerX + midX, centerY + midY, centerX + curr.tipX, centerY + curr.tipY);
+                  }
+                  ctx.stroke();
+                  ctx.setLineDash([]);
+
+                  // Glowing waypoint nodes at each tip
+                  tips.forEach((tip, idx) => {
+                    const wpGlow = 8 * s * (0.7 + 0.3 * Math.sin(totalElapsed * 0.005 + idx * 1.5));
+                    ctx.fillStyle = '#f778ba';
+                    ctx.shadowBlur = wpGlow;
+                    ctx.shadowColor = '#f778ba';
+                    ctx.beginPath();
+                    ctx.arc(centerX + tip.tipX, centerY + tip.tipY, 3.6 * s, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                  });
+                  ctx.restore();
+                }
+
+                // Tracer rays & vector emergence into bottom dock
+                if (isTracer) {
+                  for (let k = 0; k < 4; k++) {
+                    const p = poses[k];
+                    const destX = geom.tokX[16 + k];
+                    const destY = geom.vecY;
+
+                    if (glideP < 0.92) {
+                      ctx.save();
+                      ctx.strokeStyle = `rgba(247, 120, 186, ${(0.45 * (1 - glideP)).toFixed(2)})`;
+                      ctx.lineWidth = 1.1;
+                      ctx.setLineDash([3 * s, 3 * s]);
+                      ctx.beginPath();
+                      ctx.moveTo(centerX + p.x, centerY + panelY + p.y + 4 * s);
+                      ctx.lineTo(centerX + destX, centerY + destY - 24 * s);
+                      ctx.stroke();
+                      ctx.restore();
+                    }
+
+                    const startY = panelY + p.y + 8 * s;
+                    const vCurX = lerp(p.x, destX, glideP);
+                    const vCurY = lerp(startY, destY, glideP);
+
+                    const emergeP = easeInOut(Math.min(1, (phaseT - 2800) / 400));
+                    for (let m = 0; m < 4; m++) {
+                      const cy = vCurY + (m - 1.5) * 11 * s;
+                      drawCircle(vCurX, cy, 4.2 * s, '#f778ba', 'rgba(247, 120, 186, 0.20)', BASE_VECTORS[16 + k][m], 0, null, emergeP, '#8b949e', 'docked');
+                    }
+                  }
+
+                  if (glideP >= 0.85) {
+                    const bAlpha = (glideP - 0.85) / 0.15;
+                    const xStart = geom.tokX[16];
+                    const xEnd = geom.tokX[19];
+                    const cxBar = (xStart + xEnd) / 2;
+                    const w = (xEnd - xStart) + 12 * s;
+
+                    ctx.save();
+                    ctx.translate(centerX, centerY);
+                    ctx.globalAlpha = bAlpha;
+                    ctx.strokeStyle = '#f778ba';
+                    ctx.lineWidth = 1.6;
+                    ctx.lineCap = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(cxBar - w / 2, geom.vecY + 23 * s);
+                    ctx.lineTo(cxBar + w / 2, geom.vecY + 23 * s);
+                    ctx.stroke();
+
+                    const pillW = Math.min(76 * s, Math.max(50 * s, w * 0.94));
+                    const pillH = 15 * s;
+                    const pillY = geom.vecY + 29 * s;
+                    ctx.fillStyle = 'rgba(247, 120, 186, 0.14)';
+                    ctx.beginPath();
+                    ctx.roundRect(cxBar - pillW / 2, pillY, pillW, pillH, 4 * s);
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(247, 120, 186, 0.45)';
+                    ctx.lineWidth = 0.8;
+                    ctx.stroke();
+
+                    let fontSize = 8.5 * s;
+                    ctx.font = `600 ${Math.round(fontSize)}px ${SANS_FONT}`;
+                    const measuredW = ctx.measureText('action chunk (4)').width;
+                    if (measuredW > pillW - 6 * s) {
+                      fontSize = Math.floor(fontSize * ((pillW - 6 * s) / measuredW));
+                      ctx.font = `600 ${Math.round(fontSize)}px ${SANS_FONT}`;
+                    }
+
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = '#f778ba';
+                    ctx.fillText('action chunk (4)', cxBar, pillY + pillH / 2);
+                    ctx.restore();
+                  }
+                }
+              }
+
+              if (phaseT >= 800 && phaseT < 1700) {
+                const p = (phaseT - 800) / 900;
+                const inAlpha = easeInOut(Math.min(1, p * 2.0));
+                drawActionChunkPanel(inAlpha, 0, false, 0);
+                return;
+              }
+
+              if (phaseT >= 1700 && phaseT < 2800) {
+                const p = (phaseT - 1700) / 1100;
+                drawActionChunkPanel(1.0, easeInOut(p), false, 0);
+                return;
+              }
+
+              const p = (phaseT - 2800) / 1600;
+              const glideP = easeInOut(Math.max(0, (p - 0.45) / 0.55));
+              const panelAlpha = Math.max(0.20, 1 - glideP * 0.70);
+              drawActionChunkPanel(panelAlpha, 1.0, true, glideP);
+              return;
+            }
+
+            // ----------------------------------------------------
+            // Phase 6: Convergence into 20 tokens and feed into Transformer (25000 to 27600ms)
+            // ----------------------------------------------------
+            if (totalElapsed >= 25000 && totalElapsed < 27600) {
+              const phaseT = totalElapsed - 25000;
+              const p = phaseT / 2600;
+
+              caption.innerHTML = 'all 5 modalities converge into a sequence of <span style="color:#58a6ff; font-weight:600;">20 vectors (tokens)</span> &rarr; feeds into Multimodal Transformer';
+
+              drawDockedModalityVectors(5, 1.0);
 
               const liftEase = easeInOut(clamp((p - 0.20) / 0.75, 0, 1));
 
-              // Duplicate copy lifts up from bottom to form the initial transformer sequence
-              for (let i = 0; i < 16; i++) {
+              for (let i = 0; i < 20; i++) {
                 const startX = geom.tokX[i];
                 const startY = geom.vecY;
                 const targetX = (0.82 * geom.depthLen) / 2;
@@ -11362,35 +11725,33 @@
           }
 
           // ----------------------------------------------------
-          // PART 2: THE TRANSFORMER ATTENTION LOOP (23000ms+, LOOPS FOREVER!)
+          // PART 2: THE TRANSFORMER ATTENTION LOOP (27600ms+, LOOPS FOREVER!)
           // ----------------------------------------------------
           const p2_time = (totalElapsed - PART1_DURATION) % PART2_DURATION;
 
-          // Determine if any spotlight arc is active (during Attention Matrix stage: 14400 to 22400ms = 8000ms, 2000ms per arc)
           let activeArc = null;
-          if (p2_time >= 14400 && p2_time < 22400) {
-            const arcDuration = 8000 / PRIMARY_ATTENTION_ARCS.length;
+          if (p2_time >= 14400 && p2_time < 24400) {
+            const arcDuration = 10000 / PRIMARY_ATTENTION_ARCS.length;
             const arcIdx = Math.floor((p2_time - 14400) / arcDuration);
             activeArc = PRIMARY_ATTENTION_ARCS[arcIdx];
           }
 
-          // Always draw the 16 Constituent Modality Docked Vectors at the bottom!
-          drawDockedModalityVectors(4, 1.0, activeArc);
+          // Always draw the 20 Constituent Modality Docked Vectors at the bottom!
+          drawDockedModalityVectors(5, 1.0, activeArc);
 
-          // If during attention matrix stage and an arc is active, draw the curved attention arrow!
           if (activeArc) {
-            const arcProg = ((p2_time - 14400) % (8000 / PRIMARY_ATTENTION_ARCS.length)) / (8000 / PRIMARY_ATTENTION_ARCS.length);
+            const arcProg = ((p2_time - 14400) % (10000 / PRIMARY_ATTENTION_ARCS.length)) / (10000 / PRIMARY_ATTENTION_ARCS.length);
             const arcAlpha = Math.sin(arcProg * Math.PI);
             drawAttentionArc(activeArc.src, activeArc.tgt, activeArc.color, arcAlpha);
           }
 
           // ==========================================
-          // PHASE 1: Initial 16 Vectors (0 to 1400ms)
+          // PHASE 1: Initial 20 Vectors (0 to 1400ms)
           // ==========================================
           if (p2_time < 1400) {
             updateMathHighlight(null);
             caption.style.opacity = '1';
-            caption.innerHTML = '<span style="color:#e3b341; font-weight:600;">text</span> (4) &middot; <span style="color:#3fb950; font-weight:600;">vision</span> (4) &middot; <span style="color:#a371f7; font-weight:600;">sound</span> (4) &middot; <span style="color:#58a6ff; font-weight:600;">atoms</span> (4)<br>16 vectors &middot; dim 4';
+            caption.innerHTML = '<span style="color:#e3b341; font-weight:600;">text</span> (4) &middot; <span style="color:#3fb950; font-weight:600;">vision</span> (4) &middot; <span style="color:#a371f7; font-weight:600;">sound</span> (4) &middot; <span style="color:#58a6ff; font-weight:600;">atoms</span> (4) &middot; <span style="color:#f778ba; font-weight:600;">action chunk</span> (4)<br>20 vectors &middot; dim 4';
 
             const vecHeaderY = geom.rowY[0] - rowBracketH / 2 - 14 * s;
             drawLabel("vectors", 0, vecHeaderY, "#58a6ff", "center", `400 ${Math.round(11 * s)}px ui-monospace, monospace`);
@@ -11399,13 +11760,15 @@
             const visionY = (geom.rowY[4] + geom.rowY[7]) / 2;
             const soundY = (geom.rowY[8] + geom.rowY[11]) / 2;
             const atomsY = (geom.rowY[12] + geom.rowY[15]) / 2;
+            const actionY = (geom.rowY[16] + geom.rowY[19]) / 2;
 
             drawModalityRowIndicator("text", textY, "#e3b341", geom.rowY[0], geom.rowY[3], 0);
             drawModalityRowIndicator("vision", visionY, "#3fb950", geom.rowY[4], geom.rowY[7], 0);
             drawModalityRowIndicator("sound", soundY, "#a371f7", geom.rowY[8], geom.rowY[11], 0);
             drawModalityRowIndicator("atoms", atomsY, "#58a6ff", geom.rowY[12], geom.rowY[15], 0);
+            drawModalityRowIndicator("action chunk", actionY, "#f778ba", geom.rowY[16], geom.rowY[19], 0);
 
-            for (let i = 0; i < 16; i++) {
+            for (let i = 0; i < 20; i++) {
               const cy = geom.rowY[i];
               const vLabels = data.q[i];
               const vColor = getModalityColor(i);
@@ -11413,7 +11776,7 @@
               drawDepthVector((0.82 * geom.depthLen) / 2, cy + (0.57 * geom.depthLen) / 2, d, geom.depthLen, vColor, vFill, vLabels, 1, 0, 1, 'vector');
             }
             const topV = geom.rowY[0] - rowBracketH / 2;
-            const botV = geom.rowY[15] + rowBracketH / 2;
+            const botV = geom.rowY[19] + rowBracketH / 2;
             drawBracket(-rowBracketW / 2 - 4 * s, (topV + botV) / 2, botV - topV, true);
             drawBracket(rowBracketW / 2 + 4 * s, (topV + botV) / 2, botV - topV, false);
             return;
@@ -11436,19 +11799,19 @@
             const qHeaderY = geom.rowY[0] - rowBracketH / 2 - 14 * s;
             drawLabel("queries", curQX, qHeaderY, "#58a6ff", "center", null, ease);
 
-            // Modality row indicators stay attached to queries and glide with them
             const textY = (geom.rowY[0] + geom.rowY[3]) / 2;
             const visionY = (geom.rowY[4] + geom.rowY[7]) / 2;
             const soundY = (geom.rowY[8] + geom.rowY[11]) / 2;
             const atomsY = (geom.rowY[12] + geom.rowY[15]) / 2;
+            const actionY = (geom.rowY[16] + geom.rowY[19]) / 2;
 
             drawModalityRowIndicator("text", textY, "#e3b341", geom.rowY[0], geom.rowY[3], curQX);
             drawModalityRowIndicator("vision", visionY, "#3fb950", geom.rowY[4], geom.rowY[7], curQX);
             drawModalityRowIndicator("sound", soundY, "#a371f7", geom.rowY[8], geom.rowY[11], curQX);
             drawModalityRowIndicator("atoms", atomsY, "#58a6ff", geom.rowY[12], geom.rowY[15], curQX);
+            drawModalityRowIndicator("action chunk", actionY, "#f778ba", geom.rowY[16], geom.rowY[19], curQX);
 
-            // Queries (Q) glide left
-            for (let i = 0; i < 16; i++) {
+            for (let i = 0; i < 20; i++) {
               const qy = geom.rowY[i];
               const qLabels = data.q[i];
               const qColor = getModalityColor(i);
@@ -11456,13 +11819,12 @@
               drawDepthVector(curQX + (0.82 * geom.depthLen) / 2, qy + (0.57 * geom.depthLen) / 2, d, geom.depthLen, qColor, qFill, qLabels, 1, 0, 1, 'vector');
             }
             const topQ = geom.rowY[0] - rowBracketH / 2;
-            const botQ = geom.rowY[15] + rowBracketH / 2;
+            const botQ = geom.rowY[19] + rowBracketH / 2;
             drawBracket(curQX - rowBracketW / 2 - 4 * s, (topQ + botQ) / 2, botQ - topQ, true);
             drawBracket(curQX + rowBracketW / 2 + 4 * s, (topQ + botQ) / 2, botQ - topQ, false);
 
-            // Keys (K) glide up and fan out to columns
-            const curKY = lerp((geom.rowY[0] + geom.rowY[15]) / 2, geom.topKeyY, ease);
-            for (let j = 0; j < 16; j++) {
+            const curKY = lerp((geom.rowY[0] + geom.rowY[19]) / 2, geom.topKeyY, ease);
+            for (let j = 0; j < 20; j++) {
               const kx = lerp(0, geom.colX[j], ease);
               const ky = lerp(geom.rowY[j], geom.topKeyY, ease);
               const kLabels = data.k[j];
@@ -11471,14 +11833,13 @@
               drawDepthVector(kx + (0.82 * geom.depthLen) / 2, ky + (0.57 * geom.depthLen) / 2, d, geom.depthLen, kColor, kFill, kLabels, 1, 0, 1, 'vector');
             }
             const leftK = lerp(-colBracketW / 2 - 4 * s, geom.colX[0] - colBracketW / 2 - 4 * s, ease);
-            const rightK = lerp(colBracketW / 2 + 4 * s, geom.colX[15] + colBracketW / 2 + 4 * s, ease);
+            const rightK = lerp(colBracketW / 2 + 4 * s, geom.colX[19] + colBracketW / 2 + 4 * s, ease);
             drawBracket(leftK, curKY, colBracketH, true, ease);
             drawBracket(rightK, curKY, colBracketH, false, ease);
             drawLabel("keys", 0, curKY - colBracketH / 2 - 14 * s, "#58a6ff", "center", null, ease);
 
-            // Values (V) glide up above keys and fan out to columns
-            const curVY = lerp((geom.rowY[0] + geom.rowY[15]) / 2, geom.topValY, ease);
-            for (let j = 0; j < 16; j++) {
+            const curVY = lerp((geom.rowY[0] + geom.rowY[19]) / 2, geom.topValY, ease);
+            for (let j = 0; j < 20; j++) {
               const vx = lerp(0, geom.colX[j], ease);
               const vy = lerp(geom.rowY[j], geom.topValY, ease);
               const vColor = getModalityColor(j);
@@ -11486,7 +11847,7 @@
               drawDepthVector(vx + (0.82 * geom.depthLen) / 2, vy + (0.57 * geom.depthLen) / 2, d, geom.depthLen, vColor, vFill, data.v[j], ease, 0, 1, 'vector');
             }
             const leftV = lerp(-colBracketW / 2 - 4 * s, geom.colX[0] - colBracketW / 2 - 4 * s, ease);
-            const rightV = lerp(colBracketW / 2 + 4 * s, geom.colX[15] + colBracketW / 2 + 4 * s, ease);
+            const rightV = lerp(colBracketW / 2 + 4 * s, geom.colX[19] + colBracketW / 2 + 4 * s, ease);
             drawBracket(leftV, curVY, colBracketH, true, ease);
             drawBracket(rightV, curVY, colBracketH, false, ease);
             drawLabel("values", 0, curVY - colBracketH / 2 - 14 * s, "#58a6ff", "center", null, ease);
@@ -11529,8 +11890,8 @@
             const curVY = lerp(geom.topValY, geom.valParkedY, easeInOut(Math.min(1, p / 0.85)));
             drawValuesAtPosition(curVY, 1.0);
 
-            for (let i = 0; i < 16; i++) {
-              for (let j = 0; j < 16; j++) {
+            for (let i = 0; i < 20; i++) {
+              for (let j = 0; j < 20; j++) {
                 const qy = geom.rowY[i];
                 const kx = geom.colX[j];
                 const curQX = lerp(geom.leftQueryX, kx, pMove);
@@ -11568,8 +11929,8 @@
 
             drawValuesAtPosition(geom.valParkedY, 1.0);
 
-            for (let i = 0; i < 16; i++) {
-              for (let j = 0; j < 16; j++) {
+            for (let i = 0; i < 20; i++) {
+              for (let j = 0; j < 20; j++) {
                 const cx = geom.colX[j];
                 const cy = geom.rowY[i];
                 const simVal = data.sim[i][j];
@@ -11637,7 +11998,7 @@
               drawLabel("row sum", geom.rightSumX, geom.rowY[0] - 14 * s, "#3fb950", "center", `400 ${Math.round(10 * s)}px ui-monospace`);
             }
 
-            for (let i = 0; i < 16; i++) {
+            for (let i = 0; i < 20; i++) {
               const cy = geom.rowY[i];
               const rowSumVal = data.sum[i];
               if (isSummed) {
@@ -11657,7 +12018,7 @@
 
                 drawCircle(geom.rightSumX, cy, rSum, '#3fb950', greenBg, rowSumVal, 0, null, 1, '#e6edf3', 'sum');
               } else {
-                for (let j = 0; j < 16; j++) {
+                for (let j = 0; j < 20; j++) {
                   const curX = lerp(geom.colX[j], geom.rightSumX, easeSum);
                   const valIJ = data.exp[i][j];
                   drawCircle(curX, cy, geom.cellR * 0.9, '#f85149', 'rgba(248, 81, 73, 0.20)', valIJ, 0, null, 0.85, '#e6edf3', 'exp');
@@ -11685,9 +12046,9 @@
             const flash = isFlash ? Math.sin(((p - 0.40) / 0.35) * Math.PI) : 0;
             const rayAlpha = Math.sin(Math.min(1, p / 0.60) * Math.PI);
 
-            for (let i = 0; i < 16; i++) {
+            for (let i = 0; i < 20; i++) {
               const cy = geom.rowY[i];
-              const curSumX = lerp(geom.rightSumX, geom.colX[15], easeInOut(pMove));
+              const curSumX = lerp(geom.rightSumX, geom.colX[19], easeInOut(pMove));
               const fadeSum = Math.max(0, 1 - pMove * 1.5);
               if (fadeSum > 0) {
                 drawCircle(curSumX, cy, geom.cellR * 1.15, '#3fb950', 'rgba(63, 185, 80, 0.25)', data.sum[i], 0, null, fadeSum, '#e6edf3', 'sum');
@@ -11700,7 +12061,7 @@
               ctx.strokeStyle = `rgba(163, 113, 247, ${rayAlpha * 0.55})`;
               ctx.lineWidth = 1.0;
               ctx.beginPath();
-              for (let i = 0; i < 16; i++) {
+              for (let i = 0; i < 20; i++) {
                 ctx.moveTo(geom.rightSumX, geom.rowY[i]);
                 ctx.lineTo(geom.colX[0] - geom.cellW / 2, geom.rowY[i]);
               }
@@ -11720,11 +12081,10 @@
           }
 
           // ==========================================
-          // PHASE 8b: Attention Matrix A & Dynamic Cross-Modal Attention Arcs (14400 to 22400ms - 8.0s!)
+          // PHASE 8b: Attention Matrix A & Dynamic Cross-Modal Attention Arcs (14400 to 24400ms - 10.0s!)
           // Slowed down gracefully, caption: (modality {} token {}) attends to (modality {} token {})
-          // No percentages shown!
           // ==========================================
-          if (p2_time >= 14400 && p2_time < 22400) {
+          if (p2_time >= 14400 && p2_time < 24400) {
             updateMathHighlight('softmax-purple');
             caption.style.opacity = '1';
 
@@ -11733,16 +12093,14 @@
             drawLabel("Attention Matrix (fully connected graph)", 0, labelY, "#58a6ff", "center", `600 ${Math.round(11 * s)}px ${SANS_FONT}`, labelFade);
             drawValuesAtPosition(geom.valParkedY, 1.0);
 
-            // Format: (modality {} token {}) attends to (modality {} token {}) — highest value after normalization
             if (activeArc) {
               caption.innerHTML = `<span style="color:${activeArc.color}; font-weight:600;">(modality ${activeArc.srcMod} token "${activeArc.srcTok}")</span> attends to <span style="color:${activeArc.tgtColor}; font-weight:600;">(modality ${activeArc.tgtMod} token "${activeArc.tgtTok}")</span> &mdash; highest value after normalization`;
             } else {
-              caption.innerHTML = '= Attention Matrix A = 16&times;16 fully connected graph &middot; <span class="caption-op exp">softmax</span> normalizes each row (row sum = 1.0)';
+              caption.innerHTML = '= Attention Matrix A = 20&times;20 fully connected graph &middot; <span class="caption-op exp">softmax</span> normalizes each row (row sum = 1.0)';
             }
 
             drawMatrix('#58a6ff', 'rgba(88, 166, 255, 0.18)', data.prob, 0, null, 1, '#e6edf3', 1, true, 'prob');
 
-            // Draw Attention Spotlight ring on active cell in matrix
             if (activeArc) {
               const spotX = geom.colX[activeArc.tgt];
               const spotY = geom.rowY[activeArc.src];
@@ -11756,7 +12114,6 @@
               ctx.arc(spotX, spotY, geom.cellR * 1.5, 0, Math.PI * 2);
               ctx.stroke();
 
-              // Ray connecting matrix cell to target token below
               ctx.strokeStyle = `rgba(163, 113, 247, 0.40)`;
               ctx.lineWidth = 1.0;
               ctx.setLineDash([3, 3]);
@@ -11770,11 +12127,11 @@
           }
 
           // ==========================================
-          // PHASE 9: Values slide down all the way through all rows & multiply with orange flash (22400 to 25600ms)
+          // PHASE 9: Values slide down all the way through all rows & multiply with orange flash (24400 to 27600ms)
           // ==========================================
-          if (p2_time >= 22400 && p2_time < 25600) {
+          if (p2_time >= 24400 && p2_time < 27600) {
             updateMathHighlight('val-orange');
-            const p = (p2_time - 22400) / 3200;
+            const p = (p2_time - 24400) / 3200;
             caption.innerHTML = '<span class="caption-op val" style="color:#58a6ff;">weight values using attention matrix</span> &rarr; <span class="caption-op mul" style="color:#f0883e;">&times; multiply</span> values by attention weights';
 
             drawGridOutline(0.75);
@@ -11783,13 +12140,11 @@
 
             if (isDescent) {
               const easeSub = easeInOut(p / 0.45);
-              // Attention Matrix visible underneath
               drawMatrix('#58a6ff', 'rgba(88, 166, 255, 0.18)', data.prob, 0, null, 0.75, '#e6edf3', 1, true, 'prob');
 
-              // Values slide all the way down across all rows i=0..15!
-              for (let i = 0; i < 16; i++) {
+              for (let i = 0; i < 20; i++) {
                 const curY = lerp(geom.valParkedY, geom.rowY[i], easeSub);
-                for (let j = 0; j < 16; j++) {
+                for (let j = 0; j < 20; j++) {
                   const vx = geom.colX[j];
                   const curX = vx + (0.82 * geom.depthLen) / 2 * (1 - easeSub);
                   const vColor = getModalityColor(j);
@@ -11798,9 +12153,9 @@
                 }
               }
               const leftV = geom.colX[0] - colBracketW / 2 - 4 * s;
-              const rightV = geom.colX[15] + colBracketW / 2 + 4 * s;
+              const rightV = geom.colX[19] + colBracketW / 2 + 4 * s;
               const topY = lerp(geom.valParkedY, geom.rowY[0], easeSub);
-              const botY = lerp(geom.valParkedY, geom.rowY[15], easeSub);
+              const botY = lerp(geom.valParkedY, geom.rowY[19], easeSub);
               drawBracket(leftV, (topY + botY) / 2, Math.max(colBracketH, botY - topY + colBracketH), true);
               drawBracket(rightV, (topY + botY) / 2, Math.max(colBracketH, botY - topY + colBracketH), false);
             } else if (isCollision) {
@@ -11810,8 +12165,8 @@
               const flashGlow = 16 * orangePulse;
               const scaleR = 1.05 + 0.22 * orangePulse;
 
-              for (let i = 0; i < 16; i++) {
-                for (let j = 0; j < 16; j++) {
+              for (let i = 0; i < 20; i++) {
+                for (let j = 0; j < 20; j++) {
                   const cx = geom.colX[j];
                   const cy = geom.rowY[i];
                   const bLabels = (data.broadcast && data.broadcast[i] && data.broadcast[i][j]) ? data.broadcast[i][j] : null;
@@ -11821,9 +12176,8 @@
               drawBracket(geom.matL, geom.matCenterY, geom.matHBrack, true, 1.0, '#f0883e');
               drawBracket(geom.matR, geom.matCenterY, geom.matHBrack, false, 1.0, '#f0883e');
             } else {
-              // Settle into weighted vectors
-              for (let i = 0; i < 16; i++) {
-                for (let j = 0; j < 16; j++) {
+              for (let i = 0; i < 20; i++) {
+                for (let j = 0; j < 20; j++) {
                   const cx = geom.colX[j];
                   const cy = geom.rowY[i];
                   const pWeight = data.probNums[i][j];
@@ -11838,26 +12192,26 @@
           }
 
           // ==========================================
-          // PHASE 10: Sum values across columns -> Output vectors O (25600 to 29200ms)
+          // PHASE 10: Sum values across columns -> Output vectors O (27600 to 31200ms)
           // ==========================================
-          if (p2_time >= 25600 && p2_time < 29200) {
+          if (p2_time >= 27600 && p2_time < 31200) {
             updateMathHighlight('val-green');
             caption.innerHTML = '<span class="caption-op val" style="color:#58a6ff;">weight values using attention matrix</span> &rarr; <span class="caption-op add" style="color:#3fb950;">&sum; sum</span> &rarr; <span style="color:#79c0ff;">output vectors O</span>';
 
             drawGridOutline(0.75);
-            const p = (p2_time - 25600) / 3600;
+            const p = (p2_time - 27600) / 3600;
             const pSum = easeInOut(Math.min(1, p / 0.65));
             const isSummed = p >= 0.65;
             const flash = isSummed ? Math.sin(((p - 0.65) / 0.35) * Math.PI) : 0;
             const glow = 14 * flash;
 
-            for (let i = 0; i < 16; i++) {
+            for (let i = 0; i < 20; i++) {
               const cy = geom.rowY[i];
               if (isSummed) {
                 const oLabels = data.out[i];
                 drawDepthVector(geom.rightOutX + (0.82 * geom.depthLen) / 2, cy + (0.57 * geom.depthLen) / 2, d, geom.depthLen, '#3fb950', 'rgba(63, 185, 80, 0.28)', oLabels, 1, 0, 1 + 0.15 * flash, 'vector', glow, '#3fb950');
               } else {
-                for (let j = 0; j < 16; j++) {
+                for (let j = 0; j < 20; j++) {
                   const curX = lerp(geom.colX[j], geom.rightOutX, pSum);
                   const pWeight = data.probNums[i][j];
                   const bLabels = (data.broadcast && data.broadcast[i] && data.broadcast[i][j]) ? data.broadcast[i][j] : null;
@@ -11870,8 +12224,8 @@
               const pNorm = Math.min(1, p / 0.65);
               for (let k = 0; k < PRIMARY_ATTENTION_ARCS.length; k++) {
                 const arc = PRIMARY_ATTENTION_ARCS[k];
-                const startOffset = k * 0.045;
-                const duration = 0.86;
+                const startOffset = k * 0.04;
+                const duration = 0.84;
                 const localP = clamp((pNorm - startOffset) / duration, 0, 1);
                 if (localP > 0.01 && localP <= 1.0) {
                   drawTokenHemicircleLiftoff(arc.tgt, arc.src, localP, arc.tgtColor || arc.color, 1.0);
@@ -11881,7 +12235,7 @@
 
             if (isSummed) {
               const topO = geom.rowY[0] - rowBracketH / 2;
-              const botO = geom.rowY[15] + rowBracketH / 2;
+              const botO = geom.rowY[19] + rowBracketH / 2;
               drawBracket(geom.rightOutX - rowBracketW / 2 - 4 * s, (topO + botO) / 2, botO - topO, true);
               drawBracket(geom.rightOutX + rowBracketW / 2 + 4 * s, (topO + botO) / 2, botO - topO, false);
               drawLabel("output", geom.rightOutX, geom.rowY[0] - rowBracketH / 2 - 14 * s, "#58a6ff", "center");
@@ -11890,23 +12244,23 @@
           }
 
           // ==========================================
-          // PHASE 11: Output vectors O loop back (29200 to 33000ms)
+          // PHASE 11: Output vectors O loop back (31200 to 35000ms)
           // ==========================================
-          if (p2_time >= 29200) {
+          if (p2_time >= 31200) {
             updateMathHighlight(null);
             caption.innerHTML = 'output vectors <span style="color:#58a6ff; font-weight:600;">O</span> loop back &rarr; a <span style="color:#58a6ff; font-weight:600;">Multimodal Transformer</span> is just attention done in a loop';
 
-            const p = (p2_time - 29200) / 3800;
+            const p = (p2_time - 31200) / 3800;
             const easeP = easeInOut(Math.min(1, p));
 
             const topO = geom.rowY[0] - rowBracketH / 2;
-            const botO = geom.rowY[15] + rowBracketH / 2;
+            const botO = geom.rowY[19] + rowBracketH / 2;
             const curOX = lerp(geom.rightOutX, 0, easeP);
 
             drawBracket(curOX - rowBracketW / 2 - 4 * s, (topO + botO) / 2, botO - topO, true);
             drawBracket(curOX + rowBracketW / 2 + 4 * s, (topO + botO) / 2, botO - topO, false);
 
-            for (let i = 0; i < 16; i++) {
+            for (let i = 0; i < 20; i++) {
               const cy = geom.rowY[i];
               const curX = lerp(geom.rightOutX, 0, easeP) + (0.82 * geom.depthLen) / 2;
               const curY = cy + (0.57 * geom.depthLen) / 2;

@@ -1534,6 +1534,85 @@
       right: 1.25rem;
       z-index: 9999;
       font-family: var(--font-mono);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .exp-btn-fab {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 1px solid rgba(248, 81, 73, 0.55);
+      color: var(--accent-red);
+      font-family: inherit;
+      font-style: italic;
+      font-weight: 700;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+      transition: var(--transition-fast);
+      outline: none;
+      padding: 0;
+    }
+
+    .exp-btn-fab:hover,
+    .exp-btn-fab.active {
+      background: rgba(248, 81, 73, 0.18);
+      border-color: var(--accent-red);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(248, 81, 73, 0.25);
+    }
+
+    .exp-panel {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      right: 0;
+      width: 176px;
+      background: rgba(22, 27, 34, 0.95);
+      border: 1px solid var(--border-default);
+      border-radius: 10px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(16px);
+      padding: 8px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .exp-panel .calc-title {
+      text-transform: none;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      letter-spacing: 0;
+      font-style: italic;
+    }
+
+    .exp-canvas {
+      display: block;
+      border-radius: 6px;
+      background: var(--bg-surface);
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    .exp-readout {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      padding: 0 2px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .exp-ro-val {
+      color: var(--text-primary);
+      font-weight: 600;
     }
 
     .calc-btn-fab {
@@ -2150,6 +2229,7 @@
   </main>
 
   <div class="calc-dock" id="calc-dock">
+    <button class="exp-btn-fab" id="exp-toggle-btn" aria-label="Toggle exponential graph" title="Exponential graph">e</button>
     <button class="calc-btn-fab" id="calc-toggle-btn" aria-label="Toggle calculator" title="Calculator">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="4" y="2" width="16" height="20" rx="2"></rect>
@@ -2191,6 +2271,17 @@
         <button class="calc-key num zero" data-action="num" data-val="0">0</button>
         <button class="calc-key num" data-action="dot">.</button>
         <button class="calc-key op-eq" data-action="eq">=</button>
+      </div>
+    </div>
+    <div class="exp-panel" id="exp-panel" style="display: none;">
+      <div class="calc-header">
+        <span class="calc-title">y = e<sup>x</sup></span>
+        <button class="calc-close-btn" id="exp-close-btn" aria-label="Close exponential graph">&times;</button>
+      </div>
+      <canvas class="exp-canvas" id="exp-canvas"></canvas>
+      <div class="exp-readout">
+        <span>x = <b class="exp-ro-val" id="exp-ro-x">&ndash;</b></span>
+        <span>y = <b class="exp-ro-val" id="exp-ro-y">&ndash;</b></span>
       </div>
     </div>
   </div>
@@ -4220,7 +4311,10 @@
         is_open = typeof open_state === 'boolean' ? open_state : !is_open;
         if (panel) panel.style.display = is_open ? 'flex' : 'none';
         if (toggle_btn) toggle_btn.classList.toggle('active', is_open);
+        if (is_open && typeof window.__closeExpGraph === 'function') window.__closeExpGraph();
       }
+
+      window.__closeCalcPanel = () => toggle_calc(false);
 
       if (toggle_btn) {
         toggle_btn.addEventListener('click', (e) => {
@@ -4384,6 +4478,146 @@
     }
 
     init_calculator();
+
+    // exponential graph (tiny e popup)
+    function init_exp_graph() {
+      const toggle_btn = document.getElementById('exp-toggle-btn');
+      const close_btn = document.getElementById('exp-close-btn');
+      const panel = document.getElementById('exp-panel');
+      const canvas = document.getElementById('exp-canvas');
+      const ro_x = document.getElementById('exp-ro-x');
+      const ro_y = document.getElementById('exp-ro-y');
+      const dock = document.getElementById('calc-dock');
+      if (!toggle_btn || !panel || !canvas) return;
+
+      const W = 160, H = 110;
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+
+      // visible window: x in [-4, 2.5], y in [0, 12.5]
+      const X_MIN = -4, X_MAX = 2.5, Y_MAX = 12.5, PAD = 6, SNAP = 16;
+      const plotW = W - 2 * PAD, plotH = H - 2 * PAD;
+      const x_px = (x) => PAD + ((x - X_MIN) / (X_MAX - X_MIN)) * plotW;
+      const y_px = (y) => H - PAD - (Math.min(y, Y_MAX) / Y_MAX) * plotH;
+
+      let is_open = false;
+      const fmt = (v, d) => String(parseFloat(v.toFixed(d)));
+
+      function draw(state) {
+        ctx.clearRect(0, 0, W, H);
+
+        // axes
+        ctx.strokeStyle = 'rgba(110, 118, 129, 0.35)';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(PAD - 3, y_px(0)); ctx.lineTo(W - PAD + 3, y_px(0)); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x_px(0), H - PAD + 3); ctx.lineTo(x_px(0), PAD - 3); ctx.stroke();
+
+        // curve y = e^x
+        ctx.strokeStyle = '#f85149';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        for (let i = 0; i <= plotW; i++) {
+          const x = X_MIN + (i / plotW) * (X_MAX - X_MIN);
+          const px = PAD + i, py = y_px(Math.exp(x));
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+
+        if (!state) return;
+
+        const mx = state.kind === 'left' ? PAD : state.kind === 'right' ? W - PAD : state.px;
+        const my = state.kind === 'left' ? y_px(0) : state.kind === 'right' ? PAD : state.py;
+
+        // guides
+        if (!state.kind) {
+          ctx.setLineDash([2, 2]);
+          ctx.strokeStyle = 'rgba(110, 118, 129, 0.45)';
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(mx, y_px(0)); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(x_px(0), my); ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
+        // marker
+        ctx.beginPath(); ctx.arc(mx, my, 3, 0, Math.PI * 2);
+        ctx.fillStyle = '#f85149'; ctx.fill();
+        ctx.strokeStyle = '#0d1117'; ctx.lineWidth = 1; ctx.stroke();
+      }
+
+      function set_state(state) {
+        if (state && state.kind === 'left') {
+          ro_x.textContent = '\u2212\u221e';   // x -> -inf
+          ro_y.textContent = '0';              // y -> 0
+        } else if (state && state.kind === 'right') {
+          ro_x.textContent = '+\u221e';
+          ro_y.textContent = '+\u221e';
+        } else if (state) {
+          const x = X_MIN + ((state.px - PAD) / plotW) * (X_MAX - X_MIN);
+          const y = Math.exp(x);
+          ro_x.textContent = fmt(x, 2);
+          ro_y.textContent = fmt(y, y < 1 ? 3 : 2);
+        } else {
+          ro_x.textContent = '\u2013';
+          ro_y.textContent = '\u2013';
+        }
+        draw(state);
+      }
+
+      function on_move(e) {
+        const rect = canvas.getBoundingClientRect();
+        const px = (e.clientX - rect.left) * (W / rect.width);
+        if (px <= SNAP) return set_state({ kind: 'left' });    // snap to -inf, 0
+        if (px >= W - SNAP) return set_state({ kind: 'right' }); // snap to +inf, +inf
+        const x = X_MIN + ((px - PAD) / plotW) * (X_MAX - X_MIN);
+        set_state({ px, py: y_px(Math.exp(x)) });
+      }
+
+      canvas.addEventListener('pointermove', on_move);
+      canvas.addEventListener('pointerdown', on_move);
+      canvas.addEventListener('pointerleave', () => set_state(null));
+      canvas.addEventListener('pointerup', (e) => { if (e.pointerType === 'touch') set_state(null); });
+
+      function toggle_exp(open_state) {
+        is_open = typeof open_state === 'boolean' ? open_state : !is_open;
+        panel.style.display = is_open ? 'flex' : 'none';
+        toggle_btn.classList.toggle('active', is_open);
+        if (is_open) {
+          if (typeof window.__closeCalcPanel === 'function') window.__closeCalcPanel();
+          set_state(null);
+        }
+      }
+
+      window.__closeExpGraph = () => toggle_exp(false);
+
+      toggle_btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggle_exp();
+      });
+
+      if (close_btn) {
+        close_btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggle_exp(false);
+        });
+      }
+
+      document.addEventListener('click', (e) => {
+        if (is_open && dock && !dock.contains(e.target)) {
+          toggle_exp(false);
+        }
+      });
+
+      window.addEventListener('keydown', (e) => {
+        if (is_open && e.key === 'Escape') toggle_exp(false);
+      });
+    }
+
+    init_exp_graph();
 
       function createMagnitudeGradient(ctx, x, y, r, val, baseColor = '#58a6ff', alpha = 1, category = 'default') {
         const num = typeof val === 'number' ? val : parseFloat(val);

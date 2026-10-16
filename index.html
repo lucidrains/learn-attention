@@ -1890,7 +1890,7 @@
           <span>dimension (power of 2)</span>
           <span class="slider-val" id="slider-label">4</span>
         </div>
-        <input type="range" id="dim-slider" min="0" max="6" value="0" step="1" />
+        <input type="range" id="dim-slider" min="0" max="7" value="1" step="1" />
       </div>
 
       <div class="canvas-stage" id="canvas-stage" title="Click to replay">
@@ -1936,7 +1936,7 @@
           <span>dimension (power of 2)</span>
           <span class="slider-val" id="softmax-slider-label">4</span>
         </div>
-        <input type="range" id="softmax-dim-slider" min="0" max="6" value="0" step="1" />
+        <input type="range" id="softmax-dim-slider" min="0" max="7" value="1" step="1" />
       </div>
 
       <div class="canvas-stage" id="softmax-canvas-stage" title="Click to replay">
@@ -4445,8 +4445,8 @@
 
       // stage 1: dot product
       (function initDotCanvasAnimation() {
-        const POWERS = [4, 8, 16, 32, 64, 128, 256];
-        let currentPowerIdx = 0;
+        const POWERS = [2, 4, 8, 16, 32, 64, 128, 256];
+        let currentPowerIdx = 1;
         let N = POWERS[currentPowerIdx];
 
         const slider = document.getElementById('dim-slider');
@@ -4893,8 +4893,8 @@
 
       // stage 2: softmax
       (function initSoftmaxCanvasAnimation() {
-        const POWERS = [4, 8, 16, 32, 64, 128, 256];
-        let currentPowerIdx = 0;
+        const POWERS = [2, 4, 8, 16, 32, 64, 128, 256];
+        let currentPowerIdx = 1;
         let N = POWERS[currentPowerIdx];
 
         const slider = document.getElementById('softmax-dim-slider');

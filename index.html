@@ -2438,11 +2438,27 @@
       ctx.restore();
     }
 
+    const CAPTION_HTML_CACHE = new WeakMap();
+    // skip innerHTML re-parse when the caption string is unchanged (called every frame)
+    function setCaption(el, html) {
+      if (!el || CAPTION_HTML_CACHE.get(el) === html) return;
+      CAPTION_HTML_CACHE.set(el, html);
+      el.innerHTML = html;
+    }
+
+    const VECTOR_LAYOUT_CACHE = new Map();
     function getVectorLayout(count, isVertical, length, s = 1, maxCircleR = 999) {
+      const key = count + '|' + (isVertical ? 1 : 0) + '|' + length.toFixed(3) + '|' + s.toFixed(3) + '|' + maxCircleR.toFixed(3);
+      const cached = VECTOR_LAYOUT_CACHE.get(key);
+      if (cached) return cached;
+      if (VECTOR_LAYOUT_CACHE.size > 64) VECTOR_LAYOUT_CACHE.clear();
+
       const points = [];
       if (count === 1) {
         const r = Math.min(13.0 * s, maxCircleR);
-        return { points: [{ x: 0, y: 0, r }], r, length: 2 * r, extentW: 2 * r, extentH: 2 * r };
+        const single = { points: [{ x: 0, y: 0, r }], r, length: 2 * r, extentW: 2 * r, extentH: 2 * r };
+        VECTOR_LAYOUT_CACHE.set(key, single);
+        return single;
       }
       if (count <= 8) {
         const spacing = length / count;
@@ -2453,7 +2469,9 @@
           const offset = start + i * spacing;
           points.push({ x: isVertical ? 0 : offset, y: isVertical ? offset : 0, r });
         }
-        return { points, r, length, extentW: isVertical ? 2 * r : length, extentH: isVertical ? length : 2 * r };
+        const laid = { points, r, length, extentW: isVertical ? 2 * r : length, extentH: isVertical ? length : 2 * r };
+        VECTOR_LAYOUT_CACHE.set(key, laid);
+        return laid;
       }
       const maxPts = Math.min(count, 48);
       const spacing = length / maxPts;
@@ -2466,7 +2484,9 @@
         const laneOffset = (lane - (Math.ceil(count / 48) - 1) / 2) * (r * 2.4);
         points.push({ x: isVertical ? laneOffset : offset, y: isVertical ? offset : laneOffset, r });
       }
-      return { points, r, length, extentW: isVertical ? 20 * s : length + 2 * r, extentH: isVertical ? length + 2 * r : 20 * s };
+      const laid = { points, r, length, extentW: isVertical ? 20 * s : length + 2 * r, extentH: isVertical ? length + 2 * r : 20 * s };
+      VECTOR_LAYOUT_CACHE.set(key, laid);
+      return laid;
     }
 
     function setup_quiz_accordion(toggle_btn, panel_el, input_el, on_open) {
@@ -4619,7 +4639,20 @@
 
     init_exp_graph();
 
+      // memoized magnitude->style lookup: output depends only on (category, baseColor, val, alpha bucket)
+      const MAG_GRAD_CACHE = new Map();
       function createMagnitudeGradient(ctx, x, y, r, val, baseColor = '#58a6ff', alpha = 1, category = 'default') {
+        const alphaQ = alpha >= 1 ? 64 : Math.max(1, Math.round(alpha * 64));
+        const colorKey = typeof baseColor === 'string' ? baseColor : (Array.isArray(baseColor) ? baseColor.join(',') : String(baseColor));
+        let byColor = MAG_GRAD_CACHE.get(category);
+        if (!byColor) { byColor = new Map(); MAG_GRAD_CACHE.set(category, byColor); }
+        let byVal = byColor.get(colorKey);
+        if (!byVal) { byVal = new Map(); byColor.set(colorKey, byVal); }
+        let bucket = byVal.get(val);
+        if (!bucket) { bucket = []; byVal.set(val, bucket); }
+        const cachedGrad = bucket[alphaQ];
+        if (cachedGrad) return cachedGrad;
+
         const num = typeof val === 'number' ? val : parseFloat(val);
         const isNeg = !isNaN(num) && num < 0;
         const mag = isNaN(num) ? 1.0 : Math.abs(num);
@@ -4636,7 +4669,9 @@
           const textColor = p > 0.55 ? '#ffffff' : (p > 0.20 ? '#c9d1d9' : '#7d8590');
           const glowBlur = p > 0.45 ? Math.round(8 * (p - 0.45) * 1.8) : 0;
           const glowColor = p > 0.45 ? `rgba(121, 192, 255, ${(0.65 * p).toFixed(2)})` : null;
-          return { grad, strokeColor, glowBlur, glowColor, textColor, t: p };
+          const info = { grad, strokeColor, glowBlur, glowColor, textColor, t: p };
+          bucket[alphaQ] = info;
+          return info;
         }
 
         let maxRef = 3.0;
@@ -4674,7 +4709,9 @@
         const glowColor = null;
         const textColor = isNeg ? (t < 0.20 ? '#8b949e' : '#b8bed6') : (t < 0.20 ? '#8b949e' : '#c9d1d9');
 
-        return { grad, strokeColor, glowBlur, glowColor, textColor, t };
+        const info = { grad, strokeColor, glowBlur, glowColor, textColor, t };
+        bucket[alphaQ] = info;
+        return info;
       }
 
       // stage 1: dot product
@@ -4694,7 +4731,7 @@
         const ctx = canvas.getContext('2d');
         let width = 0;
         let height = 0;
-        let dpr = window.devicePixelRatio || 1;
+        let dpr = Math.min(2, window.devicePixelRatio || 1);
 
         function resize() {
           const rect = canvas.getBoundingClientRect();
@@ -4904,7 +4941,7 @@
 
           if (ms < 1200) {
             caption.style.opacity = '1';
-            caption.innerHTML = `Two vectors of ${N.toLocaleString()}`;
+            setCaption(caption, `Two vectors of ${N.toLocaleString()}`);
 
             drawBracket(bracketL, Y_TOP, bracketH, true);
             drawBracket(bracketR, Y_TOP, bracketH, false);
@@ -4917,7 +4954,7 @@
           }
 
           if (ms >= 1200 && ms < 2700) {
-            caption.innerHTML = '<span class="caption-op mul">&times; multiply</span> pairwise';
+            setCaption(caption, '<span class="caption-op mul">&times; multiply</span> pairwise');
 
             const p = (ms - 1200) / 1500;
             const moveProgress = Math.min(1, p / 0.75);
@@ -4950,7 +4987,7 @@
           }
 
           if (ms >= 2700 && ms < 3800) {
-            caption.innerHTML = `${N.toLocaleString()} products &rarr; <span class="caption-op add">+ add</span> together`;
+            setCaption(caption, `${N.toLocaleString()} products &rarr; <span class="caption-op add">+ add</span> together`);
 
             drawBracket(bracketL, Y_MID, bracketH, true);
             drawBracket(bracketR, Y_MID, bracketH, false);
@@ -4960,7 +4997,7 @@
           }
 
           if (ms >= 3800 && ms < 5400) {
-            caption.innerHTML = '<span class="caption-op add">+ add</span> together';
+            setCaption(caption, '<span class="caption-op add">+ add</span> together');
             const p = (ms - 3800) / 1600;
             const coalesceProgress = Math.min(1, p / 0.80);
             const ease = coalesceProgress < 1 ? coalesceProgress * coalesceProgress * (3 - 2 * coalesceProgress) : 1;
@@ -5019,7 +5056,7 @@
           }
 
           if (ms >= 5400 && ms < 7000) {
-            caption.innerHTML = '= 1 number <span style="color:#58a6ff; font-weight:400;">(scalar)</span>';
+            setCaption(caption, '= 1 number <span style="color:#58a6ff; font-weight:400;">(scalar)</span>');
 
             ctx.save();
             ctx.translate(centerX, centerY);
@@ -5142,7 +5179,7 @@
         const ctx = canvas.getContext('2d');
         let width = 0;
         let height = 0;
-        let dpr = window.devicePixelRatio || 1;
+        let dpr = Math.min(2, window.devicePixelRatio || 1);
 
         function resize() {
           const rect = canvas.getBoundingClientRect();
@@ -5360,7 +5397,7 @@
 
           if (ms < 1200) {
             caption.style.opacity = '1';
-            caption.innerHTML = `Vector of ${N.toLocaleString()}`;
+            setCaption(caption, `Vector of ${N.toLocaleString()}`);
 
             drawBracket(bracketL, Y_MID, bracketH, true);
             drawBracket(bracketR, Y_MID, bracketH, false);
@@ -5370,7 +5407,7 @@
           }
 
           if (ms >= 1200 && ms < 2600) {
-            caption.innerHTML = '<span class="caption-op exp">exp</span> elementwise &rarr; e<sup>x</sup>';
+            setCaption(caption, '<span class="caption-op exp">exp</span> elementwise &rarr; e<sup>x</sup>');
 
             const p = (ms - 1200) / 1400;
             const flash = Math.sin(p * Math.PI);
@@ -5387,7 +5424,7 @@
           }
 
           if (ms >= 2600 && ms < 3600) {
-            caption.innerHTML = `${N.toLocaleString()} values &rarr; <span class="caption-op add">+ add</span> to sum denominator`;
+            setCaption(caption, `${N.toLocaleString()} values &rarr; <span class="caption-op add">+ add</span> to sum denominator`);
 
             const p = (ms - 2600) / 1000;
             const ease = p * p * (3 - 2 * p);
@@ -5406,7 +5443,7 @@
           }
 
           if (ms >= 3600 && ms < 5200) {
-            caption.innerHTML = '<span class="caption-op add">+ add</span> all &rarr; sum denominator';
+            setCaption(caption, '<span class="caption-op add">+ add</span> all &rarr; sum denominator');
 
             drawBracket(bracketL, Y_TOP, bracketH, true);
             drawBracket(bracketR, Y_TOP, bracketH, false);
@@ -5470,7 +5507,7 @@
           }
 
           if (ms >= 5200 && ms < 6600) {
-            caption.innerHTML = '<span class="caption-op div">&divide; divide</span> each by sum';
+            setCaption(caption, '<span class="caption-op div">&divide; divide</span> each by sum');
 
             const p = (ms - 5200) / 1400;
             const isDivided = p >= 0.40;
@@ -5570,7 +5607,7 @@
 
           if (ms >= 6600 && ms < 7200) {
             caption.style.opacity = '1';
-            caption.innerHTML = `= Vector of ${N.toLocaleString()}`;
+            setCaption(caption, `= Vector of ${N.toLocaleString()}`);
 
             const p = (ms - 6600) / 600;
             const ease = p * p * (3 - 2 * p);
@@ -5593,9 +5630,9 @@
             }
 
             if (greenAlpha > 0.05) {
-              caption.innerHTML = `= Vector of ${N.toLocaleString()} <span style="color:rgba(63, 185, 80, ${greenAlpha.toFixed(2)}); font-weight:400;">(sum = 1.0)</span>`;
+              setCaption(caption, `= Vector of ${N.toLocaleString()} <span style="color:rgba(63, 185, 80, ${greenAlpha.toFixed(2)}); font-weight:400;">(sum = 1.0)</span>`);
             } else {
-              caption.innerHTML = `= Vector of ${N.toLocaleString()}`;
+              setCaption(caption, `= Vector of ${N.toLocaleString()}`);
             }
 
             const fitsRight = (centerX + bracketR + 75 < width - 8);
@@ -5635,7 +5672,7 @@
 
           if (ms >= 9200 && ms < 10400) {
             caption.style.opacity = '1';
-            caption.innerHTML = `= Vector of ${N.toLocaleString()}`;
+            setCaption(caption, `= Vector of ${N.toLocaleString()}`);
 
             drawBracket(bracketL, Y_MID, bracketH, true);
             drawBracket(bracketR, Y_MID, bracketH, false);
@@ -5746,7 +5783,7 @@
         const ctx = canvas.getContext('2d');
         let width = 0;
         let height = 0;
-        let dpr = window.devicePixelRatio || 1;
+        let dpr = Math.min(2, window.devicePixelRatio || 1);
 
         function createThreeAttnRenderer(canvasEl) {
           if (!window.THREE || !canvasEl) return null;
@@ -5834,6 +5871,10 @@
           mesh.frustumCulled = false;
           scene.add(mesh);
 
+          // reused per-frame scratch (avoids re-allocating array storage every frame)
+          const kXScratch = [];
+          const kYScratch = [];
+
           function resize(w, h) {
             renderer.setSize(w, h, false);
             camera.left = -w / 2;
@@ -5863,8 +5904,10 @@
 
             let qX = 0;
             let qkAlpha = 1.0;
-            const kX = [];
-            const kYArr = [];
+            const kX = kXScratch;
+            const kYArr = kYScratch;
+            kX.length = 0;
+            kYArr.length = 0;
 
             if (ms < 1200) {
               qX = 0;
@@ -6063,6 +6106,11 @@
               }
             }
 
+            // upload only the live slice of each buffer (instanceCount can be far below capacity)
+            posAttr.updateRange.count = totalDots * 3;
+            colorAttr.updateRange.count = totalDots * 3;
+            sizeAttr.updateRange.count = totalDots;
+            alphaAttr.updateRange.count = totalDots;
             posAttr.needsUpdate = true;
             colorAttr.needsUpdate = true;
             sizeAttr.needsUpdate = true;
@@ -6236,7 +6284,12 @@
           return String(n).split('').map(c => subs[parseInt(c, 10)] || c).join('');
         }
 
+        // geometry depends only on (tCount, s, canvas size, d) -> memoize so per-frame renders reuse it
+        let gridGeomKey = '';
+        let gridGeomCache = null;
         function getGridGeometry(tCount, s, canvasW, canvasH) {
+          const key = tCount + '|' + s + '|' + canvasW + '|' + canvasH + '|' + d;
+          if (key === gridGeomKey) return gridGeomCache;
           const centerY = 24 * s;
           const maxMatW = Math.min(canvasW ? canvasW - 140 * s : 250 * s, 260 * s);
           const maxMatH = Math.min(canvasH ? canvasH - 150 * s : 220 * s, 230 * s);
@@ -6291,7 +6344,8 @@
           const leftQueryX = matL - estQueryW / 2 - (tCount <= 2 ? 22 * s : 18 * s);
           const rightSumX = matR + (tCount <= 2 ? 44 * s : (tCount <= 4 ? 38 * s : 30 * s));
 
-          return {
+          gridGeomKey = key;
+          gridGeomCache = {
             matW,
             matH,
             matL,
@@ -6312,6 +6366,7 @@
             topKeyY,
             rightSumX
           };
+          return gridGeomCache;
         }
 
         const TOTAL_DURATION = 17400;
@@ -6711,7 +6766,7 @@
           if (ms < 1200) {
             updateAttnMathHighlight(null);
             caption.style.opacity = '1';
-            caption.innerHTML = `vectors &middot; ${T.toLocaleString()} &middot; dim ${d.toLocaleString()}`;
+            setCaption(caption, `vectors &middot; ${T.toLocaleString()} &middot; dim ${d.toLocaleString()}`);
 
             const vecHeaderY = geom.rowY[0] - rowBracketH / 2 - 16 * s;
             drawLabel("vectors", 0, vecHeaderY, "#58a6ff", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`);
@@ -6758,7 +6813,7 @@
 
           if (ms >= 1200 && ms < 2800) {
             updateAttnMathHighlight(null);
-            caption.innerHTML = 'vectors &rarr; separate into <span style="color:#58a6ff;">queries</span> (rows) &amp; <span style="color:#58a6ff;">keys</span> (columns)';
+            setCaption(caption, 'vectors &rarr; separate into <span style="color:#58a6ff;">queries</span> (rows) &amp; <span style="color:#58a6ff;">keys</span> (columns)');
 
             const p = (ms - 1200) / 1600;
             const ease = p * p * (3 - 2 * p);
@@ -6873,7 +6928,7 @@
 
           if (ms >= 2800 && ms < 3600) {
             updateAttnMathHighlight('qk-orange');
-            caption.innerHTML = `Q (rows) &amp; K (columns) &middot; ${T.toLocaleString()} &times; ${T.toLocaleString()} &middot; dim ${d.toLocaleString()}`;
+            setCaption(caption, `Q (rows) &amp; K (columns) &middot; ${T.toLocaleString()} &times; ${T.toLocaleString()} &middot; dim ${d.toLocaleString()}`);
             drawStaticHeaders(1.0);
             if (isWebGL) {
               threeAttn.renderFrame(T, d, ms, geom, width, height, s);
@@ -6900,7 +6955,7 @@
             const contactProg = isContact ? (p - 0.55) / 0.25 : 0;
             const flash = isContact ? Math.sin(contactProg * Math.PI) : 0;
 
-            caption.innerHTML = '<span class="caption-op mul">Dot Product</span>: <span class="caption-op mul">&times; multiply</span> pairwise';
+            setCaption(caption, '<span class="caption-op mul">Dot Product</span>: <span class="caption-op mul">&times; multiply</span> pairwise');
 
             const labelY = geom.matTop - 30 * s;
             const labelFade = Math.min(1, (ms - 3600) / 300);
@@ -7030,7 +7085,7 @@
 
           if (ms >= 5600 && ms < 7600) {
             updateAttnMathHighlight('qk-green');
-            caption.innerHTML = '<span class="caption-op add">Dot Product</span>: <span class="caption-op add">+ sum</span> &rarr; similarity scores';
+            setCaption(caption, '<span class="caption-op add">Dot Product</span>: <span class="caption-op add">+ sum</span> &rarr; similarity scores');
 
             const labelY = geom.matTop - 30 * s;
             drawLabel("dot product", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
@@ -7090,7 +7145,7 @@
           // PHASE 5b: Pause between Dot Product and Softmax (7600 to 8400ms)
           if (ms >= 7600 && ms < 8400) {
             updateAttnMathHighlight('qk-green');
-            caption.innerHTML = '<span class="caption-op add">Dot Product</span>: <span class="caption-op add">+ sum</span> &rarr; similarity scores';
+            setCaption(caption, '<span class="caption-op add">Dot Product</span>: <span class="caption-op add">+ sum</span> &rarr; similarity scores');
 
             const labelY = geom.matTop - 30 * s;
             drawLabel("dot product", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
@@ -7116,7 +7171,7 @@
 
           if (ms >= 8400 && ms < 9800) {
             updateAttnMathHighlight('softmax-red');
-            caption.innerHTML = '<span class="caption-op exp">Softmax</span> (step 1): <span class="caption-op exp">exp</span> elementwise on each row';
+            setCaption(caption, '<span class="caption-op exp">Softmax</span> (step 1): <span class="caption-op exp">exp</span> elementwise on each row');
 
             const labelY = geom.matTop - 30 * s;
             drawLabel("softmax", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
@@ -7138,7 +7193,7 @@
 
           if (ms >= 9800 && ms < 11400) {
             updateAttnMathHighlight('softmax-red');
-            caption.innerHTML = '<span class="caption-op exp">Softmax</span> (step 2): <span class="caption-op add">+ sum</span> each row &rarr; denominators';
+            setCaption(caption, '<span class="caption-op exp">Softmax</span> (step 2): <span class="caption-op add">+ sum</span> each row &rarr; denominators');
 
             const labelY = geom.matTop - 30 * s;
             drawLabel("softmax", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
@@ -7194,7 +7249,7 @@
 
           if (ms >= 11400 && ms < 13000) {
             updateAttnMathHighlight('softmax-purple');
-            caption.innerHTML = '<span class="caption-op exp">Softmax</span> (step 3): <span class="caption-op div">&divide; divide</span> each row by its sum';
+            setCaption(caption, '<span class="caption-op exp">Softmax</span> (step 3): <span class="caption-op div">&divide; divide</span> each row by its sum');
 
             const labelY = geom.matTop - 30 * s;
             drawLabel("softmax", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
@@ -7260,9 +7315,9 @@
             }
 
             if (greenAlpha > 0.05) {
-              caption.innerHTML = `= Attention Matrix A = <span class="caption-op exp">softmax</span>(Q &middot; K<sup>T</sup>) <span style="color:rgba(63, 185, 80, ${greenAlpha.toFixed(2)}); font-weight:400;">(row sum = 1.0)</span>`;
+              setCaption(caption, `= Attention Matrix A = <span class="caption-op exp">softmax</span>(Q &middot; K<sup>T</sup>) <span style="color:rgba(63, 185, 80, ${greenAlpha.toFixed(2)}); font-weight:400;">(row sum = 1.0)</span>`);
             } else {
-              caption.innerHTML = '= Attention Matrix A = <span class="caption-op exp">softmax</span>(Q &middot; K<sup>T</sup>)';
+              setCaption(caption, '= Attention Matrix A = <span class="caption-op exp">softmax</span>(Q &middot; K<sup>T</sup>)');
             }
 
             const probVals = data ? data.prob : null;
@@ -7368,7 +7423,7 @@
         if (!canvasStage || !canvas || !dimSlider || !lenSlider) return;
 
         const ctx = canvas.getContext('2d');
-        const dpr = window.devicePixelRatio || 1;
+        const dpr = Math.min(2, window.devicePixelRatio || 1);
         const LEN_POWERS = [1, 2, 4, 8, 16, 32, 64, 128, 256];
         const DIM_POWERS = [1, 2, 4, 8, 16, 32, 64, 128, 256];
 
@@ -7559,7 +7614,8 @@
             camera.updateMatrixWorld();
 
             const T_vis = Math.min(T_val, 128);
-            geo.instanceCount = 4 * T_vis + T_vis * T_vis;
+            const totalDots = 4 * T_vis + T_vis * T_vis;
+            geo.instanceCount = totalDots;
 
             const stepX = geom.matW / T_vis;
             const dotR = Math.max(1.1, stepX * 0.36);
@@ -7776,6 +7832,11 @@
               }
             }
 
+            // upload only the live slice of each buffer (instanceCount can be far below capacity)
+            posAttr.updateRange.count = totalDots * 3;
+            colorAttr.updateRange.count = totalDots * 3;
+            sizeAttr.updateRange.count = totalDots;
+            alphaAttr.updateRange.count = totalDots;
             posAttr.needsUpdate = true;
             colorAttr.needsUpdate = true;
             sizeAttr.needsUpdate = true;
@@ -7916,7 +7977,12 @@
           return String(n).split('').map(c => subs[parseInt(c, 10)] || c).join('');
         }
 
+        // geometry depends only on (tCount, s, canvas size, d) -> memoize so per-frame renders reuse it
+        let fullGeomKey = '';
+        let fullGeomCache = null;
         function getFullAttentionGeometry(tCount, s, canvasW, canvasH) {
+          const key = tCount + '|' + s + '|' + canvasW + '|' + canvasH + '|' + d;
+          if (key === fullGeomKey) return fullGeomCache;
           const actualCanvasH = canvasH || 540;
           const centerY_canvas = actualCanvasH / 2 + 10 * s;
 
@@ -8013,7 +8079,9 @@
           const rightSumX = matR + (tCount <= 2 ? 46 * s : (tCount <= 4 ? 40 * s : 32 * s));
           const rightOutX = matR + estQueryW / 2 + (tCount <= 2 ? 28 * s : 22 * s);
 
-          return { matW, matH, matL, matR, matTop: Y_mat_top - centerY_canvas, matBot: Y_mat_bot - centerY_canvas, matHBrack, matCenterY, colX, rowY, cellW: stepX * (tCount <= 4 ? 0.92 : 0.96), cellH: stepY * (tCount <= 4 ? 0.88 : 0.96), cellR, stepX, stepY, T_calc, leftQueryX, topKeyY, topValY, valParkedY, rightSumX, rightOutX };
+          fullGeomKey = key;
+          fullGeomCache = { matW, matH, matL, matR, matTop: Y_mat_top - centerY_canvas, matBot: Y_mat_bot - centerY_canvas, matHBrack, matCenterY, colX, rowY, cellW: stepX * (tCount <= 4 ? 0.92 : 0.96), cellH: stepY * (tCount <= 4 ? 0.88 : 0.96), cellR, stepX, stepY, T_calc, leftQueryX, topKeyY, topValY, valParkedY, rightSumX, rightOutX };
+          return fullGeomCache;
         }
 
         const TOTAL_DURATION = 25800;
@@ -8476,7 +8544,7 @@
           if (ms < 1200) {
             updateMathHighlight(null);
             caption.style.opacity = '1';
-            caption.innerHTML = `vectors &middot; ${T.toLocaleString()} &middot; dim ${d.toLocaleString()}`;
+            setCaption(caption, `vectors &middot; ${T.toLocaleString()} &middot; dim ${d.toLocaleString()}`);
 
             const vecHeaderY = geom.rowY[0] - rowBracketH / 2 - 16 * s;
             drawLabel("vectors", 0, vecHeaderY, "#58a6ff", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`);
@@ -8530,7 +8598,7 @@
           // phase 2 - separate q, k, v
           if (ms >= 1200 && ms < 2800) {
             updateMathHighlight(null);
-            caption.innerHTML = 'vectors &rarr; separate into <span style="color:#58a6ff;">queries</span> (rows), <span style="color:#58a6ff;">keys</span> &amp; <span style="color:#58a6ff;">values</span> (columns)';
+            setCaption(caption, 'vectors &rarr; separate into <span style="color:#58a6ff;">queries</span> (rows), <span style="color:#58a6ff;">keys</span> &amp; <span style="color:#58a6ff;">values</span> (columns)');
 
             const ease = easeInOut((ms - 1200) / 1600);
             drawGridOutline(ease * 0.85);
@@ -8656,7 +8724,7 @@
           // phase 3 - static q, k, v
           if (ms >= 2800 && ms < 3600) {
             updateMathHighlight(null);
-            caption.innerHTML = `<span style="color:#58a6ff;">queries</span> Q (rows), <span style="color:#58a6ff;">keys</span> K &amp; <span style="color:#58a6ff;">values</span> V (columns)`;
+            setCaption(caption, `<span style="color:#58a6ff;">queries</span> Q (rows), <span style="color:#58a6ff;">keys</span> K &amp; <span style="color:#58a6ff;">values</span> V (columns)`);
             drawStaticHeaders(1.0);
             drawValuesAtPosition(geom.topValY, 1.0);
             if (isWebGL) {
@@ -8689,7 +8757,7 @@
             const contactProg = isContact ? (p - 0.55) / 0.25 : 0;
             const flash = isContact ? Math.sin(contactProg * Math.PI) : 0;
 
-            caption.innerHTML = '<span class="caption-op mul">Dot Product</span>: <span class="caption-op mul">&times; multiply</span> pairwise';
+            setCaption(caption, '<span class="caption-op mul">Dot Product</span>: <span class="caption-op mul">&times; multiply</span> pairwise');
 
             const labelY = geom.matTop - 30 * s;
             drawLabel("dot product", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, Math.min(1, (ms - 3600) / 300));
@@ -8789,7 +8857,7 @@
           // phase 5 - similarity matrix
           if (ms >= 5600 && ms < 7600) {
             updateMathHighlight('qk-green');
-            caption.innerHTML = '<span class="caption-op add">Dot Product</span>: <span class="caption-op add">+ sum</span> &rarr; similarity scores';
+            setCaption(caption, '<span class="caption-op add">Dot Product</span>: <span class="caption-op add">+ sum</span> &rarr; similarity scores');
 
             const labelY = geom.matTop - 30 * s;
             drawLabel("dot product", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
@@ -8849,7 +8917,7 @@
           // phase 5b - pause
           if (ms >= 7600 && ms < 8400) {
             updateMathHighlight('qk-green');
-            caption.innerHTML = '<span class="caption-op add">Dot Product</span>: <span class="caption-op add">+ sum</span> &rarr; similarity scores';
+            setCaption(caption, '<span class="caption-op add">Dot Product</span>: <span class="caption-op add">+ sum</span> &rarr; similarity scores');
 
             const labelY = geom.matTop - 30 * s;
             drawLabel("dot product", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
@@ -8877,7 +8945,7 @@
           // phase 6 - softmax exp
           if (ms >= 8400 && ms < 9800) {
             updateMathHighlight('softmax-red');
-            caption.innerHTML = '<span class="caption-op exp">Softmax</span> (step 1): <span class="caption-op exp">exp</span> elementwise on each row';
+            setCaption(caption, '<span class="caption-op exp">Softmax</span> (step 1): <span class="caption-op exp">exp</span> elementwise on each row');
 
             const labelY = geom.matTop - 30 * s;
             drawLabel("softmax", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
@@ -8901,7 +8969,7 @@
           // phase 7 - softmax row sum
           if (ms >= 9800 && ms < 11400) {
             updateMathHighlight('softmax-red');
-            caption.innerHTML = '<span class="caption-op exp">Softmax</span> (step 2): <span class="caption-op add">+ sum</span> each row &rarr; denominators';
+            setCaption(caption, '<span class="caption-op exp">Softmax</span> (step 2): <span class="caption-op add">+ sum</span> each row &rarr; denominators');
 
             const labelY = geom.matTop - 30 * s;
             drawLabel("softmax", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
@@ -8966,7 +9034,7 @@
           // phase 8 - softmax divide
           if (ms >= 11400 && ms < 13000) {
             updateMathHighlight('softmax-purple');
-            caption.innerHTML = '<span class="caption-op exp" style="color:#a371f7;">Softmax</span> (step 3): <span class="caption-op div" style="color:#a371f7;">&divide; divide</span> each row by its sum &rarr; <span style="color:#a371f7;">Attention Matrix A</span>';
+            setCaption(caption, '<span class="caption-op exp" style="color:#a371f7;">Softmax</span> (step 3): <span class="caption-op div" style="color:#a371f7;">&divide; divide</span> each row by its sum &rarr; <span style="color:#a371f7;">Attention Matrix A</span>');
 
             const labelY = geom.matTop - 30 * s;
             drawLabel("softmax", 0, labelY, "#a371f7", "center", `400 ${Math.round(11 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`, 1);
@@ -9047,9 +9115,9 @@
             const greenAlpha = ms >= 14200 ? Math.max(0, 1 - (ms - 14200) / 600) : 1.0;
 
             if (greenAlpha > 0.05) {
-              caption.innerHTML = `= Attention Matrix A = <span class="caption-op exp">softmax</span>(Q &middot; K<sup>T</sup>) <span style="color:rgba(63, 185, 80, ${greenAlpha.toFixed(2)}); font-weight:400;">(row sum = 1.0)</span>`;
+              setCaption(caption, `= Attention Matrix A = <span class="caption-op exp">softmax</span>(Q &middot; K<sup>T</sup>) <span style="color:rgba(63, 185, 80, ${greenAlpha.toFixed(2)}); font-weight:400;">(row sum = 1.0)</span>`);
             } else {
-              caption.innerHTML = '= Attention Matrix A = <span class="caption-op exp">softmax</span>(Q &middot; K<sup>T</sup>)';
+              setCaption(caption, '= Attention Matrix A = <span class="caption-op exp">softmax</span>(Q &middot; K<sup>T</sup>)');
             }
 
             const probVals = data ? data.prob : null;
@@ -9097,7 +9165,7 @@
           if (ms >= 14800 && ms < 18000) {
             updateMathHighlight('val-orange');
             const p = (ms - 14800) / 3200;
-            caption.innerHTML = '<span class="caption-op val" style="color:#58a6ff;">weight and sum values using attention matrix</span> &rarr; <span class="caption-op mul">&times; multiply</span> values by attention weights';
+            setCaption(caption, '<span class="caption-op val" style="color:#58a6ff;">weight and sum values using attention matrix</span> &rarr; <span class="caption-op mul">&times; multiply</span> values by attention weights');
             drawGridOutline(0.75);
 
             const labelY = geom.matTop - (T <= 2 ? 38 * s : 32 * s);
@@ -9172,7 +9240,7 @@
           if (ms >= 18000 && ms < 21000) {
             updateMathHighlight('val-green');
             const p = (ms - 18000) / 3000;
-            caption.innerHTML = '<span class="caption-op val" style="color:#58a6ff;">weight and sum values using attention matrix</span> &rarr; <span class="caption-op add">&sum; sum</span> &rarr; output vectors <span class="caption-op out">O</span>';
+            setCaption(caption, '<span class="caption-op val" style="color:#58a6ff;">weight and sum values using attention matrix</span> &rarr; <span class="caption-op add">&sum; sum</span> &rarr; output vectors <span class="caption-op out">O</span>');
             drawGridOutline(0.5);
 
             const labelY = geom.matTop - (T <= 2 ? 38 * s : 32 * s);
@@ -9256,7 +9324,7 @@
           if (ms >= 21000) {
             updateMathHighlight(null);
             const p = (ms - 21000) / 4800;
-            caption.innerHTML = 'output vectors <span class="caption-op out">O</span> loop back &rarr; a <span style="color:#79c0ff; font-weight:600;">Transformer</span> is just attention done in a loop';
+            setCaption(caption, 'output vectors <span class="caption-op out">O</span> loop back &rarr; a <span style="color:#79c0ff; font-weight:600;">Transformer</span> is just attention done in a loop');
 
             // Fade out the "output" header and row labels as the vectors leave
             const outFade = Math.max(0, 1 - (p / 0.35));
@@ -9373,11 +9441,11 @@
 
         if (!canvasStage || !canvas) return;
 
-        const ctx = canvas.getContext('2d');
-        const dpr = window.devicePixelRatio || 1;
+        let ctx = canvas.getContext('2d');
+        const dpr = Math.min(2, window.devicePixelRatio || 1);
         const SANS_FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
 
-        const T = 20;
+        const T = 24;
         const d = 4;
         let width = 0;
         let height = 0;
@@ -9392,25 +9460,27 @@
         let drawBracket = null;
         let drawLabel = null;
 
-        // 5 Modalities Color Coding: 4 tokens per modality
-        const MODALITY_COLORS = ['#e3b341', '#3fb950', '#a371f7', '#58a6ff', '#f778ba'];
-        const MODALITY_NAMES = ['text', 'vision', 'sound', 'atoms', 'action chunk'];
+        // 6 Modalities Color Coding: 4 tokens per modality
+        const MODALITY_COLORS = ['#e3b341', '#3fb950', '#a371f7', '#58a6ff', '#f778ba', '#2dd4bf'];
+        const MODALITY_NAMES = ['text', 'vision', 'sound', 'atoms', 'action chunk', 'dna'];
+        const POD_NAMES = ['Text', 'Vision', 'Sound', 'Atoms', 'Action', 'DNA'];
         const MODALITY_FILLS = [
           'rgba(227, 179, 65, 0.18)',
           'rgba(63, 185, 80, 0.18)',
           'rgba(163, 113, 247, 0.18)',
           'rgba(88, 166, 255, 0.18)',
-          'rgba(247, 120, 186, 0.18)'
+          'rgba(247, 120, 186, 0.18)',
+          'rgba(45, 212, 191, 0.18)'
         ];
 
         function getModalityColor(idx) {
-          return MODALITY_COLORS[Math.floor(idx / 4) % 5];
+          return MODALITY_COLORS[Math.floor(idx / 4) % MODALITY_COLORS.length];
         }
         function getModalityFill(idx) {
-          return MODALITY_FILLS[Math.floor(idx / 4) % 5];
+          return MODALITY_FILLS[Math.floor(idx / 4) % MODALITY_FILLS.length];
         }
 
-        // Token Metadata for all 20 tokens across 5 modalities
+        // Token Metadata for all 24 tokens across 6 modalities
         const TOKEN_METADATA = [
           { mod: 'text', label: 'all', modColor: '#e3b341' },
           { mod: 'text', label: 'Atten', modColor: '#e3b341' },
@@ -9431,7 +9501,11 @@
           { mod: 'action chunk', label: 'action t₁ (grip)', modColor: '#f778ba' },
           { mod: 'action chunk', label: 'action t₂ (reach)', modColor: '#f778ba' },
           { mod: 'action chunk', label: 'action t₃ (lift)', modColor: '#f778ba' },
-          { mod: 'action chunk', label: 'action t₄ (place)', modColor: '#f778ba' }
+          { mod: 'action chunk', label: 'action t₄ (place)', modColor: '#f778ba' },
+          { mod: 'dna', label: 'A (adenine)', modColor: '#2dd4bf' },
+          { mod: 'dna', label: 'C (cytosine)', modColor: '#2dd4bf' },
+          { mod: 'dna', label: 'T (thymine)', modColor: '#2dd4bf' },
+          { mod: 'dna', label: 'G (guanine)', modColor: '#2dd4bf' }
         ];
 
         function enrichArc(arc) {
@@ -9458,9 +9532,10 @@
               { src: 5, tgt: 12 },
               { src: 16, tgt: 5 },
               { src: 3, tgt: 6 },
-              { src: 18, tgt: 3 }
+              { src: 18, tgt: 3 },
+              { src: 20, tgt: 13 }
             ],
-            rowTargets: [2, 2, 1, 6, 5, 12, 7, 4, 9, 1, 11, 8, 14, 10, 15, 13, 5, 16, 3, 18]
+            rowTargets: [2, 2, 1, 6, 5, 12, 7, 4, 9, 1, 11, 8, 14, 10, 15, 13, 5, 16, 3, 18, 13, 12, 14, 15]
           },
           {
             title: "Robotic Manipulation & Spatial Target Reach",
@@ -9469,20 +9544,22 @@
               { src: 1, tgt: 9 },
               { src: 7, tgt: 13 },
               { src: 10, tgt: 18 },
-              { src: 19, tgt: 4 }
+              { src: 19, tgt: 4 },
+              { src: 23, tgt: 16 }
             ],
-            rowTargets: [1, 9, 0, 7, 6, 4, 5, 13, 10, 8, 18, 9, 15, 12, 13, 14, 17, 6, 16, 4]
+            rowTargets: [1, 9, 0, 7, 6, 4, 5, 13, 10, 8, 18, 9, 15, 12, 13, 14, 17, 6, 16, 4, 21, 20, 22, 16]
           },
           {
             title: "Molecular Dynamics & Chemical Graph Resonance",
             arcs: [
-              { src: 14, tgt: 10 },
+              { src: 14, tgt: 22 },
               { src: 6, tgt: 1 },
               { src: 16, tgt: 12 },
               { src: 3, tgt: 15 },
-              { src: 8, tgt: 17 }
+              { src: 8, tgt: 17 },
+              { src: 21, tgt: 10 }
             ],
-            rowTargets: [3, 2, 1, 15, 7, 6, 1, 5, 17, 10, 8, 9, 13, 12, 10, 12, 12, 18, 19, 16]
+            rowTargets: [3, 2, 1, 15, 7, 6, 1, 5, 17, 10, 8, 9, 13, 12, 22, 12, 12, 18, 19, 16, 12, 10, 14, 15]
           },
           {
             title: "Closed-Loop Hand-Eye Coordination & Acoustic Parsing",
@@ -9491,9 +9568,10 @@
               { src: 11, tgt: 2 },
               { src: 13, tgt: 12 },
               { src: 18, tgt: 7 },
-              { src: 0, tgt: 5 }
+              { src: 0, tgt: 5 },
+              { src: 21, tgt: 2 }
             ],
-            rowTargets: [5, 3, 0, 6, 16, 7, 4, 6, 9, 11, 8, 2, 14, 12, 13, 14, 18, 16, 7, 18]
+            rowTargets: [5, 3, 0, 6, 16, 7, 4, 6, 9, 11, 8, 2, 14, 12, 13, 14, 18, 16, 7, 18, 23, 2, 20, 22]
           },
           {
             title: "Multi-Sensor Fusion & Audio-Visual Source Localization",
@@ -9502,9 +9580,10 @@
               { src: 17, tgt: 0 },
               { src: 2, tgt: 7 },
               { src: 15, tgt: 14 },
-              { src: 19, tgt: 8 }
+              { src: 19, tgt: 8 },
+              { src: 22, tgt: 14 }
             ],
-            rowTargets: [1, 2, 7, 0, 5, 4, 7, 6, 11, 5, 9, 10, 13, 15, 12, 14, 17, 0, 16, 8]
+            rowTargets: [1, 2, 7, 0, 5, 4, 7, 6, 11, 5, 9, 10, 13, 15, 12, 14, 17, 0, 16, 8, 13, 15, 14, 20]
           },
           {
             title: "Autonomous Trajectory Chaining & Subword Composition",
@@ -9513,9 +9592,10 @@
               { src: 5, tgt: 17 },
               { src: 12, tgt: 3 },
               { src: 10, tgt: 6 },
-              { src: 1, tgt: 2 }
+              { src: 1, tgt: 2 },
+              { src: 1, tgt: 20 }
             ],
-            rowTargets: [0, 2, 1, 2, 6, 17, 5, 4, 8, 9, 6, 11, 3, 14, 15, 13, 17, 18, 16, 17]
+            rowTargets: [0, 2, 1, 2, 6, 17, 5, 4, 8, 9, 6, 11, 3, 14, 15, 13, 17, 18, 16, 17, 1, 20, 23, 22]
           }
         ];
 
@@ -9538,7 +9618,26 @@
           else STARS_WHITE.push(st);
         }
 
-        // Base 20 Multimodal Vectors (4 tokens x 5 modalities)
+        // Star arcs are baked into two Path2D layers, rebuilt only on resize
+        let starPathWhite = null;
+        let starPathBlue = null;
+        function buildStarPaths() {
+          starPathWhite = new Path2D();
+          starPathBlue = new Path2D();
+          const bake = (path, stars) => {
+            for (let i = 0; i < stars.length; i++) {
+              const st = stars[i];
+              const sx = st.xRatio * width;
+              const sy = st.yRatio * height;
+              path.moveTo(sx + st.r * s, sy);
+              path.arc(sx, sy, st.r * s, 0, Math.PI * 2);
+            }
+          };
+          bake(starPathWhite, STARS_WHITE);
+          bake(starPathBlue, STARS_BLUE);
+        }
+
+        // Base 24 Multimodal Vectors (4 tokens x 6 modalities)
         const BASE_VECTORS = [
           [0.8, -0.3, 0.5, 1.2],   // 0: all (text)
           [1.4, 0.2, -0.7, 0.9],   // 1: Atten (text)
@@ -9559,7 +9658,11 @@
           [-0.7, 1.2, 0.6, 0.4],   // 16: action t₁ (action chunk)
           [1.3, -0.4, 0.9, 0.5],   // 17: action t₂ (action chunk)
           [0.5, 1.0, -0.6, 1.3],   // 18: action t₃ (action chunk)
-          [-0.2, 0.8, 1.1, -0.5]   // 19: action t₄ (action chunk)
+          [-0.2, 0.8, 1.1, -0.5],  // 19: action t₄ (action chunk)
+          [-0.9, 0.6, 1.4, 0.2],   // 20: A (dna)
+          [0.7, 1.3, -0.8, 0.3],   // 21: C (dna)
+          [1.0, -0.7, 0.2, 1.4],   // 22: T (dna)
+          [0.3, 0.9, 1.5, -0.9]    // 23: G (dna)
         ];
 
         if (window.katex && katexEl) {
@@ -9611,7 +9714,7 @@
           const k = [];
           const v = [];
 
-          for (let i = 0; i < 20; i++) {
+          for (let i = 0; i < T; i++) {
             const bv = BASE_VECTORS[i];
             const jitter = ((i * 7 + cycleIdx * 13) % 5 - 2) * 0.05;
             q.push([
@@ -9646,14 +9749,14 @@
           const broadcast = [];
           const out = [];
 
-          for (let i = 0; i < 20; i++) {
+          for (let i = 0; i < T; i++) {
             sim.push([]);
             simNums.push([]);
             exp.push([]);
             expNums.push([]);
             const tgt = rowTargets[i];
 
-            for (let j = 0; j < 20; j++) {
+            for (let j = 0; j < T; j++) {
               let dot = 0;
               for (let m = 0; m < 4; m++) {
                 dot += q[i][m] * k[j][m];
@@ -9678,7 +9781,7 @@
 
             prob.push([]);
             probNums.push([]);
-            for (let j = 0; j < 20; j++) {
+            for (let j = 0; j < T; j++) {
               const p = Math.max(0.01, Math.round((exp[i][j] / rowSum) * 100) / 100);
               prob[i].push(p);
               probNums[i].push(p);
@@ -9686,7 +9789,7 @@
 
             const pRowSum = probNums[i].reduce((a, b) => a + b, 0);
             if (pRowSum > 0) {
-              for (let j = 0; j < 20; j++) {
+              for (let j = 0; j < T; j++) {
                 probNums[i][j] = Math.round((probNums[i][j] / pRowSum) * 100) / 100;
                 prob[i][j] = probNums[i][j];
               }
@@ -9696,7 +9799,7 @@
             prob[i][tgt] = probNums[i][tgt];
 
             broadcast.push([]);
-            for (let j = 0; j < 20; j++) {
+            for (let j = 0; j < T; j++) {
               const pVal = probNums[i][j];
               broadcast[i].push(v[j].map(val => Math.round(val * pVal * 10) / 10));
             }
@@ -9704,7 +9807,7 @@
             const oVec = [0, 0, 0, 0];
             for (let m = 0; m < 4; m++) {
               let acc = 0;
-              for (let j = 0; j < 20; j++) {
+              for (let j = 0; j < T; j++) {
                 acc += probNums[i][j] * v[j][m];
               }
               oVec[m] = Math.round(acc * 10) / 10;
@@ -9732,19 +9835,55 @@
 
         const exists = v => v !== null && v !== undefined && !Number.isNaN(v);
 
+        // Style lookup cache: cell/vector styles depend only on (category, baseColor, value, alpha bucket),
+        // so reuse the rgba strings instead of rebuilding thousands per frame
+        const MISSING_CELL_STYLE = {
+          grad: 'rgba(110, 118, 129, 0.15)',
+          strokeColor: 'rgba(110, 118, 129, 0.40)',
+          textColor: '#8b949e'
+        };
+        const CELL_STYLE_CACHE = new Map();
+
+        // Number label formatting cache (matrix cells, vector labels)
+        const NUM_STR_CACHE = new Map();
+        function formatCellValue(text, trimZero) {
+          let strs = NUM_STR_CACHE.get(text);
+          if (!strs) {
+            let full = String(text);
+            if (typeof text === 'number') {
+              full = text.toFixed(1);
+              if (full.endsWith('.0')) full = full.slice(0, -2);
+            }
+            let trimmed = full;
+            if (trimmed.startsWith('0.')) trimmed = trimmed.slice(1);
+            else if (trimmed.startsWith('-0.')) trimmed = '-' + trimmed.slice(2);
+            strs = [full, trimmed];
+            NUM_STR_CACHE.set(text, strs);
+          }
+          return trimZero ? strs[1] : strs[0];
+        }
+
         // Fast Magnitude Gradient Color Calculation
         function getCellColorInfo(val, baseColor, alpha = 1, category = 'default') {
           if (!exists(val)) {
-            return {
-              grad: 'rgba(110, 118, 129, 0.15)',
-              strokeColor: 'rgba(110, 118, 129, 0.40)',
-              textColor: '#8b949e'
-            };
+            return MISSING_CELL_STYLE;
           }
+
+          const alphaQ = alpha >= 1 ? 64 : Math.max(1, Math.round(alpha * 64));
+          let byColor = CELL_STYLE_CACHE.get(category);
+          if (!byColor) { byColor = new Map(); CELL_STYLE_CACHE.set(category, byColor); }
+          let byVal = byColor.get(baseColor);
+          if (!byVal) { byVal = new Map(); byColor.set(baseColor, byVal); }
+          let bucket = byVal.get(val);
+          if (!bucket) { bucket = []; byVal.set(val, bucket); }
+          const cachedStyle = bucket[alphaQ];
+          if (cachedStyle) return cachedStyle;
 
           const num = typeof val === 'number' ? val : parseFloat(val);
           const mag = Math.abs(num);
           const isNeg = num < -0.0001;
+
+          let info = null;
 
           if (category === 'prob') {
             const p = Math.min(1.0, Math.max(0.0, isNaN(num) ? 0.0 : num));
@@ -9753,42 +9892,48 @@
             const strokeA = Math.min(1.0, (0.12 + 0.88 * p)) * alpha;
             const R = Math.round(40 + 95 * Math.pow(p, 0.85));
             const G = Math.round(90 + 125 * Math.pow(p, 0.85));
-            const grad = `rgba(${R}, ${G}, 255, ${fillA.toFixed(3)})`;
-            const strokeColor = `rgba(${R}, ${G}, 255, ${strokeA.toFixed(3)})`;
-            const textColor = isBright ? '#ffffff' : (p > 0.15 ? '#b8c2cc' : '#656c76');
-            return { grad, strokeColor, textColor };
+            info = {
+              grad: `rgba(${R}, ${G}, 255, ${fillA.toFixed(3)})`,
+              strokeColor: `rgba(${R}, ${G}, 255, ${strokeA.toFixed(3)})`,
+              textColor: isBright ? '#ffffff' : (p > 0.15 ? '#b8c2cc' : '#656c76')
+            };
+          } else {
+            let maxRef = 2.5;
+            if (category === 'exp') maxRef = 7.0;
+            else if (category === 'sum') maxRef = 16.0;
+            else if (category === 'vector' || category === 'docked') maxRef = 2.0;
+
+            const t = Math.min(1.0, Math.max(0.06, mag / maxRef));
+
+            let rgb = [88, 166, 255];
+            if (isNeg) {
+              rgb = [135, 138, 172];
+            } else if (baseColor === '#e3b341' || (typeof baseColor === 'string' && baseColor.includes('227, 179, 65'))) {
+              rgb = [227, 179, 65];
+            } else if (baseColor === '#3fb950' || (typeof baseColor === 'string' && baseColor.includes('63, 185, 80'))) {
+              rgb = [63, 185, 80];
+            } else if (baseColor === '#f85149' || (typeof baseColor === 'string' && baseColor.includes('248, 81, 73'))) {
+              rgb = [248, 81, 73];
+            } else if (baseColor === '#a371f7' || (typeof baseColor === 'string' && baseColor.includes('163, 113, 247'))) {
+              rgb = [163, 113, 247];
+            } else if (baseColor === '#f778ba' || (typeof baseColor === 'string' && baseColor.includes('247, 120, 186'))) {
+              rgb = [247, 120, 186];
+            } else if (baseColor === '#2dd4bf' || (typeof baseColor === 'string' && baseColor.includes('45, 212, 191'))) {
+              rgb = [45, 212, 191];
+            }
+
+            const [R, G, B] = rgb;
+            const fillA = (0.05 + 0.35 * t) * alpha;
+            const strokeA = Math.min(1.0, (0.20 + 0.45 * t) * alpha);
+            info = {
+              grad: `rgba(${R}, ${G}, ${B}, ${fillA.toFixed(3)})`,
+              strokeColor: `rgba(${R}, ${G}, ${B}, ${strokeA.toFixed(3)})`,
+              textColor: isNeg ? (t < 0.25 ? '#8b949e' : '#b8bed6') : (t < 0.25 ? '#8b949e' : '#ffffff')
+            };
           }
 
-          let maxRef = 2.5;
-          if (category === 'exp') maxRef = 7.0;
-          else if (category === 'sum') maxRef = 16.0;
-          else if (category === 'vector' || category === 'docked') maxRef = 2.0;
-
-          const t = Math.min(1.0, Math.max(0.06, mag / maxRef));
-
-          let rgb = [88, 166, 255];
-          if (isNeg) {
-            rgb = [135, 138, 172];
-          } else if (baseColor === '#e3b341' || (typeof baseColor === 'string' && baseColor.includes('227, 179, 65'))) {
-            rgb = [227, 179, 65];
-          } else if (baseColor === '#3fb950' || (typeof baseColor === 'string' && baseColor.includes('63, 185, 80'))) {
-            rgb = [63, 185, 80];
-          } else if (baseColor === '#f85149' || (typeof baseColor === 'string' && baseColor.includes('248, 81, 73'))) {
-            rgb = [248, 81, 73];
-          } else if (baseColor === '#a371f7' || (typeof baseColor === 'string' && baseColor.includes('163, 113, 247'))) {
-            rgb = [163, 113, 247];
-          } else if (baseColor === '#f778ba' || (typeof baseColor === 'string' && baseColor.includes('247, 120, 186'))) {
-            rgb = [247, 120, 186];
-          }
-
-          const [R, G, B] = rgb;
-          const fillA = (0.05 + 0.35 * t) * alpha;
-          const grad = `rgba(${R}, ${G}, ${B}, ${fillA.toFixed(3)})`;
-          const strokeA = Math.min(1.0, (0.20 + 0.45 * t) * alpha);
-          const strokeColor = `rgba(${R}, ${G}, ${B}, ${strokeA.toFixed(3)})`;
-          const textColor = isNeg ? (t < 0.25 ? '#8b949e' : '#b8bed6') : (t < 0.25 ? '#8b949e' : '#ffffff');
-
-          return { grad, strokeColor, textColor };
+          bucket[alphaQ] = info;
+          return info;
         }
 
         // Clean Canvas Vertical Bracket (for matrices)
@@ -9809,10 +9954,10 @@
         function calculateGeometry() {
           const matW = clamp(width * 0.44, 175 * s, 225 * s);
           const matH = matW;
-          const cellR = Math.max(3.0 * s, (matW / 20) * 0.40);
+          const cellR = Math.max(3.0 * s, (matW / T) * 0.40);
 
-          const stepX = matW / 20;
-          const stepY = matH / 20;
+          const stepX = matW / T;
+          const stepY = matH / T;
           const depthLen = clamp(matW * 0.22, 14 * s, 28 * s);
 
           const colBracketH = Math.abs(-0.57) * depthLen + 10 * s;
@@ -9839,13 +9984,13 @@
 
           const colX = [];
           const rowY = [];
-          for (let j = 0; j < 20; j++) colX.push(-matW / 2 + (j + 0.5) * stepX);
-          for (let i = 0; i < 20; i++) rowY.push(matTop + (i + 0.5) * stepY);
+          for (let j = 0; j < T; j++) colX.push(-matW / 2 + (j + 0.5) * stepX);
+          for (let i = 0; i < T; i++) rowY.push(matTop + (i + 0.5) * stepY);
 
           const vecY = 168 * s;
-          const tokSpacing = Math.min(20.5 * s, (width - 36 * s) / 20);
+          const tokSpacing = Math.min(20.5 * s, (width - 36 * s) / T);
           const tokX = [];
-          for (let i = 0; i < 20; i++) tokX.push((i - 9.5) * tokSpacing);
+          for (let i = 0; i < T; i++) tokX.push((i - (T - 1) / 2) * tokSpacing);
 
           return {
             matW, matH, matL, matR, matTop, matBot, matCenterY, matHBrack,
@@ -9875,6 +10020,9 @@
           ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
           geom = calculateGeometry();
+          window.__geom = geom;
+          buildStarPaths();
+          layerGen++;
           colBracketW = 10 * s;
           colBracketH = Math.abs(-0.57) * geom.depthLen + 10 * s;
           rowBracketW = Math.abs(-0.82) * geom.depthLen + 10 * s;
@@ -9892,36 +10040,67 @@
         }
 
         window.addEventListener('resize', resize);
+
+        // Static-frame cache: quantize the phase parameter and re-render the frame slice into an
+        // offscreen layer only when the bucket changes; every other frame is a single drawImage blit
+        let layerCanvas = null;
+        let layerCtx = null;
+        let layerKey = '';
+        let layerGen = 0;
+        function renderCachedFrame(layerId, phaseValue, steps, drawFn) {
+          const bucket = steps > 1 ? Math.round(phaseValue * steps) : 0;
+          const key = layerId + '|' + bucket + '|' + layerGen;
+
+          if (window.__disableLayerCache) {
+            drawFn(steps > 1 ? bucket / steps : phaseValue);
+            return;
+          }
+
+          if (layerKey !== key) {
+            if (!layerCanvas) {
+              layerCanvas = document.createElement('canvas');
+              layerCtx = layerCanvas.getContext('2d');
+            }
+            const pw = Math.round(width * dpr);
+            const ph = Math.round(height * dpr);
+            if (layerCanvas.width !== pw || layerCanvas.height !== ph) {
+              layerCanvas.width = pw;
+              layerCanvas.height = ph;
+            } else {
+              layerCtx.setTransform(1, 0, 0, 1, 0, 0);
+              layerCtx.clearRect(0, 0, pw, ph);
+            }
+            layerCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            const prevCtx = ctx;
+            ctx = layerCtx;
+            try {
+              drawFn(steps > 1 ? bucket / steps : phaseValue);
+            } finally {
+              ctx = prevCtx;
+            }
+            layerKey = key;
+          }
+
+          ctx.globalAlpha = 1;
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.drawImage(layerCanvas, 0, 0);
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
         resize();
 
-        // High-Performance Batched Universe Starfield
+        // High-Performance Batched Universe Starfield (Path2D layers, 2 fills per frame)
         function drawUniverseBackground(now) {
           const tA = 0.70 + 0.30 * Math.sin(now * 0.002);
           const tB = 0.70 + 0.30 * Math.cos(now * 0.0028);
 
           ctx.fillStyle = '#ffffff';
           ctx.globalAlpha = 0.35 * tA;
-          ctx.beginPath();
-          for (let i = 0; i < STARS_WHITE.length; i++) {
-            const st = STARS_WHITE[i];
-            const sx = st.xRatio * width;
-            const sy = st.yRatio * height;
-            ctx.moveTo(sx + st.r * s, sy);
-            ctx.arc(sx, sy, st.r * s, 0, Math.PI * 2);
-          }
-          ctx.fill();
+          ctx.fill(starPathWhite);
 
           ctx.fillStyle = '#93c5fd';
           ctx.globalAlpha = 0.45 * tB;
-          ctx.beginPath();
-          for (let i = 0; i < STARS_BLUE.length; i++) {
-            const st = STARS_BLUE[i];
-            const sx = st.xRatio * width;
-            const sy = st.yRatio * height;
-            ctx.moveTo(sx + st.r * s, sy);
-            ctx.arc(sx, sy, st.r * s, 0, Math.PI * 2);
-          }
-          ctx.fill();
+          ctx.fill(starPathBlue);
           ctx.globalAlpha = 1.0;
         }
 
@@ -9983,13 +10162,7 @@
           const shouldShowNumber = (isMatrixCell || category === 'vector' || category === 'docked' || category === 'prob-vector') && exists(text) && r >= 2.4 * s;
 
           if (shouldShowNumber) {
-            let strVal = String(text);
-            if (typeof text === 'number') {
-              strVal = text.toFixed(1);
-              if (strVal.endsWith('.0')) strVal = strVal.slice(0, -2);
-            }
-            if (r < 9 * s && strVal.startsWith('0.')) strVal = strVal.slice(1);
-            else if (r < 9 * s && strVal.startsWith('-0.')) strVal = '-' + strVal.slice(2);
+            const strVal = formatCellValue(text, r < 9 * s);
 
             const maxChars = strVal.length || 1;
             const fontSize = Math.max(2.5, Math.min(8.0, Math.floor((2 * r * 0.56) / (maxChars * 0.58))));
@@ -10044,9 +10217,9 @@
           ctx.lineWidth = 0.5;
           ctx.globalAlpha = alpha;
           ctx.beginPath();
-          for (let j = 0; j < 20; j++) {
+          for (let j = 0; j < T; j++) {
             const x = centerX + geom.colX[j];
-            for (let i = 0; i < 20; i++) {
+            for (let i = 0; i < T; i++) {
               const y = centerY + geom.rowY[i];
               ctx.moveTo(x - 2 * s, y);
               ctx.lineTo(x + 2 * s, y);
@@ -10061,10 +10234,10 @@
           if (alpha <= 0) return;
           drawGridOutline(alpha * 0.45);
           const r = geom.cellR * rMult;
-          for (let i = 0; i < 20; i++) {
+          for (let i = 0; i < T; i++) {
             const cy = geom.rowY[i];
             const rowVals = cellValues ? cellValues[i] : null;
-            for (let j = 0; j < 20; j++) {
+            for (let j = 0; j < T; j++) {
               const cx = geom.colX[j];
               const val = rowVals ? rowVals[j] : null;
               drawCircle(cx, cy, r, stroke, fill, val, glow, glowColor, alpha, textColor, category);
@@ -10076,7 +10249,7 @@
 
         function drawValuesAtPosition(yPos, alpha = 1.0, scaleR = 1.0) {
           if (alpha <= 0) return;
-          for (let j = 0; j < 20; j++) {
+          for (let j = 0; j < T; j++) {
             const x = geom.colX[j] + (0.82 * geom.depthLen) / 2;
             const curY = yPos + (0.57 * geom.depthLen) / 2;
             const vColor = getModalityColor(j);
@@ -10084,7 +10257,7 @@
             drawDepthVector(x, curY, d, geom.depthLen, vColor, vFill, data.v[j], alpha, 0, scaleR, 'vector');
           }
           const leftV = geom.colX[0] - colBracketW / 2 - 4 * s;
-          const rightV = geom.colX[19] + colBracketW / 2 + 4 * s;
+          const rightV = geom.colX[T - 1] + colBracketW / 2 + 4 * s;
           drawBracket(leftV, yPos, colBracketH, true, alpha);
           drawBracket(rightV, yPos, colBracketH, false, alpha);
           drawLabel("values", 0, yPos - colBracketH / 2 - 12 * s, "#58a6ff", "center", null, alpha);
@@ -10094,7 +10267,7 @@
           if (alpha <= 0) return;
           drawGridOutline(alpha * 0.45);
 
-          for (let i = 0; i < 20; i++) {
+          for (let i = 0; i < T; i++) {
             const qy = geom.rowY[i];
             const qLabels = data.q[i];
             const qColor = getModalityColor(i);
@@ -10102,7 +10275,7 @@
             drawDepthVector(geom.leftQueryX + (0.82 * geom.depthLen) / 2, qy + (0.57 * geom.depthLen) / 2, d, geom.depthLen, qColor, qFill, qLabels, alpha, 0, 1, 'vector');
           }
           const topQ = geom.rowY[0] - rowBracketH / 2;
-          const botQ = geom.rowY[19] + rowBracketH / 2;
+          const botQ = geom.rowY[T - 1] + rowBracketH / 2;
           drawBracket(geom.leftQueryX - rowBracketW / 2 - 4 * s, (topQ + botQ) / 2, botQ - topQ, true, alpha);
           drawBracket(geom.leftQueryX + rowBracketW / 2 + 4 * s, (topQ + botQ) / 2, botQ - topQ, false, alpha);
 
@@ -10117,8 +10290,9 @@
           drawModalityRowIndicator("sound", soundY, "#a371f7", geom.rowY[8], geom.rowY[11], geom.leftQueryX, alpha);
           drawModalityRowIndicator("atoms", atomsY, "#58a6ff", geom.rowY[12], geom.rowY[15], geom.leftQueryX, alpha);
           drawModalityRowIndicator("action chunk", actionY, "#f778ba", geom.rowY[16], geom.rowY[19], geom.leftQueryX, alpha);
+          drawModalityRowIndicator("dna", (geom.rowY[20] + geom.rowY[23]) / 2, "#2dd4bf", geom.rowY[20], geom.rowY[23], geom.leftQueryX, alpha);
 
-          for (let j = 0; j < 20; j++) {
+          for (let j = 0; j < T; j++) {
             const kx = geom.colX[j];
             const kLabels = data.k[j];
             const kColor = getModalityColor(j);
@@ -10126,7 +10300,7 @@
             drawDepthVector(kx + (0.82 * geom.depthLen) / 2, geom.topKeyY + (0.57 * geom.depthLen) / 2, d, geom.depthLen, kColor, kFill, kLabels, alpha, 0, 1, 'vector');
           }
           const leftK = geom.colX[0] - colBracketW / 2 - 4 * s;
-          const rightK = geom.colX[19] + colBracketW / 2 + 4 * s;
+          const rightK = geom.colX[T - 1] + colBracketW / 2 + 4 * s;
           drawBracket(leftK, geom.topKeyY, colBracketH, true, alpha);
           drawBracket(rightK, geom.topKeyY, colBracketH, false, alpha);
         }
@@ -10151,10 +10325,20 @@
           ctx.fillText(name, barX - 6 * s, centerY + midY);
         }
 
-        // Draw Constituent Modality Docked Vectors at the bottom (Up to 20 vectors, 5 modalities)
-        function drawDockedModalityVectors(completedModalityCount = 5, alpha = 1.0, activePair = null) {
+        // Docked modality legend (bottom pills) - static table
+        const DOCKED_MODALITIES = [
+          { name: "text (4)", color: "#e3b341", rgb: [227, 179, 65], start: 0, end: 3 },
+          { name: "vision (4)", color: "#3fb950", rgb: [63, 185, 80], start: 4, end: 7 },
+          { name: "sound (4)", color: "#a371f7", rgb: [163, 113, 247], start: 8, end: 11 },
+          { name: "atoms (4)", color: "#58a6ff", rgb: [88, 166, 255], start: 12, end: 15 },
+          { name: "action chunk (4)", color: "#f778ba", rgb: [247, 120, 186], start: 16, end: 19 },
+          { name: "dna (4)", color: "#2dd4bf", rgb: [45, 212, 191], start: 20, end: 23 }
+        ];
+
+        // Draw Constituent Modality Docked Vectors at the bottom (Up to 24 vectors, 6 modalities)
+        function drawDockedModalityVectors(completedModalityCount = 6, alpha = 1.0, activePair = null) {
           if (alpha <= 0.01 || completedModalityCount <= 0) return;
-          const totalTokens = Math.min(20, completedModalityCount * 4);
+          const totalTokens = Math.min(T, completedModalityCount * 4);
 
           for (let i = 0; i < totalTokens; i++) {
             const x = geom.tokX[i];
@@ -10190,16 +10374,9 @@
           }
 
           const barY = geom.vecY + 23 * s;
-          const modalities = [
-            { name: "text (4)", color: "#e3b341", rgb: [227, 179, 65], start: 0, end: 3 },
-            { name: "vision (4)", color: "#3fb950", rgb: [63, 185, 80], start: 4, end: 7 },
-            { name: "sound (4)", color: "#a371f7", rgb: [163, 113, 247], start: 8, end: 11 },
-            { name: "atoms (4)", color: "#58a6ff", rgb: [88, 166, 255], start: 12, end: 15 },
-            { name: "action chunk (4)", color: "#f778ba", rgb: [247, 120, 186], start: 16, end: 19 }
-          ];
 
           for (let m = 0; m < completedModalityCount; m++) {
-            const mod = modalities[m];
+            const mod = DOCKED_MODALITIES[m];
             const xStart = geom.tokX[mod.start];
             const xEnd = geom.tokX[mod.end];
             const cx = centerX + (xStart + xEnd) / 2;
@@ -10539,9 +10716,9 @@
           ctx.stroke();
           ctx.setLineDash([]);
 
-          for (let m = 0; m < 5; m++) {
+          for (let m = 0; m < MODALITY_COLORS.length; m++) {
             if (activePodIdx === m) continue;
-            const angle = now * 0.0008 + (m * Math.PI * 2 / 5);
+            const angle = now * 0.0008 + (m * Math.PI * 2 / MODALITY_COLORS.length);
             const ox = Math.cos(angle) * orbitA;
             const oy = Math.sin(angle) * orbitB;
             const rotAngle = -0.22;
@@ -10557,8 +10734,7 @@
             ctx.font = `600 ${Math.round(8.5 * s)}px ${SANS_FONT}`;
             ctx.fillStyle = col;
             ctx.textAlign = 'center';
-            const podName = m === 4 ? 'Action' : (MODALITY_NAMES[m].charAt(0).toUpperCase() + MODALITY_NAMES[m].slice(1));
-            ctx.fillText(podName, px, py - 7 * s);
+            ctx.fillText(POD_NAMES[m], px, py - 7 * s);
           }
           ctx.restore();
         }
@@ -10566,7 +10742,7 @@
         function getPodOrbitPos(podIdx, now, r) {
           const orbitA = r * 1.8;
           const orbitB = r * 0.65;
-          const angle = now * 0.0008 + (podIdx * Math.PI * 2 / 5);
+          const angle = now * 0.0008 + (podIdx * Math.PI * 2 / MODALITY_COLORS.length);
           const ox = Math.cos(angle) * orbitA;
           const oy = Math.sin(angle) * orbitB;
           const rotAngle = -0.22;
@@ -10575,8 +10751,425 @@
           return { x: px, y: py };
         }
 
+        // DNA double helix card (item view)
+        function drawDnaHelixCard(cx, cy, w, h, alpha) {
+          ctx.save();
+          ctx.translate(cx, cy);
+          ctx.globalAlpha = alpha;
+
+          ctx.fillStyle = 'rgba(13, 17, 23, 0.85)';
+          ctx.strokeStyle = '#2dd4bf';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.roundRect(-w / 2, -h / 2, w, h, 6 * s);
+          ctx.fill();
+          ctx.stroke();
+
+          const span = w * 0.62;
+          const amp = h * 0.22;
+          const turns = 2.2;
+
+          for (let strand = 0; strand < 2; strand++) {
+            ctx.strokeStyle = strand === 0 ? '#2dd4bf' : '#99f6e4';
+            ctx.lineWidth = 1.8;
+            ctx.beginPath();
+            for (let x = -span / 2; x <= span / 2; x += 2 * s) {
+              const u = (x + span / 2) / span;
+              const y = amp * Math.sin(u * Math.PI * 2 * turns + strand * Math.PI);
+              if (x <= -span / 2) ctx.moveTo(x, y);
+              else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+          }
+
+          ctx.strokeStyle = 'rgba(153, 246, 228, 0.45)';
+          ctx.lineWidth = 1.0;
+          for (let rung = 0; rung < 6; rung++) {
+            const u = 0.10 + rung * 0.16;
+            const x = -span / 2 + u * span;
+            const y1 = amp * Math.sin(u * Math.PI * 2 * turns);
+            const y2 = amp * Math.sin(u * Math.PI * 2 * turns + Math.PI);
+            ctx.beginPath();
+            ctx.moveTo(x, y1);
+            ctx.lineTo(x, y2);
+            ctx.stroke();
+          }
+
+          ctx.font = `600 ${Math.round(8.5 * s)}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = '#99f6e4';
+          ctx.fillText("sequence 5'–ACGT–3'", 0, h / 2 - 9 * s);
+          ctx.restore();
+        }
+
+        // single nucleotide (A/C/T/G) chip, used when the helix splits into tokens
+        function drawDnaChip(cx, cy, w, h, alpha, idx) {
+          ctx.save();
+          ctx.translate(cx, cy);
+          ctx.globalAlpha = alpha;
+
+          ctx.fillStyle = 'rgba(13, 17, 23, 0.90)';
+          ctx.strokeStyle = '#2dd4bf';
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.roundRect(-w / 2, -h / 2, w, h, 4 * s);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.font = `700 ${Math.round(h * 0.46)}px ${SANS_FONT}`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = '#2dd4bf';
+          ctx.fillText('ACTG'[idx], 0, 1);
+          ctx.restore();
+        }
+
+        // Cached static frame slices for the attention loop (real motion stays in animate)
+        function drawPart2Phase1() {
+          const vecHeaderY = geom.rowY[0] - rowBracketH / 2 - 14 * s;
+          drawLabel("vectors", 0, vecHeaderY, "#58a6ff", "center", `400 ${Math.round(11 * s)}px ui-monospace, monospace`);
+
+          const textY = (geom.rowY[0] + geom.rowY[3]) / 2;
+          const visionY = (geom.rowY[4] + geom.rowY[7]) / 2;
+          const soundY = (geom.rowY[8] + geom.rowY[11]) / 2;
+          const atomsY = (geom.rowY[12] + geom.rowY[15]) / 2;
+          const actionY = (geom.rowY[16] + geom.rowY[19]) / 2;
+
+          drawModalityRowIndicator("text", textY, "#e3b341", geom.rowY[0], geom.rowY[3], 0);
+          drawModalityRowIndicator("vision", visionY, "#3fb950", geom.rowY[4], geom.rowY[7], 0);
+          drawModalityRowIndicator("sound", soundY, "#a371f7", geom.rowY[8], geom.rowY[11], 0);
+          drawModalityRowIndicator("atoms", atomsY, "#58a6ff", geom.rowY[12], geom.rowY[15], 0);
+          drawModalityRowIndicator("action chunk", actionY, "#f778ba", geom.rowY[16], geom.rowY[19], 0);
+          drawModalityRowIndicator("dna", (geom.rowY[20] + geom.rowY[23]) / 2, "#2dd4bf", geom.rowY[20], geom.rowY[23], 0);
+
+          for (let i = 0; i < T; i++) {
+            const cy = geom.rowY[i];
+            const vLabels = data.q[i];
+            const vColor = getModalityColor(i);
+            const vFill = getModalityFill(i);
+            drawDepthVector((0.82 * geom.depthLen) / 2, cy + (0.57 * geom.depthLen) / 2, d, geom.depthLen, vColor, vFill, vLabels, 1, 0, 1, 'vector');
+          }
+          const topV = geom.rowY[0] - rowBracketH / 2;
+          const botV = geom.rowY[T - 1] + rowBracketH / 2;
+          drawBracket(-rowBracketW / 2 - 4 * s, (topV + botV) / 2, botV - topV, true);
+          drawBracket(rowBracketW / 2 + 4 * s, (topV + botV) / 2, botV - topV, false);
+        }
+        function drawPart2Phase2(ease) {
+          drawGridOutline(ease * 0.85);
+
+          const vecHeaderY = geom.rowY[0] - rowBracketH / 2 - 14 * s;
+          drawLabel("vectors", 0, vecHeaderY, "#58a6ff", "center", `400 ${Math.round(11 * s)}px ui-monospace`, Math.max(0, 1 - ease * 2.0));
+
+          const curQX = lerp(0, geom.leftQueryX, ease);
+          const qHeaderY = geom.rowY[0] - rowBracketH / 2 - 14 * s;
+          drawLabel("queries", curQX, qHeaderY, "#58a6ff", "center", null, ease);
+
+          const textY = (geom.rowY[0] + geom.rowY[3]) / 2;
+          const visionY = (geom.rowY[4] + geom.rowY[7]) / 2;
+          const soundY = (geom.rowY[8] + geom.rowY[11]) / 2;
+          const atomsY = (geom.rowY[12] + geom.rowY[15]) / 2;
+          const actionY = (geom.rowY[16] + geom.rowY[19]) / 2;
+
+          drawModalityRowIndicator("text", textY, "#e3b341", geom.rowY[0], geom.rowY[3], curQX);
+          drawModalityRowIndicator("vision", visionY, "#3fb950", geom.rowY[4], geom.rowY[7], curQX);
+          drawModalityRowIndicator("sound", soundY, "#a371f7", geom.rowY[8], geom.rowY[11], curQX);
+          drawModalityRowIndicator("atoms", atomsY, "#58a6ff", geom.rowY[12], geom.rowY[15], curQX);
+          drawModalityRowIndicator("action chunk", actionY, "#f778ba", geom.rowY[16], geom.rowY[19], curQX);
+          drawModalityRowIndicator("dna", (geom.rowY[20] + geom.rowY[23]) / 2, "#2dd4bf", geom.rowY[20], geom.rowY[23], curQX);
+
+          for (let i = 0; i < T; i++) {
+            const qy = geom.rowY[i];
+            const qLabels = data.q[i];
+            const qColor = getModalityColor(i);
+            const qFill = getModalityFill(i);
+            drawDepthVector(curQX + (0.82 * geom.depthLen) / 2, qy + (0.57 * geom.depthLen) / 2, d, geom.depthLen, qColor, qFill, qLabels, 1, 0, 1, 'vector');
+          }
+          const topQ = geom.rowY[0] - rowBracketH / 2;
+          const botQ = geom.rowY[T - 1] + rowBracketH / 2;
+          drawBracket(curQX - rowBracketW / 2 - 4 * s, (topQ + botQ) / 2, botQ - topQ, true);
+          drawBracket(curQX + rowBracketW / 2 + 4 * s, (topQ + botQ) / 2, botQ - topQ, false);
+
+          const curKY = lerp((geom.rowY[0] + geom.rowY[T - 1]) / 2, geom.topKeyY, ease);
+          for (let j = 0; j < T; j++) {
+            const kx = lerp(0, geom.colX[j], ease);
+            const ky = lerp(geom.rowY[j], geom.topKeyY, ease);
+            const kLabels = data.k[j];
+            const kColor = getModalityColor(j);
+            const kFill = getModalityFill(j);
+            drawDepthVector(kx + (0.82 * geom.depthLen) / 2, ky + (0.57 * geom.depthLen) / 2, d, geom.depthLen, kColor, kFill, kLabels, 1, 0, 1, 'vector');
+          }
+          const leftK = lerp(-colBracketW / 2 - 4 * s, geom.colX[0] - colBracketW / 2 - 4 * s, ease);
+          const rightK = lerp(colBracketW / 2 + 4 * s, geom.colX[T - 1] + colBracketW / 2 + 4 * s, ease);
+          drawBracket(leftK, curKY, colBracketH, true, ease);
+          drawBracket(rightK, curKY, colBracketH, false, ease);
+          drawLabel("keys", 0, curKY - colBracketH / 2 - 14 * s, "#58a6ff", "center", null, ease);
+
+          const curVY = lerp((geom.rowY[0] + geom.rowY[T - 1]) / 2, geom.topValY, ease);
+          for (let j = 0; j < T; j++) {
+            const vx = lerp(0, geom.colX[j], ease);
+            const vy = lerp(geom.rowY[j], geom.topValY, ease);
+            const vColor = getModalityColor(j);
+            const vFill = getModalityFill(j);
+            drawDepthVector(vx + (0.82 * geom.depthLen) / 2, vy + (0.57 * geom.depthLen) / 2, d, geom.depthLen, vColor, vFill, data.v[j], ease, 0, 1, 'vector');
+          }
+          const leftV = lerp(-colBracketW / 2 - 4 * s, geom.colX[0] - colBracketW / 2 - 4 * s, ease);
+          const rightV = lerp(colBracketW / 2 + 4 * s, geom.colX[T - 1] + colBracketW / 2 + 4 * s, ease);
+          drawBracket(leftV, curVY, colBracketH, true, ease);
+          drawBracket(rightV, curVY, colBracketH, false, ease);
+          drawLabel("values", 0, curVY - colBracketH / 2 - 14 * s, "#58a6ff", "center", null, ease);
+
+        }
+        function drawPart2Phase3() {
+          drawLabel("queries", geom.leftQueryX, geom.rowY[0] - rowBracketH / 2 - 14 * s, "#58a6ff", "center");
+          drawLabel("keys", 0, geom.topKeyY - colBracketH / 2 - 14 * s, "#58a6ff", "center");
+          drawStaticHeaders(1.0);
+          drawValuesAtPosition(geom.topValY, 1.0);
+        }
+        function drawPart2Phase5(p) {
+          const pSum = easeInOut(p);
+
+          drawValuesAtPosition(geom.valParkedY, 1.0);
+
+          for (let i = 0; i < T; i++) {
+            const cy = geom.rowY[i];
+            for (let j = 0; j < T; j++) {
+              const cx = geom.colX[j];
+              const simVal = data.sim[i][j];
+              const bLabels = (data.broadcast && data.broadcast[i] && data.broadcast[i][j]) ? data.broadcast[i][j] : null;
+
+              if (pSum < 0.85) {
+                drawDepthVector(cx + (0.82 * geom.depthLen) / 2, cy + (0.57 * geom.depthLen) / 2, d, geom.depthLen, '#f0883e', 'rgba(240, 136, 62, 0.22)', bLabels, 1 - pSum, pSum, 1, 'vector');
+              }
+              drawCircle(cx, cy, geom.cellR, '#3fb950', 'rgba(63, 185, 80, 0.22)', simVal, 0, null, pSum, '#ffffff', 'sim');
+            }
+          }
+          drawBracket(geom.matL, geom.matCenterY, geom.matHBrack, true);
+          drawBracket(geom.matR, geom.matCenterY, geom.matHBrack, false);
+        }
+        function drawPart2Phase6(p) {
+          const labelFade = Math.min(1, (p * 2200) / 350);
+          const labelY = geom.matTop - 12 * s;
+          drawLabel("softmax", 0, labelY, "#f85149", "center", `400 ${Math.round(11 * s)}px ui-monospace`, labelFade);
+          drawValuesAtPosition(geom.valParkedY, 1.0);
+
+          const isFlash = p >= 0.35 && p < 0.70;
+          const flash = isFlash ? Math.sin(((p - 0.35) / 0.35) * Math.PI) : 0;
+          const isExp = p >= 0.50;
+
+          const strokeColor = isExp ? '#f85149' : '#3fb950';
+          const redBg = `rgba(248, 81, 73, ${(0.20 + 0.40 * flash).toFixed(3)})`;
+          const curVals = isExp ? data.exp : data.sim;
+          const rMult = 1 + (isFlash ? 0.22 * flash : 0);
+          const cat = isFlash ? 'flash' : (isExp ? 'exp' : 'sim');
+
+          drawMatrix(strokeColor, redBg, curVals, 0, null, 1, '#ffffff', rMult, false, cat);
+        }
+        function drawPart2Phase7(p) {
+          const labelY = geom.matTop - 12 * s;
+          drawLabel("softmax", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace`, 1);
+          drawValuesAtPosition(geom.valParkedY, 1.0);
+
+          const easeSum = easeInOut(Math.min(1, p / 0.72));
+          const isSummed = p >= 0.72;
+          const flash = isSummed ? Math.sin(((p - 0.72) / 0.28) * Math.PI) : 0;
+
+          drawMatrix('#f85149', 'rgba(248, 81, 73, 0.18)', data.exp, 0, null, 1, '#e6edf3', 1, false, 'exp');
+
+          if (isSummed) {
+            drawLabel("row sum", geom.rightSumX, geom.rowY[0] - 14 * s, "#3fb950", "center", `400 ${Math.round(10 * s)}px ui-monospace`);
+          }
+
+          for (let i = 0; i < T; i++) {
+            const cy = geom.rowY[i];
+            const rowSumVal = data.sum[i];
+            if (isSummed) {
+              const rSum = geom.cellR * 1.18 * (1 + 0.22 * flash);
+              const greenBg = `rgba(63, 185, 80, ${0.18 + 0.35 * flash})`;
+
+              ctx.beginPath();
+              ctx.arc(centerX + geom.rightSumX, centerY + cy, rSum + 2.5 * s, 0, Math.PI * 2);
+              ctx.fillStyle = 'rgba(10, 13, 18, 0.70)';
+              ctx.fill();
+              ctx.strokeStyle = `rgba(63, 185, 80, ${0.20 + 0.20 * flash})`;
+              ctx.lineWidth = 0.75;
+              ctx.stroke();
+
+              drawCircle(geom.rightSumX, cy, rSum, '#3fb950', greenBg, rowSumVal, 0, null, 1, '#e6edf3', 'sum');
+            } else {
+              for (let j = 0; j < T; j++) {
+                const curX = lerp(geom.colX[j], geom.rightSumX, easeSum);
+                const valIJ = data.exp[i][j];
+                drawCircle(curX, cy, geom.cellR * 0.9, '#f85149', 'rgba(248, 81, 73, 0.20)', valIJ, 0, null, 0.85, '#e6edf3', 'exp');
+              }
+            }
+          }
+        }
+        function drawPart2Phase8(p) {
+          const labelY = geom.matTop - 12 * s;
+          drawLabel("softmax", 0, labelY, "#a371f7", "center", `400 ${Math.round(11 * s)}px ui-monospace`, 1);
+          drawValuesAtPosition(geom.valParkedY, 1.0);
+
+          const pMove = Math.min(1, p / 0.40);
+          const isDivided = p >= 0.40;
+          const isFlash = p >= 0.40 && p < 0.75;
+          const flash = isFlash ? Math.sin(((p - 0.40) / 0.35) * Math.PI) : 0;
+          const rayAlpha = Math.sin(Math.min(1, p / 0.60) * Math.PI);
+
+          for (let i = 0; i < T; i++) {
+            const cy = geom.rowY[i];
+            const curSumX = lerp(geom.rightSumX, geom.colX[T - 1], easeInOut(pMove));
+            const fadeSum = Math.max(0, 1 - pMove * 1.5);
+            if (fadeSum > 0) {
+              drawCircle(curSumX, cy, geom.cellR * 1.15, '#3fb950', 'rgba(63, 185, 80, 0.25)', data.sum[i], 0, null, fadeSum, '#e6edf3', 'sum');
+            }
+          }
+
+          if (rayAlpha > 0) {
+            ctx.strokeStyle = `rgba(163, 113, 247, ${rayAlpha * 0.55})`;
+            ctx.lineWidth = 1.0;
+            ctx.beginPath();
+            for (let i = 0; i < T; i++) {
+              ctx.moveTo(centerX + geom.rightSumX, centerY + geom.rowY[i]);
+              ctx.lineTo(centerX + geom.colX[0] - geom.cellW / 2, centerY + geom.rowY[i]);
+            }
+            ctx.stroke();
+          }
+
+          const strokeColor = isDivided ? '#a371f7' : '#f85149';
+          const purpleBg = `rgba(163, 113, 247, ${(0.28 + 0.45 * flash).toFixed(3)})`;
+          const curVals = isDivided ? data.prob : data.exp;
+          const rMult = 1 + (isFlash ? 0.20 * flash : 0);
+          const cat = isFlash ? 'flash' : (isDivided ? 'prob' : 'exp');
+          drawMatrix(strokeColor, purpleBg, curVals, 0, null, 1, '#ffffff', rMult, false, cat);
+        }
+        function drawPart2Phase8b(labelFade) {
+          const labelY = geom.matTop - 12 * s;
+          drawLabel("Attention Matrix (fully connected graph)", 0, labelY, "#58a6ff", "center", `600 ${Math.round(11 * s)}px ${SANS_FONT}`, labelFade);
+          drawValuesAtPosition(geom.valParkedY, 1.0);
+          drawMatrix('#58a6ff', 'rgba(88, 166, 255, 0.18)', data.prob, 0, null, 1, '#e6edf3', 1, true, 'prob');
+        }
+        function drawPart2Phase9Descent(param) {
+          const easeSub = easeInOut(param);
+          drawGridOutline(0.75);
+          drawMatrix('#58a6ff', 'rgba(88, 166, 255, 0.18)', data.prob, 0, null, 0.75, '#e6edf3', 1, true, 'prob');
+
+          for (let i = 0; i < T; i++) {
+            const curY = lerp(geom.valParkedY, geom.rowY[i], easeSub);
+            for (let j = 0; j < T; j++) {
+              const vx = geom.colX[j];
+              const vColor = getModalityColor(j);
+              const vFill = getModalityFill(j);
+              const curX = vx + (0.82 * geom.depthLen) / 2 * (1 - easeSub * 0.5);
+              drawDepthVector(curX, curY + (0.57 * geom.depthLen) / 2, d, geom.depthLen, vColor, vFill, data.v[j], 1, 0, 1, 'vector');
+            }
+          }
+
+          const leftV = geom.colX[0] - colBracketW / 2 - 4 * s;
+          const rightV = geom.colX[T - 1] + colBracketW / 2 + 4 * s;
+          const topBrackY = lerp(geom.valParkedY, geom.rowY[0], easeSub);
+          const botBrackY = lerp(geom.valParkedY, geom.rowY[T - 1], easeSub);
+          drawBracket(leftV, (topBrackY + botBrackY) / 2, (botBrackY - topBrackY) + colBracketH, true);
+          drawBracket(rightV, (topBrackY + botBrackY) / 2, (botBrackY - topBrackY) + colBracketH, false);
+        }
+        function drawPart2Phase9Collision(t) {
+          const orangePulse = Math.sin(t * Math.PI);
+          const strokeColor = '#f0883e';
+          const fillColor = `rgba(240, 136, 62, ${(0.28 + 0.45 * orangePulse).toFixed(3)})`;
+          const scaleR = 1.05 + 0.20 * orangePulse;
+
+          drawGridOutline(0.75);
+          for (let i = 0; i < T; i++) {
+            const cy = geom.rowY[i];
+            for (let j = 0; j < T; j++) {
+              const cx = geom.colX[j];
+              const bLabels = (data.broadcast && data.broadcast[i] && data.broadcast[i][j]) ? data.broadcast[i][j] : null;
+              drawDepthVector(cx, cy, d, geom.depthLen, strokeColor, fillColor, bLabels, 1, 0, scaleR, 'flash');
+            }
+          }
+          drawBracket(geom.matL, geom.matCenterY, geom.matHBrack, true, 1.0, '#f0883e');
+          drawBracket(geom.matR, geom.matCenterY, geom.matHBrack, false, 1.0, '#f0883e');
+        }
+        function drawPart2Phase9Weighted() {
+          drawGridOutline(0.75);
+          for (let i = 0; i < T; i++) {
+            const cy = geom.rowY[i];
+            for (let j = 0; j < T; j++) {
+              const cx = geom.colX[j];
+              const pWeight = data.probNums[i][j];
+              const bLabels = (data.broadcast && data.broadcast[i] && data.broadcast[i][j]) ? data.broadcast[i][j] : null;
+              drawWeightedVector(cx, cy, pWeight, bLabels, 1, geom.depthLen * 0.75);
+            }
+          }
+          drawBracket(geom.matL, geom.matCenterY, geom.matHBrack, true);
+          drawBracket(geom.matR, geom.matCenterY, geom.matHBrack, false);
+        }
+        function drawPart2Phase10(p) {
+          const pSum = easeInOut(Math.min(1, p / 0.65));
+          const isSummed = p >= 0.65;
+          const flash = isSummed ? Math.sin(((p - 0.65) / 0.35) * Math.PI) : 0;
+          const glow = 14 * flash;
+
+          drawGridOutline(0.75);
+          for (let i = 0; i < T; i++) {
+            const cy = geom.rowY[i];
+            if (isSummed) {
+              const oLabels = data.out[i];
+              drawDepthVector(geom.rightOutX + (0.82 * geom.depthLen) / 2, cy + (0.57 * geom.depthLen) / 2, d, geom.depthLen, '#3fb950', 'rgba(63, 185, 80, 0.28)', oLabels, 1, 0, 1 + 0.15 * flash, 'vector', glow, '#3fb950');
+            } else {
+              for (let j = 0; j < T; j++) {
+                const curX = lerp(geom.colX[j], geom.rightOutX, pSum);
+                const pWeight = data.probNums[i][j];
+                const bLabels = (data.broadcast && data.broadcast[i] && data.broadcast[i][j]) ? data.broadcast[i][j] : null;
+                drawWeightedVector(curX, cy, pWeight, bLabels, 1, geom.depthLen * 0.75);
+              }
+            }
+          }
+
+          // Target tokens lift off and fly to source tokens based on current cycle's arcs
+          if (!isSummed && currentArcs && currentArcs.length) {
+            const pNorm = Math.min(1, p / 0.65);
+            for (let k = 0; k < currentArcs.length; k++) {
+              const arc = currentArcs[k];
+              const startOffset = k * 0.04;
+              const duration = 0.84;
+              const localP = clamp((pNorm - startOffset) / duration, 0, 1);
+              if (localP > 0.01 && localP <= 1.0) {
+                drawTokenHemicircleLiftoff(arc.tgt, arc.src, localP, arc.tgtColor || arc.color, 1.0);
+              }
+            }
+          }
+
+          if (isSummed) {
+            const topO = geom.rowY[0] - rowBracketH / 2;
+            const botO = geom.rowY[T - 1] + rowBracketH / 2;
+            drawBracket(geom.rightOutX - rowBracketW / 2 - 4 * s, (topO + botO) / 2, botO - topO, true);
+            drawBracket(geom.rightOutX + rowBracketW / 2 + 4 * s, (topO + botO) / 2, botO - topO, false);
+            drawLabel("output", geom.rightOutX, geom.rowY[0] - rowBracketH / 2 - 14 * s, "#58a6ff", "center");
+          }
+        }
+        function drawPart2Phase11(p) {
+          const easeP = easeInOut(Math.min(1, p));
+
+          const topO = geom.rowY[0] - rowBracketH / 2;
+          const botO = geom.rowY[T - 1] + rowBracketH / 2;
+          const curOX = lerp(geom.rightOutX, 0, easeP);
+
+          drawBracket(curOX - rowBracketW / 2 - 4 * s, (topO + botO) / 2, botO - topO, true);
+          drawBracket(curOX + rowBracketW / 2 + 4 * s, (topO + botO) / 2, botO - topO, false);
+
+          for (let i = 0; i < T; i++) {
+            const cy = geom.rowY[i];
+            const curX = lerp(geom.rightOutX, 0, easeP) + (0.82 * geom.depthLen) / 2;
+            const curY = cy + (0.57 * geom.depthLen) / 2;
+            const curColor = getModalityColor(i);
+            const curFill = getModalityFill(i);
+            drawDepthVector(curX, curY, d, geom.depthLen, curColor, curFill, data.out[i], 1, 0, 1, 'vector');
+          }
+        }
+
         // Animation Loop Timings & Lifecycle
-        const PART1_DURATION = 27600;
+        const PART1_DURATION = 32000;
         const PART2_DURATION = 35000;
 
         let startTime = null;
@@ -10615,7 +11208,7 @@
           } else {
             graphicalCard.classList.remove('is-locked');
             graphicalCard.classList.add('is-unlocked');
-            if (headerDim) headerDim.innerHTML = '5 modalities &middot; 20 vec &middot; dim 4';
+            if (headerDim) headerDim.innerHTML = '6 modalities &middot; 24 vec &middot; dim 4';
           }
         }
 
@@ -10716,25 +11309,6 @@
           // Starfield in cosmic background
           drawUniverseBackground(now);
 
-          geom = calculateGeometry();
-          window.__geom = geom;
-
-          drawBracket = (x, y, h, isLeft, alpha = 1, color = "#484f58", wing = 5) => drawCanvasVerticalBracket(ctx, centerX + x, centerY + y, h, isLeft, alpha, color, wing);
-          drawLabel = (txt, x, y, col = '#e6edf3', align = 'center', font = null, alpha = 1) => {
-            if (alpha <= 0) return;
-            ctx.globalAlpha = alpha;
-            ctx.font = font || `400 ${Math.round(10 * s)}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
-            ctx.textAlign = align;
-            ctx.textBaseline = 'middle';
-            ctx.fillStyle = col;
-            ctx.fillText(txt, centerX + x, centerY + y);
-          };
-
-          colBracketW = 10 * s;
-          colBracketH = Math.abs(-0.57) * geom.depthLen + 10 * s;
-          rowBracketW = Math.abs(-0.82) * geom.depthLen + 10 * s;
-          rowBracketH = 10 * s;
-
           // part 1: tokenization
           if (totalElapsed < PART1_DURATION) {
             updateMathHighlight(null);
@@ -10742,7 +11316,7 @@
             // phase 0 - universe
             if (totalElapsed < 3000) {
               caption.style.opacity = '1';
-              caption.innerHTML = 'you can convert any modality into <span style="color:#58a6ff; font-weight:600;">feature vectors (tokens)</span>';
+              setCaption(caption, 'you can convert any modality into <span style="color:#58a6ff; font-weight:600;">feature vectors (tokens)</span>');
 
               const inP = Math.min(1, totalElapsed / 600);
               const outP = Math.min(1, (3000 - totalElapsed) / 600);
@@ -10760,7 +11334,7 @@
 
             // phase 1 - text
             if (totalElapsed >= 3000 && totalElapsed < 7400) {
-              caption.innerHTML = '<span style="color:#e3b341; font-weight:600;">Text</span> &rarr; sentence &rarr; subwords &rarr; embedding lookup &rarr; <span style="color:#e3b341; font-weight:600;">4 token vectors</span>';
+              setCaption(caption, '<span style="color:#e3b341; font-weight:600;">Text</span> &rarr; sentence &rarr; subwords &rarr; embedding lookup &rarr; <span style="color:#e3b341; font-weight:600;">4 token vectors</span>');
 
               const phaseT = totalElapsed - 3000;
               const earthR = 42 * s;
@@ -10939,7 +11513,7 @@
 
             // phase 2 - vision
             if (totalElapsed >= 7400 && totalElapsed < 11800) {
-              caption.innerHTML = '<span style="color:#3fb950; font-weight:600;">Vision</span> &rarr; 2D image &rarr; image patches &rarr; linear projection &rarr; <span style="color:#3fb950; font-weight:600;">4 token vectors</span>';
+              setCaption(caption, '<span style="color:#3fb950; font-weight:600;">Vision</span> &rarr; 2D image &rarr; image patches &rarr; linear projection &rarr; <span style="color:#3fb950; font-weight:600;">4 token vectors</span>');
 
               drawDockedModalityVectors(1, 1.0);
 
@@ -11132,7 +11706,7 @@
 
             // phase 3 - sound
             if (totalElapsed >= 11800 && totalElapsed < 16200) {
-              caption.innerHTML = '<span style="color:#a371f7; font-weight:600;">Sound</span> &rarr; audio waveform &rarr; STFT spectrogram frames (time &times; freq) &rarr; projection &rarr; <span style="color:#a371f7; font-weight:600;">4 token vectors</span>';
+              setCaption(caption, '<span style="color:#a371f7; font-weight:600;">Sound</span> &rarr; audio waveform &rarr; STFT spectrogram frames (time &times; freq) &rarr; projection &rarr; <span style="color:#a371f7; font-weight:600;">4 token vectors</span>');
 
               drawDockedModalityVectors(2, 1.0);
 
@@ -11345,7 +11919,7 @@
 
             // phase 4 - atoms
             if (totalElapsed >= 16200 && totalElapsed < 20600) {
-              caption.innerHTML = '<span style="color:#58a6ff; font-weight:600;">Atoms</span> &rarr; molecular graph &rarr; atom features (charge, mass, etc..) &rarr; MLP &rarr; <span style="color:#58a6ff; font-weight:600;">4 token vectors</span>';
+              setCaption(caption, '<span style="color:#58a6ff; font-weight:600;">Atoms</span> &rarr; molecular graph &rarr; atom features (charge, mass, etc..) &rarr; MLP &rarr; <span style="color:#58a6ff; font-weight:600;">4 token vectors</span>');
 
               drawDockedModalityVectors(3, 1.0);
 
@@ -11561,7 +12135,7 @@
 
             // phase 5 - action
             if (totalElapsed >= 20600 && totalElapsed < 25000) {
-              caption.innerHTML = '<span style="color:#f778ba; font-weight:600;">Action Chunk</span> &rarr; robot arm trajectory &rarr; intermediate action tokens (t₁&ndash;t₄) &rarr; projection &rarr; <span style="color:#f778ba; font-weight:600;">4 token vectors</span>';
+              setCaption(caption, '<span style="color:#f778ba; font-weight:600;">Action Chunk</span> &rarr; robot arm trajectory &rarr; intermediate action tokens (t₁&ndash;t₄) &rarr; projection &rarr; <span style="color:#f778ba; font-weight:600;">4 token vectors</span>');
 
               drawDockedModalityVectors(4, 1.0);
 
@@ -11762,7 +12336,7 @@
               if (glideP >= 0.85) {
                 const bAlpha = (glideP - 0.85) / 0.15;
                 const xStart = geom.tokX[16];
-                const xEnd = geom.tokX[19];
+                const xEnd = geom.tokX[T - 1];
                 const cx = centerX + (xStart + xEnd) / 2;
                 const w = (xEnd - xStart) + 12 * s;
 
@@ -11795,18 +12369,144 @@
               return;
             }
 
-            // phase 6 - convergence
-            if (totalElapsed >= 25000) {
-              const phaseT = totalElapsed - 25000;
-              const p = phaseT / 2600;
-
-              caption.innerHTML = 'all 5 modalities converge into a sequence of <span style="color:#58a6ff; font-weight:600;">20 vectors (tokens)</span> &rarr; feeds into Multimodal Transformer';
+            // phase 6 - dna
+            if (totalElapsed >= 25000 && totalElapsed < 29400) {
+              setCaption(caption, '<span style="color:#2dd4bf; font-weight:600;">DNA</span> &rarr; double helix &rarr; base pairs (A, C, T, G) &rarr; projection &rarr; <span style="color:#2dd4bf; font-weight:600;">4 token vectors</span>');
 
               drawDockedModalityVectors(5, 1.0);
 
+              const phaseT = totalElapsed - 25000;
+              const earthR = 42 * s;
+              const earthRot = totalElapsed * 0.0004;
+              drawEarth(0, -95 * s, earthR, earthRot, 0.20, totalElapsed, 5);
+
+              const plaqueAlpha = easeInOut(Math.min(1, phaseT / 500));
+              drawModalityPlaque('DNA ──> double helix ──> base pairs (A, C, T, G) ──> projection', '#2dd4bf', [45, 212, 191], plaqueAlpha);
+
+              const podStart = getPodOrbitPos(5, 25000, earthR);
+
+              if (phaseT < 800) {
+                const p = phaseT / 800;
+                const easeP = easeInOut(p);
+                const curX = lerp(podStart.x, 0, easeP);
+                const curY = lerp(podStart.y - 45 * s, itemRowY, easeP);
+
+                ctx.save();
+                ctx.strokeStyle = 'rgba(45, 212, 191, 0.45)';
+                ctx.lineWidth = 2.0;
+                ctx.beginPath();
+                ctx.moveTo(centerX + podStart.x, centerY + podStart.y - 45 * s);
+                ctx.quadraticCurveTo(centerX + podStart.x * 0.5, centerY + itemRowY, centerX + curX, centerY + curY);
+                ctx.stroke();
+
+                const rPod = lerp(4.5, 14 * s, easeP);
+                ctx.fillStyle = '#2dd4bf';
+                ctx.beginPath();
+                ctx.arc(centerX + curX, centerY + curY, rPod, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+                return;
+              }
+
+              if (phaseT >= 800 && phaseT < 1700) {
+                const p = (phaseT - 800) / 900;
+                const inAlpha = easeInOut(Math.min(1, p * 2.0));
+                drawDnaHelixCard(centerX, centerY + itemRowY, 240 * s, 56 * s, inAlpha);
+                return;
+              }
+
+              if (phaseT >= 1700 && phaseT < 2800) {
+                const p = (phaseT - 1700) / 1100;
+                const splitEase = easeInOut(p);
+                const startXs = [-60 * s, -20 * s, 20 * s, 60 * s];
+
+                for (let k = 0; k < 4; k++) {
+                  const curX = lerp(startXs[k], activeTargetsX[k], splitEase);
+                  drawDnaChip(centerX + curX, centerY + itemRowY, 40 * s, 34 * s, 1.0, k);
+                }
+                return;
+              }
+
+              const p = (phaseT - 2800) / 1600;
+              const emergeP = easeInOut(Math.min(1, p / 0.45));
+              const glideP = easeInOut(Math.max(0, (p - 0.45) / 0.55));
+
+              for (let k = 0; k < 4; k++) {
+                const curX = activeTargetsX[k];
+                const chipAlpha = Math.max(0.20, 1 - glideP * 0.70);
+                drawDnaChip(centerX + curX, centerY + itemRowY, 40 * s, 34 * s, chipAlpha, k);
+
+                if (glideP < 0.90) {
+                  ctx.save();
+                  ctx.strokeStyle = `rgba(45, 212, 191, ${(0.45 * (1 - glideP)).toFixed(2)})`;
+                  ctx.lineWidth = 1.0;
+                  ctx.setLineDash([2, 3]);
+                  ctx.beginPath();
+                  ctx.moveTo(centerX + curX, centerY + itemRowY + 14 * s);
+                  ctx.lineTo(centerX + curX, centerY + vecRowY - 18 * s);
+                  ctx.stroke();
+                  ctx.restore();
+                }
+
+                const destX = geom.tokX[20 + k];
+                const destY = geom.vecY;
+                const vCurX = lerp(activeTargetsX[k], destX, glideP);
+                const vCurY = lerp(vecRowY, destY, glideP);
+
+                for (let m = 0; m < 4; m++) {
+                  const cy = vCurY + (m - 1.5) * 11 * s;
+                  drawCircle(vCurX, cy, 4.2 * s, '#2dd4bf', 'rgba(45, 212, 191, 0.20)', BASE_VECTORS[20 + k][m], 0, null, emergeP, '#8b949e', 'docked');
+                }
+              }
+
+              if (glideP >= 0.85) {
+                const bAlpha = (glideP - 0.85) / 0.15;
+                const xStart = geom.tokX[20];
+                const xEnd = geom.tokX[23];
+                const cx = centerX + (xStart + xEnd) / 2;
+                const w = (xEnd - xStart) + 12 * s;
+
+                ctx.globalAlpha = bAlpha;
+                ctx.strokeStyle = '#2dd4bf';
+                ctx.lineWidth = 1.6;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(cx - w / 2, centerY + geom.vecY + 23 * s);
+                ctx.lineTo(cx + w / 2, centerY + geom.vecY + 23 * s);
+                ctx.stroke();
+
+                const pillW = Math.max(52 * s, w * 0.88);
+                const pillH = 15 * s;
+                const pillY = centerY + geom.vecY + 29 * s;
+                ctx.fillStyle = 'rgba(45, 212, 191, 0.14)';
+                ctx.beginPath();
+                ctx.roundRect(cx - pillW / 2, pillY, pillW, pillH, 4 * s);
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(45, 212, 191, 0.45)';
+                ctx.lineWidth = 0.8;
+                ctx.stroke();
+
+                ctx.font = `600 ${Math.round(9.5 * s)}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#2dd4bf';
+                ctx.fillText('dna (4)', cx, pillY + pillH / 2);
+              }
+              return;
+            }
+
+            // phase 7 - convergence
+            if (totalElapsed >= 29400) {
+              const phaseT = totalElapsed - 29400;
+              const p = phaseT / 2600;
+
+              setCaption(caption, 'all 6 modalities converge into a sequence of <span style="color:#58a6ff; font-weight:600;">24 vectors (tokens)</span> &rarr; feeds into Multimodal Transformer');
+
+              drawDockedModalityVectors(6, 1.0);
+
               const liftEase = easeInOut(clamp((p - 0.20) / 0.75, 0, 1));
 
-              for (let i = 0; i < 20; i++) {
+              for (let i = 0; i < T; i++) {
                 const startX = geom.tokX[i];
                 const startY = geom.vecY;
                 const targetX = (0.82 * geom.depthLen) / 2;
@@ -11833,6 +12533,7 @@
             activeCycleIndex = cycleIdx;
             data = generateTransformerData(cycleIdx);
             currentArcs = data.enrichedArcs;
+            layerGen++;
           }
 
           let activeArc = null;
@@ -11842,8 +12543,8 @@
             activeArc = currentArcs[arcIdx];
           }
 
-          // Draw the 20 Constituent Modality Docked Vectors at the bottom
-          drawDockedModalityVectors(5, 1.0, activeArc);
+          // Draw the 24 Constituent Modality Docked Vectors at the bottom
+          drawDockedModalityVectors(6, 1.0, activeArc);
 
           if (activeArc) {
             const arcProg = ((p2_time - 14400) % (10000 / currentArcs.length)) / (10000 / currentArcs.length);
@@ -11855,124 +12556,34 @@
           if (p2_time < 1400) {
             updateMathHighlight(null);
             caption.style.opacity = '1';
-            caption.innerHTML = '<span style="color:#e3b341; font-weight:600;">text</span> (4) &middot; <span style="color:#3fb950; font-weight:600;">vision</span> (4) &middot; <span style="color:#a371f7; font-weight:600;">sound</span> (4) &middot; <span style="color:#58a6ff; font-weight:600;">atoms</span> (4) &middot; <span style="color:#f778ba; font-weight:600;">action chunk</span> (4)<br>20 vectors &middot; dim 4';
+            setCaption(caption, '<span style="color:#e3b341; font-weight:600;">text</span> (4) &middot; <span style="color:#3fb950; font-weight:600;">vision</span> (4) &middot; <span style="color:#a371f7; font-weight:600;">sound</span> (4) &middot; <span style="color:#58a6ff; font-weight:600;">atoms</span> (4) &middot; <span style="color:#f778ba; font-weight:600;">action chunk</span> (4) &middot; <span style="color:#2dd4bf; font-weight:600;">dna</span> (4)<br>24 vectors &middot; dim 4');
 
-            const vecHeaderY = geom.rowY[0] - rowBracketH / 2 - 14 * s;
-            drawLabel("vectors", 0, vecHeaderY, "#58a6ff", "center", `400 ${Math.round(11 * s)}px ui-monospace, monospace`);
-
-            const textY = (geom.rowY[0] + geom.rowY[3]) / 2;
-            const visionY = (geom.rowY[4] + geom.rowY[7]) / 2;
-            const soundY = (geom.rowY[8] + geom.rowY[11]) / 2;
-            const atomsY = (geom.rowY[12] + geom.rowY[15]) / 2;
-            const actionY = (geom.rowY[16] + geom.rowY[19]) / 2;
-
-            drawModalityRowIndicator("text", textY, "#e3b341", geom.rowY[0], geom.rowY[3], 0);
-            drawModalityRowIndicator("vision", visionY, "#3fb950", geom.rowY[4], geom.rowY[7], 0);
-            drawModalityRowIndicator("sound", soundY, "#a371f7", geom.rowY[8], geom.rowY[11], 0);
-            drawModalityRowIndicator("atoms", atomsY, "#58a6ff", geom.rowY[12], geom.rowY[15], 0);
-            drawModalityRowIndicator("action chunk", actionY, "#f778ba", geom.rowY[16], geom.rowY[19], 0);
-
-            for (let i = 0; i < 20; i++) {
-              const cy = geom.rowY[i];
-              const vLabels = data.q[i];
-              const vColor = getModalityColor(i);
-              const vFill = getModalityFill(i);
-              drawDepthVector((0.82 * geom.depthLen) / 2, cy + (0.57 * geom.depthLen) / 2, d, geom.depthLen, vColor, vFill, vLabels, 1, 0, 1, 'vector');
-            }
-            const topV = geom.rowY[0] - rowBracketH / 2;
-            const botV = geom.rowY[19] + rowBracketH / 2;
-            drawBracket(-rowBracketW / 2 - 4 * s, (topV + botV) / 2, botV - topV, true);
-            drawBracket(rowBracketW / 2 + 4 * s, (topV + botV) / 2, botV - topV, false);
+            renderCachedFrame('p1', 0, 1, drawPart2Phase1);
             return;
           }
 
           // phase 2 - separate q, k, v
           if (p2_time >= 1400 && p2_time < 3200) {
             updateMathHighlight(null);
-            caption.innerHTML = 'vectors &rarr; separate into <span style="color:#58a6ff;">queries</span> (rows), <span style="color:#58a6ff;">keys</span> &amp; <span style="color:#58a6ff;">values</span> (columns)';
+            setCaption(caption, 'vectors &rarr; separate into <span style="color:#58a6ff;">queries</span> (rows), <span style="color:#58a6ff;">keys</span> &amp; <span style="color:#58a6ff;">values</span> (columns)');
 
-            const ease = easeInOut((p2_time - 1400) / 1800);
-            drawGridOutline(ease * 0.85);
-
-            const vecHeaderY = geom.rowY[0] - rowBracketH / 2 - 14 * s;
-            drawLabel("vectors", 0, vecHeaderY, "#58a6ff", "center", `400 ${Math.round(11 * s)}px ui-monospace`, Math.max(0, 1 - ease * 2.0));
-
-            const curQX = lerp(0, geom.leftQueryX, ease);
-            const qHeaderY = geom.rowY[0] - rowBracketH / 2 - 14 * s;
-            drawLabel("queries", curQX, qHeaderY, "#58a6ff", "center", null, ease);
-
-            const textY = (geom.rowY[0] + geom.rowY[3]) / 2;
-            const visionY = (geom.rowY[4] + geom.rowY[7]) / 2;
-            const soundY = (geom.rowY[8] + geom.rowY[11]) / 2;
-            const atomsY = (geom.rowY[12] + geom.rowY[15]) / 2;
-            const actionY = (geom.rowY[16] + geom.rowY[19]) / 2;
-
-            drawModalityRowIndicator("text", textY, "#e3b341", geom.rowY[0], geom.rowY[3], curQX);
-            drawModalityRowIndicator("vision", visionY, "#3fb950", geom.rowY[4], geom.rowY[7], curQX);
-            drawModalityRowIndicator("sound", soundY, "#a371f7", geom.rowY[8], geom.rowY[11], curQX);
-            drawModalityRowIndicator("atoms", atomsY, "#58a6ff", geom.rowY[12], geom.rowY[15], curQX);
-            drawModalityRowIndicator("action chunk", actionY, "#f778ba", geom.rowY[16], geom.rowY[19], curQX);
-
-            for (let i = 0; i < 20; i++) {
-              const qy = geom.rowY[i];
-              const qLabels = data.q[i];
-              const qColor = getModalityColor(i);
-              const qFill = getModalityFill(i);
-              drawDepthVector(curQX + (0.82 * geom.depthLen) / 2, qy + (0.57 * geom.depthLen) / 2, d, geom.depthLen, qColor, qFill, qLabels, 1, 0, 1, 'vector');
-            }
-            const topQ = geom.rowY[0] - rowBracketH / 2;
-            const botQ = geom.rowY[19] + rowBracketH / 2;
-            drawBracket(curQX - rowBracketW / 2 - 4 * s, (topQ + botQ) / 2, botQ - topQ, true);
-            drawBracket(curQX + rowBracketW / 2 + 4 * s, (topQ + botQ) / 2, botQ - topQ, false);
-
-            const curKY = lerp((geom.rowY[0] + geom.rowY[19]) / 2, geom.topKeyY, ease);
-            for (let j = 0; j < 20; j++) {
-              const kx = lerp(0, geom.colX[j], ease);
-              const ky = lerp(geom.rowY[j], geom.topKeyY, ease);
-              const kLabels = data.k[j];
-              const kColor = getModalityColor(j);
-              const kFill = getModalityFill(j);
-              drawDepthVector(kx + (0.82 * geom.depthLen) / 2, ky + (0.57 * geom.depthLen) / 2, d, geom.depthLen, kColor, kFill, kLabels, 1, 0, 1, 'vector');
-            }
-            const leftK = lerp(-colBracketW / 2 - 4 * s, geom.colX[0] - colBracketW / 2 - 4 * s, ease);
-            const rightK = lerp(colBracketW / 2 + 4 * s, geom.colX[19] + colBracketW / 2 + 4 * s, ease);
-            drawBracket(leftK, curKY, colBracketH, true, ease);
-            drawBracket(rightK, curKY, colBracketH, false, ease);
-            drawLabel("keys", 0, curKY - colBracketH / 2 - 14 * s, "#58a6ff", "center", null, ease);
-
-            const curVY = lerp((geom.rowY[0] + geom.rowY[19]) / 2, geom.topValY, ease);
-            for (let j = 0; j < 20; j++) {
-              const vx = lerp(0, geom.colX[j], ease);
-              const vy = lerp(geom.rowY[j], geom.topValY, ease);
-              const vColor = getModalityColor(j);
-              const vFill = getModalityFill(j);
-              drawDepthVector(vx + (0.82 * geom.depthLen) / 2, vy + (0.57 * geom.depthLen) / 2, d, geom.depthLen, vColor, vFill, data.v[j], ease, 0, 1, 'vector');
-            }
-            const leftV = lerp(-colBracketW / 2 - 4 * s, geom.colX[0] - colBracketW / 2 - 4 * s, ease);
-            const rightV = lerp(colBracketW / 2 + 4 * s, geom.colX[19] + colBracketW / 2 + 4 * s, ease);
-            drawBracket(leftV, curVY, colBracketH, true, ease);
-            drawBracket(rightV, curVY, colBracketH, false, ease);
-            drawLabel("values", 0, curVY - colBracketH / 2 - 14 * s, "#58a6ff", "center", null, ease);
-
+            renderCachedFrame('p2', easeInOut((p2_time - 1400) / 1800), 128, drawPart2Phase2);
             return;
           }
 
           // phase 3 - static q, k, v
           if (p2_time >= 3200 && p2_time < 4200) {
             updateMathHighlight(null);
-            caption.innerHTML = `<span style="color:#58a6ff;">queries</span> Q (rows), <span style="color:#58a6ff;">keys</span> K &amp; <span style="color:#58a6ff;">values</span> V (columns)`;
+            setCaption(caption, `<span style="color:#58a6ff;">queries</span> Q (rows), <span style="color:#58a6ff;">keys</span> K &amp; <span style="color:#58a6ff;">values</span> V (columns)`);
 
-            drawLabel("queries", geom.leftQueryX, geom.rowY[0] - rowBracketH / 2 - 14 * s, "#58a6ff", "center");
-            drawLabel("keys", 0, geom.topKeyY - colBracketH / 2 - 14 * s, "#58a6ff", "center");
-            drawStaticHeaders(1.0);
-            drawValuesAtPosition(geom.topValY, 1.0);
+            renderCachedFrame('p3', 0, 1, drawPart2Phase3);
             return;
           }
 
           // phase 4 - dot product
           if (p2_time >= 4200 && p2_time < 6400) {
             updateMathHighlight('qk-orange');
-            caption.innerHTML = 'dot product: <span class="caption-op mul" style="color:#f0883e;">&times; multiply</span> matching elements of each query and key';
+            setCaption(caption, 'dot product: <span class="caption-op mul" style="color:#f0883e;">&times; multiply</span> matching elements of each query and key');
 
             const p = (p2_time - 4200) / 2200;
             const isApproach = p < 0.65;
@@ -11997,17 +12608,17 @@
 
             // Subtle alignment guide grid lines expanding as Q and K glide in
             ctx.save();
-            const guideEndX = lerp(geom.leftQueryX, geom.colX[19] + 10 * s, easeApproach);
+            const guideEndX = lerp(geom.leftQueryX, geom.colX[T - 1] + 10 * s, easeApproach);
             const guideFade = isApproach ? 1.0 : Math.max(0, 1 - (p - 0.65) / 0.20);
             ctx.strokeStyle = `rgba(88, 166, 255, ${(0.25 * guideFade).toFixed(3)})`;
             ctx.lineWidth = 0.8;
             ctx.beginPath();
-            for (let i = 0; i < 20; i++) {
+            for (let i = 0; i < T; i++) {
               ctx.moveTo(centerX + geom.leftQueryX + rowBracketW / 2 + 4 * s, centerY + geom.rowY[i]);
               ctx.lineTo(centerX + guideEndX, centerY + geom.rowY[i]);
             }
-            const guideEndY = lerp(geom.topKeyY, geom.rowY[19] + 10 * s, easeApproach);
-            for (let j = 0; j < 20; j++) {
+            const guideEndY = lerp(geom.topKeyY, geom.rowY[T - 1] + 10 * s, easeApproach);
+            for (let j = 0; j < T; j++) {
               ctx.moveTo(centerX + geom.colX[j], centerY + geom.topKeyY + colBracketH / 2);
               ctx.lineTo(centerX + geom.colX[j], centerY + guideEndY);
             }
@@ -12016,13 +12627,13 @@
 
             const scale = 1 + 0.16 * flash;
 
-            for (let i = 0; i < 20; i++) {
+            for (let i = 0; i < T; i++) {
               const cy = geom.rowY[i];
               const qLabels = data.q[i];
               const qColor = getModalityColor(i);
               const qFill = getModalityFill(i);
 
-              for (let j = 0; j < 20; j++) {
+              for (let j = 0; j < T; j++) {
                 const cx = geom.colX[j];
                 const kLabels = data.k[j];
                 const kColor = getModalityColor(j);
@@ -12061,145 +12672,48 @@
           // phase 5 - similarity scores
           if (p2_time >= 6400 && p2_time < 8600) {
             updateMathHighlight('qk-green');
-            caption.innerHTML = 'similarity: <span class="caption-op add" style="color:#3fb950;">&sum; sum</span> pairwise products &rarr; raw similarity score <span style="color:#3fb950;">S = Q &middot; K<sup>T</sup></span>';
+            setCaption(caption, 'similarity: <span class="caption-op add" style="color:#3fb950;">&sum; sum</span> pairwise products &rarr; raw similarity score <span style="color:#3fb950;">S = Q &middot; K<sup>T</sup></span>');
 
-            const p = (p2_time - 6400) / 2200;
-            const pSum = easeInOut(p);
-
-            drawValuesAtPosition(geom.valParkedY, 1.0);
-
-            for (let i = 0; i < 20; i++) {
-              const cy = geom.rowY[i];
-              for (let j = 0; j < 20; j++) {
-                const cx = geom.colX[j];
-                const simVal = data.sim[i][j];
-                const bLabels = (data.broadcast && data.broadcast[i] && data.broadcast[i][j]) ? data.broadcast[i][j] : null;
-
-                if (pSum < 0.85) {
-                  drawDepthVector(cx + (0.82 * geom.depthLen) / 2, cy + (0.57 * geom.depthLen) / 2, d, geom.depthLen, '#f0883e', 'rgba(240, 136, 62, 0.22)', bLabels, 1 - pSum, pSum, 1, 'vector');
-                }
-                drawCircle(cx, cy, geom.cellR, '#3fb950', 'rgba(63, 185, 80, 0.22)', simVal, 0, null, pSum, '#ffffff', 'sim');
-              }
-            }
-            drawBracket(geom.matL, geom.matCenterY, geom.matHBrack, true);
-            drawBracket(geom.matR, geom.matCenterY, geom.matHBrack, false);
+            renderCachedFrame('p5', (p2_time - 6400) / 2200, 128, drawPart2Phase5);
             return;
           }
 
           // phase 6 - softmax exp
           if (p2_time >= 8600 && p2_time < 10800) {
             updateMathHighlight('softmax-red');
-            caption.innerHTML = '<span class="caption-op exp" style="color:#f85149;">Softmax</span> (step 1): <span class="caption-op exp">exp(S)</span> &rarr; strictly positive scale';
-
-            const labelFade = Math.min(1, (p2_time - 8600) / 350);
-            const labelY = geom.matTop - 12 * s;
-            drawLabel("softmax", 0, labelY, "#f85149", "center", `400 ${Math.round(11 * s)}px ui-monospace`, labelFade);
-            drawValuesAtPosition(geom.valParkedY, 1.0);
+            setCaption(caption, '<span class="caption-op exp" style="color:#f85149;">Softmax</span> (step 1): <span class="caption-op exp">exp(S)</span> &rarr; strictly positive scale');
 
             const p = (p2_time - 8600) / 2200;
-            const isFlash = p >= 0.35 && p < 0.70;
-            const flash = isFlash ? Math.sin(((p - 0.35) / 0.35) * Math.PI) : 0;
-            const isExp = p >= 0.50;
-
-            const strokeColor = isExp ? '#f85149' : '#3fb950';
-            const redBg = `rgba(248, 81, 73, ${(0.20 + 0.40 * flash).toFixed(3)})`;
-            const curVals = isExp ? data.exp : data.sim;
-            const rMult = 1 + (isFlash ? 0.22 * flash : 0);
-            const cat = isFlash ? 'flash' : (isExp ? 'exp' : 'sim');
-
-            drawMatrix(strokeColor, redBg, curVals, 0, null, 1, '#ffffff', rMult, false, cat);
+            if (p < 0.70) {
+              renderCachedFrame('p6', p, 128, drawPart2Phase6);
+            } else {
+              // static tail: exp matrix, no flash
+              renderCachedFrame('p6-static', 1, 1, drawPart2Phase6);
+            }
             return;
           }
 
           // phase 7 - softmax row sum
           if (p2_time >= 10800 && p2_time < 12600) {
             updateMathHighlight('softmax-red');
-            caption.innerHTML = '<span class="caption-op exp">Softmax</span> (step 2): <span class="caption-op add">+ sum</span> each row &rarr; normalization denominators';
+            setCaption(caption, '<span class="caption-op exp">Softmax</span> (step 2): <span class="caption-op add">+ sum</span> each row &rarr; normalization denominators');
 
-            const labelY = geom.matTop - 12 * s;
-            drawLabel("softmax", 0, labelY, "#7d8590", "center", `400 ${Math.round(11 * s)}px ui-monospace`, 1);
-            drawValuesAtPosition(geom.valParkedY, 1.0);
-
-            const p = (p2_time - 10800) / 1800;
-            const easeSum = easeInOut(Math.min(1, p / 0.72));
-            const isSummed = p >= 0.72;
-            const flash = isSummed ? Math.sin(((p - 0.72) / 0.28) * Math.PI) : 0;
-
-            drawMatrix('#f85149', 'rgba(248, 81, 73, 0.18)', data.exp, 0, null, 1, '#e6edf3', 1, false, 'exp');
-
-            if (isSummed) {
-              drawLabel("row sum", geom.rightSumX, geom.rowY[0] - 14 * s, "#3fb950", "center", `400 ${Math.round(10 * s)}px ui-monospace`);
-            }
-
-            for (let i = 0; i < 20; i++) {
-              const cy = geom.rowY[i];
-              const rowSumVal = data.sum[i];
-              if (isSummed) {
-                const rSum = geom.cellR * 1.18 * (1 + 0.22 * flash);
-                const greenBg = `rgba(63, 185, 80, ${0.18 + 0.35 * flash})`;
-
-                ctx.beginPath();
-                ctx.arc(centerX + geom.rightSumX, centerY + cy, rSum + 2.5 * s, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(10, 13, 18, 0.70)';
-                ctx.fill();
-                ctx.strokeStyle = `rgba(63, 185, 80, ${0.20 + 0.20 * flash})`;
-                ctx.lineWidth = 0.75;
-                ctx.stroke();
-
-                drawCircle(geom.rightSumX, cy, rSum, '#3fb950', greenBg, rowSumVal, 0, null, 1, '#e6edf3', 'sum');
-              } else {
-                for (let j = 0; j < 20; j++) {
-                  const curX = lerp(geom.colX[j], geom.rightSumX, easeSum);
-                  const valIJ = data.exp[i][j];
-                  drawCircle(curX, cy, geom.cellR * 0.9, '#f85149', 'rgba(248, 81, 73, 0.20)', valIJ, 0, null, 0.85, '#e6edf3', 'exp');
-                }
-              }
-            }
+            renderCachedFrame('p7', (p2_time - 10800) / 1800, 128, drawPart2Phase7);
             return;
           }
 
           // phase 8 - softmax divide
           if (p2_time >= 12600 && p2_time < 14400) {
             updateMathHighlight('softmax-purple');
-            caption.innerHTML = '<span class="caption-op exp" style="color:#a371f7;">Softmax</span> (step 3): <span class="caption-op div" style="color:#a371f7;">&divide; divide</span> each row by its sum &rarr; <span style="color:#a371f7;">Attention Matrix A</span>';
-
-            const labelY = geom.matTop - 12 * s;
-            drawLabel("softmax", 0, labelY, "#a371f7", "center", `400 ${Math.round(11 * s)}px ui-monospace`, 1);
-            drawValuesAtPosition(geom.valParkedY, 1.0);
+            setCaption(caption, '<span class="caption-op exp" style="color:#a371f7;">Softmax</span> (step 3): <span class="caption-op div" style="color:#a371f7;">&divide; divide</span> each row by its sum &rarr; <span style="color:#a371f7;">Attention Matrix A</span>');
 
             const p = (p2_time - 12600) / 1800;
-            const pMove = Math.min(1, p / 0.40);
-            const isDivided = p >= 0.40;
-            const isFlash = p >= 0.40 && p < 0.75;
-            const flash = isFlash ? Math.sin(((p - 0.40) / 0.35) * Math.PI) : 0;
-            const rayAlpha = Math.sin(Math.min(1, p / 0.60) * Math.PI);
-
-            for (let i = 0; i < 20; i++) {
-              const cy = geom.rowY[i];
-              const curSumX = lerp(geom.rightSumX, geom.colX[19], easeInOut(pMove));
-              const fadeSum = Math.max(0, 1 - pMove * 1.5);
-              if (fadeSum > 0) {
-                drawCircle(curSumX, cy, geom.cellR * 1.15, '#3fb950', 'rgba(63, 185, 80, 0.25)', data.sum[i], 0, null, fadeSum, '#e6edf3', 'sum');
-              }
+            if (p < 0.75) {
+              renderCachedFrame('p8', p, 128, drawPart2Phase8);
+            } else {
+              // static tail: divided matrix, sums faded out
+              renderCachedFrame('p8-static', 1, 1, drawPart2Phase8);
             }
-
-            if (rayAlpha > 0) {
-              ctx.strokeStyle = `rgba(163, 113, 247, ${rayAlpha * 0.55})`;
-              ctx.lineWidth = 1.0;
-              ctx.beginPath();
-              for (let i = 0; i < 20; i++) {
-                ctx.moveTo(centerX + geom.rightSumX, centerY + geom.rowY[i]);
-                ctx.lineTo(centerX + geom.colX[0] - geom.cellW / 2, centerY + geom.rowY[i]);
-              }
-              ctx.stroke();
-            }
-
-            const strokeColor = isDivided ? '#a371f7' : '#f85149';
-            const purpleBg = `rgba(163, 113, 247, ${(0.28 + 0.45 * flash).toFixed(3)})`;
-            const curVals = isDivided ? data.prob : data.exp;
-            const rMult = 1 + (isFlash ? 0.20 * flash : 0);
-            const cat = isFlash ? 'flash' : (isDivided ? 'prob' : 'exp');
-            drawMatrix(strokeColor, purpleBg, curVals, 0, null, 1, '#ffffff', rMult, false, cat);
             return;
           }
 
@@ -12208,18 +12722,13 @@
             updateMathHighlight('softmax-purple');
             caption.style.opacity = '1';
 
-            const labelFade = Math.min(1, (p2_time - 14400) / 400);
-            const labelY = geom.matTop - 12 * s;
-            drawLabel("Attention Matrix (fully connected graph)", 0, labelY, "#58a6ff", "center", `600 ${Math.round(11 * s)}px ${SANS_FONT}`, labelFade);
-            drawValuesAtPosition(geom.valParkedY, 1.0);
-
             if (activeArc) {
-              caption.innerHTML = `<span style="color:${activeArc.color}; font-weight:600;">(modality ${activeArc.srcMod} token "${activeArc.srcTok}")</span> attends to <span style="color:${activeArc.tgtColor}; font-weight:600;">(modality ${activeArc.tgtMod} token "${activeArc.tgtTok}")</span> &mdash; highest value after normalization`;
+              setCaption(caption, `<span style="color:${activeArc.color}; font-weight:600;">(modality ${activeArc.srcMod} token "${activeArc.srcTok}")</span> attends to <span style="color:${activeArc.tgtColor}; font-weight:600;">(modality ${activeArc.tgtMod} token "${activeArc.tgtTok}")</span> &mdash; highest value after normalization`);
             } else {
-              caption.innerHTML = '= Attention Matrix A = 20&times;20 fully connected graph &middot; <span class="caption-op exp">softmax</span> normalizes each row (row sum = 1.0)';
+              setCaption(caption, '= Attention Matrix A = 24&times;24 fully connected graph &middot; <span class="caption-op exp">softmax</span> normalizes each row (row sum = 1.0)');
             }
 
-            drawMatrix('#58a6ff', 'rgba(88, 166, 255, 0.18)', data.prob, 0, null, 1, '#e6edf3', 1, true, 'prob');
+            renderCachedFrame('p8b', Math.min(1, (p2_time - 14400) / 400), 16, drawPart2Phase8b);
 
             if (activeArc) {
               const spotX = centerX + geom.colX[activeArc.tgt];
@@ -12247,61 +12756,14 @@
           if (p2_time >= 24400 && p2_time < 27600) {
             updateMathHighlight('val-orange');
             const p = (p2_time - 24400) / 3200;
-            caption.innerHTML = '<span class="caption-op val" style="color:#58a6ff;">weight values using attention matrix</span> &rarr; <span class="caption-op mul" style="color:#f0883e;">&times; multiply</span> values by attention weights';
+            setCaption(caption, '<span class="caption-op val" style="color:#58a6ff;">weight values using attention matrix</span> &rarr; <span class="caption-op mul" style="color:#f0883e;">&times; multiply</span> values by attention weights');
 
-            drawGridOutline(0.75);
-            const isDescent = p < 0.45;
-            const isCollision = p >= 0.45 && p < 0.72;
-
-            if (isDescent) {
-              const easeSub = easeInOut(p / 0.45);
-              drawMatrix('#58a6ff', 'rgba(88, 166, 255, 0.18)', data.prob, 0, null, 0.75, '#e6edf3', 1, true, 'prob');
-
-              for (let i = 0; i < 20; i++) {
-                const curY = lerp(geom.valParkedY, geom.rowY[i], easeSub);
-                for (let j = 0; j < 20; j++) {
-                  const vx = geom.colX[j];
-                  const vColor = getModalityColor(j);
-                  const vFill = getModalityFill(j);
-                  const curX = vx + (0.82 * geom.depthLen) / 2 * (1 - easeSub * 0.5);
-                  drawDepthVector(curX, curY + (0.57 * geom.depthLen) / 2, d, geom.depthLen, vColor, vFill, data.v[j], 1, 0, 1, 'vector');
-                }
-              }
-
-              const leftV = geom.colX[0] - colBracketW / 2 - 4 * s;
-              const rightV = geom.colX[19] + colBracketW / 2 + 4 * s;
-              const topBrackY = lerp(geom.valParkedY, geom.rowY[0], easeSub);
-              const botBrackY = lerp(geom.valParkedY, geom.rowY[19], easeSub);
-              drawBracket(leftV, (topBrackY + botBrackY) / 2, (botBrackY - topBrackY) + colBracketH, true);
-              drawBracket(rightV, (topBrackY + botBrackY) / 2, (botBrackY - topBrackY) + colBracketH, false);
-            } else if (isCollision) {
-              const orangePulse = Math.sin(((p - 0.45) / 0.27) * Math.PI);
-              const strokeColor = '#f0883e';
-              const fillColor = `rgba(240, 136, 62, ${(0.28 + 0.45 * orangePulse).toFixed(3)})`;
-              const scaleR = 1.05 + 0.20 * orangePulse;
-
-              for (let i = 0; i < 20; i++) {
-                const cy = geom.rowY[i];
-                for (let j = 0; j < 20; j++) {
-                  const cx = geom.colX[j];
-                  const bLabels = (data.broadcast && data.broadcast[i] && data.broadcast[i][j]) ? data.broadcast[i][j] : null;
-                  drawDepthVector(cx, cy, d, geom.depthLen, strokeColor, fillColor, bLabels, 1, 0, scaleR, 'flash');
-                }
-              }
-              drawBracket(geom.matL, geom.matCenterY, geom.matHBrack, true, 1.0, '#f0883e');
-              drawBracket(geom.matR, geom.matCenterY, geom.matHBrack, false, 1.0, '#f0883e');
+            if (p < 0.45) {
+              drawPart2Phase9Descent(p / 0.45);
+            } else if (p < 0.72) {
+              renderCachedFrame('p9b', (p - 0.45) / 0.27, 48, drawPart2Phase9Collision);
             } else {
-              for (let i = 0; i < 20; i++) {
-                const cy = geom.rowY[i];
-                for (let j = 0; j < 20; j++) {
-                  const cx = geom.colX[j];
-                  const pWeight = data.probNums[i][j];
-                  const bLabels = (data.broadcast && data.broadcast[i] && data.broadcast[i][j]) ? data.broadcast[i][j] : null;
-                  drawWeightedVector(cx, cy, pWeight, bLabels, 1, geom.depthLen * 0.75);
-                }
-              }
-              drawBracket(geom.matL, geom.matCenterY, geom.matHBrack, true);
-              drawBracket(geom.matR, geom.matCenterY, geom.matHBrack, false);
+              renderCachedFrame('p9c', 0, 1, drawPart2Phase9Weighted);
             }
             return;
           }
@@ -12309,77 +12771,18 @@
           // phase 10 - output sum
           if (p2_time >= 27600 && p2_time < 31200) {
             updateMathHighlight('val-green');
-            caption.innerHTML = '<span class="caption-op val" style="color:#58a6ff;">weight values using attention matrix</span> &rarr; <span class="caption-op add" style="color:#3fb950;">&sum; sum</span> &rarr; <span style="color:#79c0ff;">output vectors O</span>';
+            setCaption(caption, '<span class="caption-op val" style="color:#58a6ff;">weight values using attention matrix</span> &rarr; <span class="caption-op add" style="color:#3fb950;">&sum; sum</span> &rarr; <span style="color:#79c0ff;">output vectors O</span>');
 
-            drawGridOutline(0.75);
-            const p = (p2_time - 27600) / 3600;
-            const pSum = easeInOut(Math.min(1, p / 0.65));
-            const isSummed = p >= 0.65;
-            const flash = isSummed ? Math.sin(((p - 0.65) / 0.35) * Math.PI) : 0;
-            const glow = 14 * flash;
-
-            for (let i = 0; i < 20; i++) {
-              const cy = geom.rowY[i];
-              if (isSummed) {
-                const oLabels = data.out[i];
-                drawDepthVector(geom.rightOutX + (0.82 * geom.depthLen) / 2, cy + (0.57 * geom.depthLen) / 2, d, geom.depthLen, '#3fb950', 'rgba(63, 185, 80, 0.28)', oLabels, 1, 0, 1 + 0.15 * flash, 'vector', glow, '#3fb950');
-              } else {
-                for (let j = 0; j < 20; j++) {
-                  const curX = lerp(geom.colX[j], geom.rightOutX, pSum);
-                  const pWeight = data.probNums[i][j];
-                  const bLabels = (data.broadcast && data.broadcast[i] && data.broadcast[i][j]) ? data.broadcast[i][j] : null;
-                  drawWeightedVector(curX, cy, pWeight, bLabels, 1, geom.depthLen * 0.75);
-                }
-              }
-            }
-
-            // Target tokens lift off and fly to source tokens based on current cycle's arcs
-            if (!isSummed && currentArcs && currentArcs.length) {
-              const pNorm = Math.min(1, p / 0.65);
-              for (let k = 0; k < currentArcs.length; k++) {
-                const arc = currentArcs[k];
-                const startOffset = k * 0.04;
-                const duration = 0.84;
-                const localP = clamp((pNorm - startOffset) / duration, 0, 1);
-                if (localP > 0.01 && localP <= 1.0) {
-                  drawTokenHemicircleLiftoff(arc.tgt, arc.src, localP, arc.tgtColor || arc.color, 1.0);
-                }
-              }
-            }
-
-            if (isSummed) {
-              const topO = geom.rowY[0] - rowBracketH / 2;
-              const botO = geom.rowY[19] + rowBracketH / 2;
-              drawBracket(geom.rightOutX - rowBracketW / 2 - 4 * s, (topO + botO) / 2, botO - topO, true);
-              drawBracket(geom.rightOutX + rowBracketW / 2 + 4 * s, (topO + botO) / 2, botO - topO, false);
-              drawLabel("output", geom.rightOutX, geom.rowY[0] - rowBracketH / 2 - 14 * s, "#58a6ff", "center");
-            }
+            renderCachedFrame('p10', (p2_time - 27600) / 3600, 128, drawPart2Phase10);
             return;
           }
 
           // phase 11 - loop back
           if (p2_time >= 31200) {
             updateMathHighlight(null);
-            caption.innerHTML = 'output vectors <span style="color:#58a6ff; font-weight:600;">O</span> loop back &rarr; a <span style="color:#58a6ff; font-weight:600;">Multimodal Transformer</span> is just attention done in a loop';
+            setCaption(caption, 'output vectors <span style="color:#58a6ff; font-weight:600;">O</span> loop back &rarr; a <span style="color:#58a6ff; font-weight:600;">Multimodal Transformer</span> is just attention done in a loop');
 
-            const p = (p2_time - 31200) / 3800;
-            const easeP = easeInOut(Math.min(1, p));
-
-            const topO = geom.rowY[0] - rowBracketH / 2;
-            const botO = geom.rowY[19] + rowBracketH / 2;
-            const curOX = lerp(geom.rightOutX, 0, easeP);
-
-            drawBracket(curOX - rowBracketW / 2 - 4 * s, (topO + botO) / 2, botO - topO, true);
-            drawBracket(curOX + rowBracketW / 2 + 4 * s, (topO + botO) / 2, botO - topO, false);
-
-            for (let i = 0; i < 20; i++) {
-              const cy = geom.rowY[i];
-              const curX = lerp(geom.rightOutX, 0, easeP) + (0.82 * geom.depthLen) / 2;
-              const curY = cy + (0.57 * geom.depthLen) / 2;
-              const curColor = getModalityColor(i);
-              const curFill = getModalityFill(i);
-              drawDepthVector(curX, curY, d, geom.depthLen, curColor, curFill, data.out[i], 1, 0, 1, 'vector');
-            }
+            renderCachedFrame('p11', (p2_time - 31200) / 3800, 128, drawPart2Phase11);
             return;
           }
         }
@@ -12409,6 +12812,7 @@
             data = generateTransformerData(0);
             currentArcs = data.enrichedArcs;
           }
+          layerGen++;
         });
       })();
     

@@ -214,10 +214,10 @@
       transform: translateY(-0.5px);
     }
 
-    .op-badge.add .sym { color: var(--accent-green); font-weight: 600; }
-    .op-badge.mul .sym { color: var(--accent-orange); font-weight: 600; }
-    .op-badge.exp .sym { color: var(--accent-red); font-weight: 600; }
-    .op-badge.div .sym { color: var(--accent-purple); font-weight: 600; }
+    .op-badge.add .sym, .op-add { color: var(--accent-green); font-weight: 600; }
+    .op-badge.mul .sym, .op-mul { color: var(--accent-orange); font-weight: 600; }
+    .op-badge.exp .sym, .op-exp { color: var(--accent-red); font-weight: 600; }
+    .op-badge.div .sym, .op-div { color: var(--accent-purple); font-weight: 600; }
 
     .filter-btn[data-op="add"].active { background: rgba(63, 185, 80, 0.15); border-color: var(--accent-green); color: var(--accent-green); }
     .filter-btn[data-op="mul"].active { background: rgba(240, 136, 62, 0.15); border-color: var(--accent-orange); color: var(--accent-orange); }
@@ -553,6 +553,73 @@
     #full-attn-graphical-caption {
       font-size: 0.82rem;
       min-height: 2.8rem;
+    }
+
+    /* Operation Sequence Dots (Bottom Right of Each Block) */
+    .stage-op-dots-row {
+      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      margin-top: -0.35rem;
+      padding-right: 0.1rem;
+      pointer-events: auto;
+    }
+
+    .stage-op-dots {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(13, 17, 23, 0.55);
+      border: 1px solid rgba(48, 54, 61, 0.45);
+    }
+
+    .op-dot-sep {
+      width: 1px;
+      height: 7px;
+      background: rgba(125, 133, 144, 0.25);
+      margin: 0 1px;
+      border-radius: 1px;
+    }
+
+    .op-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--op-color);
+      opacity: 0.28;
+      transform: scale(1);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+      transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s ease;
+      flex-shrink: 0;
+    }
+
+    .op-dot.mul {
+      --op-color: #f0883e;
+      --op-rgb: 240, 136, 62;
+    }
+
+    .op-dot.add {
+      --op-color: #3fb950;
+      --op-rgb: 63, 185, 80;
+    }
+
+    .op-dot.exp {
+      --op-color: #f85149;
+      --op-rgb: 248, 81, 73;
+    }
+
+    .op-dot.div {
+      --op-color: #a371f7;
+      --op-rgb: 163, 113, 247;
+    }
+
+    .op-dot.active {
+      opacity: 1;
+      transform: scale(1.32);
+      box-shadow: 0 0 0 2px rgba(var(--op-rgb), 0.22), 0 0 8px 1px rgba(var(--op-rgb), 0.75);
     }
 
     /* Mysterious Lock Screen */
@@ -905,7 +972,7 @@
       font-family: var(--font-mono);
     }
 
-    .attn-op-badge.op-dot {
+    .attn-op-badge.op-dot-badge {
       background: rgba(240, 136, 62, 0.15);
       color: var(--accent-orange);
       border: 1px solid rgba(240, 136, 62, 0.35);
@@ -1977,6 +2044,12 @@
       </div>
 
       <div class="stage-caption" id="caption">Two vectors of 4</div>
+      <div class="stage-op-dots-row">
+        <div class="stage-op-dots" id="dot-op-dots" aria-label="Dot product operations">
+          <span class="op-dot mul" title="multiply (×)"></span>
+          <span class="op-dot add" title="add (+)"></span>
+        </div>
+      </div>
 
       <div class="quiz-panel" id="dot-quiz-panel" style="display: none;">
         <div class="filters">
@@ -2023,6 +2096,13 @@
       </div>
 
       <div class="stage-caption" id="softmax-caption">Vector of 4</div>
+      <div class="stage-op-dots-row">
+        <div class="stage-op-dots" id="softmax-op-dots" aria-label="Softmax operations">
+          <span class="op-dot exp" title="exp (eˣ)"></span>
+          <span class="op-dot add" title="add (+)"></span>
+          <span class="op-dot div" title="divide (÷)"></span>
+        </div>
+      </div>
 
       <div class="quiz-panel" id="softmax-quiz-panel" style="display: none;">
         <div class="filters">
@@ -2082,6 +2162,16 @@
       </div>
 
       <div class="stage-caption" id="attn-caption">vectors &middot; 2 &middot; dim 2</div>
+      <div class="stage-op-dots-row">
+        <div class="stage-op-dots" id="attn-op-dots" aria-label="Attention matrix operations">
+          <span class="op-dot mul" title="dot product: multiply (×)"></span>
+          <span class="op-dot add" title="dot product: add (+)"></span>
+          <span class="op-dot-sep"></span>
+          <span class="op-dot exp" title="softmax: exp (eˣ)"></span>
+          <span class="op-dot add" title="softmax: add (+)"></span>
+          <span class="op-dot div" title="softmax: divide (÷)"></span>
+        </div>
+      </div>
 
       <div class="quiz-panel" id="attn-quiz-panel" style="display: none;">
         <div class="filters">
@@ -2144,6 +2234,19 @@
       </div>
 
       <div class="stage-caption" id="full-attn-caption">vectors &middot; 2 &middot; dim 2</div>
+      <div class="stage-op-dots-row">
+        <div class="stage-op-dots" id="full-attn-op-dots" aria-label="Attention operations">
+          <span class="op-dot mul" title="dot product: multiply (×)"></span>
+          <span class="op-dot add" title="dot product: add (+)"></span>
+          <span class="op-dot-sep"></span>
+          <span class="op-dot exp" title="softmax: exp (eˣ)"></span>
+          <span class="op-dot add" title="softmax: add (+)"></span>
+          <span class="op-dot div" title="softmax: divide (÷)"></span>
+          <span class="op-dot-sep"></span>
+          <span class="op-dot mul" title="weight values: multiply (×)"></span>
+          <span class="op-dot add" title="sum weighted values: add (+)"></span>
+        </div>
+      </div>
 
       <div class="quiz-panel" id="full-attn-quiz-panel" style="display: none;">
         <div class="quiz-controls-toolbar">
@@ -2224,6 +2327,19 @@
         </div>
 
         <div class="stage-caption" id="full-attn-graphical-caption">you can convert any modality into feature vectors (tokens)</div>
+        <div class="stage-op-dots-row">
+          <div class="stage-op-dots" id="full-attn-graphical-op-dots" aria-label="Multimodal attention operations">
+            <span class="op-dot mul" title="dot product: multiply (×)"></span>
+            <span class="op-dot add" title="dot product: add (+)"></span>
+            <span class="op-dot-sep"></span>
+            <span class="op-dot exp" title="softmax: exp (eˣ)"></span>
+            <span class="op-dot add" title="softmax: add (+)"></span>
+            <span class="op-dot div" title="softmax: divide (÷)"></span>
+            <span class="op-dot-sep"></span>
+            <span class="op-dot mul" title="weight values: multiply (×)"></span>
+            <span class="op-dot add" title="sum weighted values: add (+)"></span>
+          </div>
+        </div>
       </div>
     </div>
   </main>
@@ -3029,6 +3145,7 @@
             streak_el.textContent = streak;
             feedback_el.className = 'feedback incorrect';
             feedback_el.innerHTML = `&#10005; target was ${target}`;
+            input_el.select();
           }
         }
       }
@@ -3039,16 +3156,13 @@
             filter_btns.forEach(b => { if (b.dataset.mode) b.classList.remove('active'); });
             btn.classList.add('active');
             mode = btn.dataset.mode;
-            if (mode === 'step') {
-              step_idx = 0;
-              prods = [];
-            }
-            if (!is_answered) {
-              feedback_el.textContent = '';
-              feedback_el.className = 'feedback';
-              submit_btn.className = 'submit-btn';
-              submit_btn.textContent = 'Check';
-            }
+            step_idx = 0;
+            prods = [];
+            is_answered = false;
+            feedback_el.textContent = '';
+            feedback_el.className = 'feedback';
+            submit_btn.className = 'submit-btn';
+            submit_btn.textContent = 'Check';
             render_problem();
             input_el.focus();
           }
@@ -3186,9 +3300,10 @@
           problem_el.innerHTML = `<div style="font-size:0.85rem; color:#7d8590; width:100%; text-align:center; margin-bottom:0.4rem;">calculate the softmax:</div>${vec_box(z, -1, 'orange', 'blue')} &rarr; <span class="quiz-vec">${input_boxes}</span>`;
 
           const box_inputs = problem_el.querySelectorAll('.quiz-box-input');
-          box_inputs.forEach(box => {
+          box_inputs.forEach((box, idx) => {
             box.addEventListener('input', () => {
               box.value = box.value.replace(/[^0-9.-]/g, '');
+              box.style.borderColor = '';
               update_submit_state();
             });
             box.addEventListener('keydown', (e) => {
@@ -3204,6 +3319,19 @@
                     if (next_empty) next_empty.focus();
                   }
                 }
+              } else if ((e.key === 'ArrowRight' || e.key === ' ') && idx < box_inputs.length - 1) {
+                if (e.key === ' ' || box.selectionStart === box.value.length) {
+                  e.preventDefault();
+                  box_inputs[idx + 1].focus();
+                  box_inputs[idx + 1].select();
+                }
+              } else if (e.key === 'ArrowLeft' && idx > 0 && box.selectionStart === 0) {
+                e.preventDefault();
+                box_inputs[idx - 1].focus();
+                box_inputs[idx - 1].select();
+              } else if (e.key === 'Backspace' && box.value === '' && idx > 0) {
+                e.preventDefault();
+                box_inputs[idx - 1].focus();
               }
             });
           });
@@ -3275,7 +3403,6 @@
           if (all_correct) {
             streak++;
             solved++;
-            if (window.unlockGraphicalAttention) window.unlockGraphicalAttention(true);
             feedback_el.className = 'feedback correct';
             feedback_el.innerHTML = `&#10003; correct! softmax = <span class="quiz-vec">${p_circles}</span>`;
             submit_btn.className = 'submit-btn ready-green';
@@ -3323,6 +3450,7 @@
             streak_el.textContent = streak;
             feedback_el.className = 'feedback incorrect';
             feedback_el.innerHTML = `&#10005; target was ${target}`;
+            input_el.select();
           }
         }
       }
@@ -3333,15 +3461,12 @@
             filter_btns.forEach(b => { if (b.dataset.mode) b.classList.remove('active'); });
             btn.classList.add('active');
             mode = btn.dataset.mode;
-            if (mode === 'step') {
-              step_idx = 0;
-            }
-            if (!is_answered) {
-              feedback_el.textContent = '';
-              feedback_el.className = 'feedback';
-              submit_btn.className = 'submit-btn';
-              submit_btn.textContent = 'Check';
-            }
+            step_idx = 0;
+            is_answered = false;
+            feedback_el.textContent = '';
+            feedback_el.className = 'feedback';
+            submit_btn.className = 'submit-btn';
+            submit_btn.textContent = 'Check';
             render_problem();
           }
         });
@@ -3589,7 +3714,7 @@
         let formula_html = '';
 
         if (cur_step.type === 'dot') {
-          badge_cls = 'op-dot';
+          badge_cls = 'op-dot-badge';
           badge_text = `dot product \u00b7 S${subscript(cur_step.row + 1)}${subscript(cur_step.col + 1)}`;
           const q_vec = vec_box(q[cur_step.row], -1, 'orange', 'orange');
           const k_vec = vec_box(k[cur_step.col], -1, 'orange', 'orange');
@@ -3655,6 +3780,7 @@
           streak_el.textContent = streak;
           feedback_el.className = 'feedback incorrect';
           feedback_el.innerHTML = `&#10005; target was ${target}`;
+          input_el.select();
         }
       }
 
@@ -4158,7 +4284,7 @@
         let formula_html = '';
 
         if (cur_step.type === 'dot') {
-          badge_cls = 'op-dot';
+          badge_cls = 'op-dot-badge';
           badge_text = `dot product \u00b7 S${subscript(cur_step.row + 1)}${subscript(cur_step.col + 1)}`;
           const q_vec = vec_box(q[cur_step.row], -1, 'orange', 'orange');
           const k_vec = vec_box(k[cur_step.col], -1, 'orange', 'orange');
@@ -4238,7 +4364,7 @@
               ? `&#10003; complete! Attention Y = softmax(QKᵀ)V solved`
               : `&#10003; solved! now complete context length 2 to unlock the animation`;
             submit_btn.className = 'submit-btn ready-green';
-            submit_btn.textContent = 'New quiz \u2192';
+            submit_btn.textContent = (len >= 2 || already_unlocked) ? 'New quiz \u2192' : 'Next: length 2 \u2192';
             streak_el.textContent = streak;
             solved_el.textContent = solved;
             render_step();
@@ -4248,6 +4374,7 @@
           streak_el.textContent = streak;
           feedback_el.className = 'feedback incorrect';
           feedback_el.innerHTML = `&#10005; target was ${target}`;
+          input_el.select();
         }
       }
 
@@ -4279,7 +4406,15 @@
         });
       }
 
-      bind_quiz_input(input_el, submit_btn, check_answer, () => is_answered, next_problem);
+      bind_quiz_input(input_el, submit_btn, check_answer, () => is_answered, () => {
+        const graphical_card_el = document.getElementById('full-attn-graphical-card');
+        const already_unlocked = !!(graphical_card_el && graphical_card_el.classList.contains('is-unlocked'));
+        if (len === 1 && !already_unlocked) {
+          len = 2;
+          len_btns.forEach(b => b.classList.toggle('active', parseInt(b.dataset.len, 10) === 2));
+        }
+        next_problem();
+      });
 
       window.__fullAttnQuiz = {
         getDim: () => dim,
@@ -4548,6 +4683,17 @@
         }
         ctx.stroke();
 
+        // key reference points x = -1, 0, 1, 2
+        const refXs = [-1, 0, 1, 2];
+        for (let i = 0; i < refXs.length; i++) {
+          const rx = x_px(refXs[i]);
+          const ry = y_px(Math.exp(refXs[i]));
+          ctx.beginPath();
+          ctx.arc(rx, ry, 1.8, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(248, 81, 73, 0.55)';
+          ctx.fill();
+        }
+
         if (!state) return;
 
         const mx = state.kind === 'left' ? PAD : state.kind === 'right' ? W - PAD : state.px;
@@ -4577,7 +4723,7 @@
           ro_x.textContent = '+\u221e';
           ro_y.textContent = '+\u221e';
         } else if (state) {
-          const x = X_MIN + ((state.px - PAD) / plotW) * (X_MAX - X_MIN);
+          const x = state.x !== undefined ? state.x : (X_MIN + ((state.px - PAD) / plotW) * (X_MAX - X_MIN));
           const y = Math.exp(x);
           ro_x.textContent = fmt(x, 2);
           ro_y.textContent = fmt(y, y < 1 ? 3 : 2);
@@ -4590,11 +4736,21 @@
 
       function on_move(e) {
         const rect = canvas.getBoundingClientRect();
-        const px = (e.clientX - rect.left) * (W / rect.width);
+        let px = (e.clientX - rect.left) * (W / rect.width);
         if (px <= SNAP) return set_state({ kind: 'left' });    // snap to -inf, 0
         if (px >= W - SNAP) return set_state({ kind: 'right' }); // snap to +inf, +inf
-        const x = X_MIN + ((px - PAD) / plotW) * (X_MAX - X_MIN);
-        set_state({ px, py: y_px(Math.exp(x)) });
+        let x = X_MIN + ((px - PAD) / plotW) * (X_MAX - X_MIN);
+        const snapTargets = [-3, -2, -1, -0.5, 0, 0.5, 1, 1.5, 2];
+        for (let i = 0; i < snapTargets.length; i++) {
+          const tx = snapTargets[i];
+          const tpx = x_px(tx);
+          if (Math.abs(px - tpx) <= 3.2) {
+            px = tpx;
+            x = tx;
+            break;
+          }
+        }
+        set_state({ px, py: y_px(Math.exp(x)), x });
       }
 
       canvas.addEventListener('pointermove', on_move);
@@ -4712,6 +4868,20 @@
         const info = { grad, strokeColor, glowBlur, glowColor, textColor, t };
         bucket[alphaQ] = info;
         return info;
+      }
+
+      function createOpDotUpdater(containerId) {
+        const container = document.getElementById(containerId);
+        const dots = container ? Array.from(container.querySelectorAll('.op-dot')) : [];
+        let currentActive = -2;
+        return function setActiveOpDot(idx) {
+          if (idx === currentActive) return;
+          currentActive = idx;
+          for (let i = 0; i < dots.length; i++) {
+            if (i === idx) dots[i].classList.add('active');
+            else dots[i].classList.remove('active');
+          }
+        };
       }
 
       // stage 1: dot product
@@ -4842,9 +5012,13 @@
 
         const TOTAL_DURATION = 7400;
         let startTime = performance.now();
+        const setDotOpActive = createOpDotUpdater('dot-op-dots');
 
         function render(ms) {
           ctx.clearRect(0, 0, width, height);
+          if (ms >= 1200 && ms < 2700) setDotOpActive(0);
+          else if (ms >= 2700 && ms < 5400) setDotOpActive(1);
+          else setDotOpActive(-1);
 
           const centerX = width / 2;
           const centerY = height / 2;
@@ -5055,7 +5229,7 @@
             return;
           }
 
-          if (ms >= 5400 && ms < 7000) {
+          if (ms >= 5400 && ms < 6800) {
             setCaption(caption, '= 1 number <span style="color:#58a6ff; font-weight:400;">(scalar)</span>');
 
             ctx.save();
@@ -5094,8 +5268,8 @@
             return;
           }
 
-          if (ms >= 7000) {
-            const fade = 1 - (ms - 7000) / 1000;
+          if (ms >= 6800) {
+            const fade = Math.max(0, 1 - (ms - 6800) / 600);
             caption.style.opacity = `${fade}`;
             ctx.save();
             ctx.translate(centerX, centerY);
@@ -5143,7 +5317,12 @@
         }
 
         function animLoop(now) {
-          if (!isStageVisible) {
+          if (!isStageVisible && window.__freezeDotMs === undefined) {
+            requestAnimationFrame(animLoop);
+            return;
+          }
+          if (typeof window.__freezeDotMs === 'number') {
+            render(window.__freezeDotMs);
             requestAnimationFrame(animLoop);
             return;
           }
@@ -5294,9 +5473,14 @@
         const TOTAL_DURATION = 11200;
         let startTime = performance.now();
         window.__setSoftmaxTime = (t) => { startTime = performance.now() - t; };
+        const setSoftmaxOpActive = createOpDotUpdater('softmax-op-dots');
 
         function render(ms) {
           ctx.clearRect(0, 0, width, height);
+          if (ms >= 1200 && ms < 2600) setSoftmaxOpActive(0);
+          else if (ms >= 2600 && ms < 5200) setSoftmaxOpActive(1);
+          else if (ms >= 5200 && ms < 6600) setSoftmaxOpActive(2);
+          else setSoftmaxOpActive(-1);
 
           const centerX = width / 2;
           const centerY = height / 2;
@@ -5419,7 +5603,8 @@
             drawBracket(bracketR, Y_MID, bracketH, false, 1, bColor);
 
             const labels = (p > 0.25 && data) ? data.exp : (data ? data.raw : null);
-            drawDotBatch(layout.positions, Y_MID, 1, 1, scale, '#f85149', redBg, flash * 18, '#f85149', 1, labels, '#ffffff');
+            const expCat = flash > 0.15 ? 'flash' : (p > 0.25 ? 'exp' : 'default');
+            drawDotBatch(layout.positions, Y_MID, 1, 1, scale, '#f85149', redBg, flash * 18, '#f85149', 1, labels, '#ffffff', expCat);
             return;
           }
 
@@ -5437,8 +5622,8 @@
             drawBracket(bracketL, curYBottom, bracketH, true, ease);
             drawBracket(bracketR, curYBottom, bracketH, false, ease);
 
-            drawDotBatch(layout.positions, curYTop, 1, 1, 1, '#f85149', 'rgba(248,81,73,0.22)', 0, null, 1, data ? data.exp : null, '#ffffff');
-            drawDotBatch(layout.positions, curYBottom, 1, 1, 1, '#f85149', 'rgba(248,81,73,0.22)', 0, null, ease, data ? data.exp : null, '#ffffff');
+            drawDotBatch(layout.positions, curYTop, 1, 1, 1, '#f85149', 'rgba(248,81,73,0.22)', 0, null, 1, data ? data.exp : null, '#ffffff', 'exp');
+            drawDotBatch(layout.positions, curYBottom, 1, 1, 1, '#f85149', 'rgba(248,81,73,0.22)', 0, null, ease, data ? data.exp : null, '#ffffff', 'exp');
             return;
           }
 
@@ -5447,7 +5632,7 @@
 
             drawBracket(bracketL, Y_TOP, bracketH, true);
             drawBracket(bracketR, Y_TOP, bracketH, false);
-            drawDotBatch(layout.positions, Y_TOP, 1, 1, 1, '#f85149', 'rgba(248,81,73,0.22)', 0, null, 1, data ? data.exp : null, '#ffffff');
+            drawDotBatch(layout.positions, Y_TOP, 1, 1, 1, '#f85149', 'rgba(248,81,73,0.22)', 0, null, 1, data ? data.exp : null, '#ffffff', 'exp');
 
             const p = (ms - 3600) / 1600;
             const coalesceProgress = Math.min(1, p / 0.80);
@@ -5501,7 +5686,7 @@
             } else {
               const coalesceFactor = 1 - ease;
               const coalLabels = (coalesceFactor > 0.65 && data) ? data.exp : null;
-              drawDotBatch(layout.positions, Y_BOTTOM, coalesceFactor, coalesceFactor, 1, '#f85149', 'rgba(248,81,73,0.22)', 0, null, 1, coalLabels, '#ffffff');
+              drawDotBatch(layout.positions, Y_BOTTOM, coalesceFactor, coalesceFactor, 1, '#f85149', 'rgba(248,81,73,0.22)', 0, null, 1, coalLabels, '#ffffff', 'exp');
             }
             return;
           }
@@ -5615,7 +5800,7 @@
 
             drawBracket(bracketL, curY, bracketH, true);
             drawBracket(bracketR, curY, bracketH, false);
-            drawDotBatch(layout.positions, curY, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.22)', 8, '#58a6ff', 1, data ? data.prob : null, '#c9d1d9');
+            drawDotBatch(layout.positions, curY, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.22)', 8, '#58a6ff', 1, data ? data.prob : null, '#c9d1d9', 'prob');
             return;
           }
 
@@ -5666,7 +5851,7 @@
 
             drawBracket(bracketL, Y_MID, bracketH, true);
             drawBracket(bracketR, Y_MID, bracketH, false);
-            drawDotBatch(layout.positions, Y_MID, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.22)', 8, '#58a6ff', 1, data ? data.prob : null, '#c9d1d9');
+            drawDotBatch(layout.positions, Y_MID, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.22)', 8, '#58a6ff', 1, data ? data.prob : null, '#c9d1d9', 'prob');
             return;
           }
 
@@ -5676,7 +5861,7 @@
 
             drawBracket(bracketL, Y_MID, bracketH, true);
             drawBracket(bracketR, Y_MID, bracketH, false);
-            drawDotBatch(layout.positions, Y_MID, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.22)', 8, '#58a6ff', 1, data ? data.prob : null, '#c9d1d9');
+            drawDotBatch(layout.positions, Y_MID, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.22)', 8, '#58a6ff', 1, data ? data.prob : null, '#c9d1d9', 'prob');
             return;
           }
 
@@ -5686,7 +5871,7 @@
 
             drawBracket(bracketL, Y_MID, bracketH, true, fade);
             drawBracket(bracketR, Y_MID, bracketH, false, fade);
-            drawDotBatch(layout.positions, Y_MID, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.22)', 8, '#58a6ff', fade, data ? data.prob : null, '#c9d1d9');
+            drawDotBatch(layout.positions, Y_MID, 1, 1, 1, '#58a6ff', 'rgba(88,166,255,0.22)', 8, '#58a6ff', fade, data ? data.prob : null, '#c9d1d9', 'prob');
           }
         }
 
@@ -5699,7 +5884,12 @@
         }
 
         function animLoop(now) {
-          if (!isStageVisible) {
+          if (!isStageVisible && window.__freezeSoftmaxMs === undefined) {
+            requestAnimationFrame(animLoop);
+            return;
+          }
+          if (typeof window.__freezeSoftmaxMs === 'number') {
+            render(window.__freezeSoftmaxMs);
             requestAnimationFrame(animLoop);
             return;
           }
@@ -6192,7 +6382,15 @@
           const sum = [];
           const prob = [];
 
-          const scaleFactor = d_dim > 1 ? 1 / Math.sqrt(d_eff) : 1;
+          function formatVal(v, maxDec = 1) {
+            if (typeof v !== 'number') return String(v);
+            if (Math.abs(v) < 0.05) return '0';
+            if (Math.abs(v - Math.round(v)) < 1e-4) return String(Math.round(v));
+            const sVal = v.toFixed(maxDec);
+            return (sVal === '-0.0' || sVal === '0.0') ? '0' : sVal;
+          }
+
+          const scaleFactor = d_dim > 8 ? 1 / Math.sqrt(d_eff) : 1;
 
           for (let i = 0; i < T_eff; i++) {
             const rowStr = [];
@@ -6208,7 +6406,7 @@
               } else {
                 v = rand_choice([-1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0]);
               }
-              rowStr.push(typeof v === 'number' ? v.toFixed(1) : String(v));
+              rowStr.push(formatVal(v, 1));
               rowNum.push(v);
             }
             q.push(rowStr);
@@ -6229,7 +6427,7 @@
               } else {
                 v = rand_choice([-1.0, -0.5, 0.0, 0.5, 1.0, 1.5]);
               }
-              rowStr.push(typeof v === 'number' ? v.toFixed(1) : String(v));
+              rowStr.push(formatVal(v, 1));
               rowNum.push(v);
             }
             k.push(rowStr);
@@ -6247,13 +6445,13 @@
               let rawDot = 0;
               for (let m = 0; m < d_eff; m++) {
                 const p = qNums[i][m] * kNums[j][m];
-                pairMul.push(p.toFixed(1));
+                pairMul.push(formatVal(p, 1));
                 rawDot += p;
               }
               mulRow.push(pairMul);
               const scaledDot = rawDot * scaleFactor;
               const dotVal = parseFloat(scaledDot.toFixed(1));
-              simRow.push(scaledDot.toFixed(1));
+              simRow.push(formatVal(scaledDot, 1));
               const ev = Math.exp(Math.max(-4, Math.min(4, dotVal)));
               expRow.push(ev.toFixed(1));
               rowEvs.push(ev);
@@ -6372,9 +6570,16 @@
         const TOTAL_DURATION = 17400;
         let startTime = performance.now();
         window.__setAttnTime = (t) => { startTime = performance.now() - t; };
+        const setAttnOpActive = createOpDotUpdater('attn-op-dots');
 
         function render(ms) {
           ctx.clearRect(0, 0, width, height);
+          if (ms >= 3600 && ms < 5600) setAttnOpActive(0);
+          else if (ms >= 5600 && ms < 8400) setAttnOpActive(1);
+          else if (ms >= 8400 && ms < 9800) setAttnOpActive(2);
+          else if (ms >= 9800 && ms < 11400) setAttnOpActive(3);
+          else if (ms >= 11400 && ms < 13000) setAttnOpActive(4);
+          else setAttnOpActive(-1);
 
           const s = Math.min(1.0, Math.max(0.70, (width - 24) / 460));
           const centerX = width / 2;
@@ -6450,9 +6655,12 @@
             const shouldShowNumber = isMatrixCell ? (!isWebGL && T <= 16) : showNumbers;
             if (shouldShowNumber && text !== null && text !== undefined && r >= 2.4) {
               ctx.shadowBlur = 0;
-              const str = String(text);
-              const strVal = (r < 8.5 && str.startsWith('0.')) ? str.slice(1) : str;
-              const maxChars = strVal.length;
+              let strVal = String(text);
+              if (strVal.endsWith('.0') && category !== 'exp' && category !== 'sum') strVal = strVal.slice(0, -2);
+              if (strVal === '-0' || strVal === '-0.0' || strVal === '0.00') strVal = '0';
+              if (r < 9.5 * s && strVal.startsWith('0.') && strVal !== '0.0') strVal = strVal.slice(1);
+              else if (r < 9.5 * s && strVal.startsWith('-0.')) strVal = '-' + strVal.slice(2);
+              const maxChars = Math.max(1, strVal.length);
               const fontSize = Math.min(r >= 18 ? 10.5 : 8.5, Math.max(3.5, Math.floor((r * 1.15) / Math.max(1, maxChars * 0.52))));
               ctx.font = `400 ${fontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace`;
               ctx.textAlign = 'center';
@@ -6830,9 +7038,10 @@
             const curKY = (geom.matCenterY) + (geom.topKeyY - geom.matCenterY) * ease;
             const kHeaderDist = (T <= 4) ? (24 * s) : (14 * s);
             const kHeaderY = curKY - colBracketH / 2 - kHeaderDist;
-            drawLabel("keys", 0, kHeaderY, "#58a6ff", "center", null, ease);
-
-            const subAlpha = ease >= 0.70 ? (ease - 0.70) / 0.30 : 0;
+            const subAlpha = ease >= 0.65 ? (ease - 0.65) / 0.35 : 0;
+            if (subAlpha > 0) {
+              drawLabel("keys", 0, kHeaderY, "#58a6ff", "center", null, subAlpha);
+            }
 
             if (!isWebGL) {
               if (T <= 4 && !isDepthMode) {
@@ -7127,7 +7336,7 @@
                     } else if (d <= 8) {
                       for (let m = 0; m < d; m++) {
                         const pt = cellLayout.points[m];
-                        const mVal = (mulLabels && mulLabels.length) ? mulLabels[m % mulLabels.length] : null;
+                        const mVal = (factor > 0.65 && mulLabels && mulLabels.length) ? mulLabels[m % mulLabels.length] : null;
                         drawCircle(cx + pt.x * factor, cy + pt.y * factor, cellLayout.r, '#f0883e', 'rgba(240, 136, 62, 0.20)', mVal, 0, null, 1, '#e6edf3', 'mul');
                       }
                     } else {
@@ -7869,8 +8078,10 @@
 
         function formatVal(v, maxDec = 1) {
           if (typeof v !== 'number') return String(v);
+          if (maxDec === 1 && Math.abs(v) < 0.05) return '0';
           if (Math.abs(v - Math.round(v)) < 1e-4) return String(Math.round(v));
-          return v.toFixed(maxDec);
+          const sVal = v.toFixed(maxDec);
+          return (sVal === '-0.0' || sVal === '0.0') ? '0' : sVal;
         }
 
         function generate_random_full_attn_data(T_len, d_dim) {
@@ -8086,9 +8297,18 @@
 
         const TOTAL_DURATION = 25800;
         let startTime = performance.now();
+        const setFullAttnOpActive = createOpDotUpdater('full-attn-op-dots');
 
         function render(ms) {
           ctx.clearRect(0, 0, width, height);
+          if (ms >= 3600 && ms < 5600) setFullAttnOpActive(0);
+          else if (ms >= 5600 && ms < 8400) setFullAttnOpActive(1);
+          else if (ms >= 8400 && ms < 9800) setFullAttnOpActive(2);
+          else if (ms >= 9800 && ms < 11400) setFullAttnOpActive(3);
+          else if (ms >= 11400 && ms < 13000) setFullAttnOpActive(4);
+          else if (ms >= 14800 && ms < 18000) setFullAttnOpActive(5);
+          else if (ms >= 18000 && ms < 21000) setFullAttnOpActive(6);
+          else setFullAttnOpActive(-1);
           const s = clamp((width - 24) / 460, 0.70, 1.0);
           const centerX = width / 2;
           const centerY = height / 2 + 10 * s;
@@ -8167,8 +8387,9 @@
             if (shouldShowNumber && exists(text) && r >= 4.5 * s) {
               ctx.shadowBlur = 0;
               let strVal = String(text);
-              if (strVal.endsWith('.0')) strVal = strVal.slice(0, -2);
-              if (r < 10 * s && strVal.startsWith('0.')) strVal = strVal.slice(1);
+              if (strVal.endsWith('.0') && category !== 'exp' && category !== 'sum') strVal = strVal.slice(0, -2);
+              if (strVal === '-0' || strVal === '-0.0' || strVal === '0.00') strVal = '0';
+              if (r < 10 * s && strVal.startsWith('0.') && strVal !== '0.0') strVal = strVal.slice(1);
               else if (r < 10 * s && strVal.startsWith('-0.')) strVal = '-' + strVal.slice(2);
               const maxChars = Math.max(1, strVal.length);
               const maxFontByW = (2 * r * 0.54) / (maxChars * 0.58);
@@ -8612,12 +8833,15 @@
 
             const curKY = lerp(geom.matCenterY, geom.topKeyY, ease);
             const kHeaderDist = (T <= 4) ? (20 * s) : (14 * s);
-            drawLabel("keys", 0, curKY - colBracketH / 2 - kHeaderDist, "#58a6ff", "center", null, ease);
-
             const curVY = lerp(geom.matCenterY, geom.topValY, ease);
-            drawValuesAtPosition(curVY, ease);
+            const vHeaderDist = (T <= 4 && !isDepthMode) ? (22 * s) : (16 * s);
 
-            const subAlpha = ease >= 0.70 ? (ease - 0.70) / 0.30 : 0;
+            const subAlpha = ease >= 0.65 ? (ease - 0.65) / 0.35 : 0;
+            if (subAlpha > 0) {
+              drawLabel("keys", 0, curKY - colBracketH / 2 - kHeaderDist, "#58a6ff", "center", null, subAlpha);
+              drawLabel("values", 0, curVY - colBracketH / 2 - vHeaderDist, "#58a6ff", "center", null, subAlpha);
+            }
+
             const numRows = Math.min(T, geom.rowY.length);
             const numCols = Math.min(T, geom.colX.length);
 
@@ -8637,15 +8861,22 @@
                 const ky = lerp(geom.rowY[j], geom.topKeyY, ease);
                 const kLabels = (data && data.k && data.k[j]) ? data.k[j] : null;
                 drawDepthVector(kx + (0.82 * depthLen) / 2 * ease, ky + (0.57 * depthLen) / 2, d, depthLen, '#58a6ff', 'rgba(88,166,255,0.18)', kLabels, 1, 0, 1, 'vector');
+
+                const vy = lerp(geom.rowY[j], geom.topValY, ease);
+                const vLabels = (data && data.v && data.v[j]) ? data.v[j] : null;
+                drawDepthVector(kx + (0.82 * depthLen) / 2 * ease, vy + (0.57 * depthLen) / 2, d, depthLen, '#58a6ff', 'rgba(88,166,255,0.18)', vLabels, ease, 0, 1, 'vector');
               }
               const leftK = lerp(0, geom.colX[0], ease) - colBracketW / 2 - 4 * s;
               const rightK = lerp(0, geom.colX[numCols - 1], ease) + colBracketW / 2 + 4 * s;
               drawBracket(leftK, curKY, colBracketH, true, ease);
               drawBracket(rightK, curKY, colBracketH, false, ease);
+              drawBracket(leftK, curVY, colBracketH, true, ease);
+              drawBracket(rightK, curVY, colBracketH, false, ease);
 
               if (isWebGL) {
                 drawSlightDepthBar(curQX, geom.rowY[0], curQX, geom.rowY[numRows - 1], depthLen, ease);
                 drawSlightDepthBar(leftK, curKY, rightK, curKY, depthLen, ease);
+                drawSlightDepthBar(leftK, curVY, rightK, curVY, depthLen, ease);
               }
             } else if (!isWebGL) {
               if (T <= 4) {
@@ -8673,26 +8904,33 @@
               for (let j = 0; j < numCols; j++) {
                 const kx = lerp(0, geom.colX[j], ease);
                 const ky = lerp(geom.rowY[j], geom.topKeyY, ease);
+                const vy = lerp(geom.rowY[j], geom.topValY, ease);
 
                 if (T <= 4 && subAlpha > 0) {
                   drawLabel(`k${subscript(j + 1)}`, kx, ky - colBracketH / 2 - 10 * s, "#7d8590", "center", null, subAlpha);
+                  drawLabel(`v${subscript(j + 1)}`, kx, vy - colBracketH / 2 - 10 * s, "#7d8590", "center", null, subAlpha);
                 }
 
                 if (ease < 0.45) {
                   drawBrackets(kx, ky, rowBracketW, rowBracketH, 1 - ease / 0.45);
                 } else if (T <= 2) {
                   drawBrackets(kx, ky, colBracketW, colBracketH, (ease - 0.45) / 0.55);
+                  drawBrackets(kx, vy, colBracketW, colBracketH, (ease - 0.45) / 0.55);
                 }
 
                 const kLabels = (data && data.k && data.k[j]) ? data.k[j] : null;
+                const vLabels = (data && data.v && data.v[j]) ? data.v[j] : null;
                 const rKey = layoutVert.r;
                 for (let m = 0; m < d; m++) {
                   const ptH = layoutHoriz.points[m];
                   const ptV = layoutVert.points[m];
                   const px = kx + ptH.x * (1 - ease) + ptV.x * ease;
-                  const py = ky + ptH.y * (1 - ease) + ptV.y * ease;
-                  const lbl = (kLabels && kLabels[m] !== undefined) ? kLabels[m] : null;
-                  drawCircle(px, py, rKey, '#58a6ff', 'rgba(88,166,255,0.18)', lbl, 0, null, 1, '#e6edf3', 'vector');
+                  const pyK = ky + ptH.y * (1 - ease) + ptV.y * ease;
+                  const pyV = vy + ptH.y * (1 - ease) + ptV.y * ease;
+                  const lblK = (kLabels && kLabels[m] !== undefined) ? kLabels[m] : null;
+                  const lblV = (vLabels && vLabels[m] !== undefined) ? vLabels[m] : null;
+                  drawCircle(px, pyK, rKey, '#58a6ff', 'rgba(88,166,255,0.18)', lblK, 0, null, 1, '#e6edf3', 'vector');
+                  drawCircle(px, pyV, rKey, '#58a6ff', 'rgba(88,166,255,0.18)', lblV, 0, null, ease, '#e6edf3', 'vector');
                 }
               }
 
@@ -8702,6 +8940,8 @@
                 const rightK = lerp(0, geom.colX[numCols - 1], ease) + colBracketW / 2 + 4 * s;
                 drawBracket(leftK, curKY, colBracketH, true, bAlpha);
                 drawBracket(rightK, curKY, colBracketH, false, bAlpha);
+                drawBracket(leftK, curVY, colBracketH, true, bAlpha);
+                drawBracket(rightK, curVY, colBracketH, false, bAlpha);
               }
             } else {
               const topQ = geom.rowY[0] - rowBracketH / 2;
@@ -8713,6 +8953,8 @@
               const rightK = lerp(0, geom.colX[numCols - 1], ease) + colBracketW / 2 + 4 * s;
               drawBracket(leftK, curKY, colBracketH, true, ease);
               drawBracket(rightK, curKY, colBracketH, false, ease);
+              drawBracket(leftK, curVY, colBracketH, true, ease);
+              drawBracket(rightK, curVY, colBracketH, false, ease);
             }
 
             if (isWebGL) {
@@ -8899,7 +9141,7 @@
                     } else if (d <= 8) {
                       for (let m = 0; m < d; m++) {
                         const pt = cellLayout.points[m];
-                        const mVal = (mulLabels && mulLabels.length) ? mulLabels[m % mulLabels.length] : null;
+                        const mVal = (factor > 0.65 && mulLabels && mulLabels.length) ? mulLabels[m % mulLabels.length] : null;
                         drawCircle(cx + pt.x * factor, cy + pt.y * factor, cellLayout.r, '#f0883e', 'rgba(240, 136, 62, 0.20)', mVal, 0, null, 1, '#e6edf3', 'mul');
                       }
                     } else {
@@ -9261,13 +9503,22 @@
               if (p < 0.70) {
                 if (!isWebGL) {
                   const easeP = easeInOut(p / 0.70);
+                  const slideLayout = isDepthMode ? cellLayout : {
+                    r: lerp(cellLayout.r, layoutHoriz.r, easeP),
+                    extentW: lerp(cellLayout.extentW, layoutHoriz.extentW, easeP),
+                    extentH: lerp(cellLayout.extentH, layoutHoriz.extentH, easeP),
+                    points: cellLayout.points.map((pt, m) => ({
+                      x: lerp(pt.x, layoutHoriz.points[m] ? layoutHoriz.points[m].x : pt.x, easeP),
+                      y: lerp(pt.y, layoutHoriz.points[m] ? layoutHoriz.points[m].y : pt.y, easeP)
+                    }))
+                  };
                   for (let j = 0; j < numCols; j++) {
                     const startX = geom.colX[j];
                     const curX = lerp(startX, geom.rightOutX, easeP);
-                    const bLabels = (data && data.broadcast && data.broadcast[i]) ? data.broadcast[i][j] : null;
+                    const bLabels = (easeP < 0.65 && data && data.broadcast && data.broadcast[i]) ? data.broadcast[i][j] : null;
                     const pWeight = (pRow && typeof pRow[j] === 'number') ? pRow[j] : (data && data.prob && data.prob[i] ? parseFloat(data.prob[i][j]) : 0);
                     const capMult = Math.max(0, 1 - easeP * 2.0);
-                    drawWeightedVector(curX, ry, cellLayout, pWeight, bLabels, 1 - easeP * 0.35, isDepthMode, depthLen * 0.7, capMult);
+                    drawWeightedVector(curX, ry, slideLayout, pWeight, bLabels, 1 - easeP * 0.35, isDepthMode, lerp(depthLen * 0.7, depthLen, easeP), capMult);
                   }
                 }
               } else {
@@ -9293,8 +9544,10 @@
                   drawLabel(`o${subscript(i + 1)}`, geom.rightOutX + rowBracketW / 2 + 14 * s, ry, "#79c0ff", "left", null, 1);
                 }
               }
+            }
 
-              const outAlpha = clamp((p - 0.70) / 0.10, 0, 1);
+            const outAlpha = clamp((p - 0.70) / 0.10, 0, 1);
+            if (outAlpha > 0) {
               const outHeaderY = geom.rowY[0] - rowBracketH / 2 - 16 * s;
               drawLabel("output", geom.rightOutX, outHeaderY, "#79c0ff", "center", null, outAlpha);
 
@@ -9309,7 +9562,7 @@
                 drawBracket(geom.rightOutX - rowBracketW / 2 - 4 * s, (topO + botO) / 2, botO - topO, true, outAlpha, bColor);
                 drawBracket(geom.rightOutX + rowBracketW / 2 + 4 * s, (topO + botO) / 2, botO - topO, false, outAlpha, bColor);
               }
-              if (isWebGL && isDepthMode && outAlpha > 0) {
+              if (isWebGL && isDepthMode) {
                 drawSlightDepthBar(geom.rightOutX, geom.rowY[0], geom.rightOutX, geom.rowY[numRows - 1], depthLen, outAlpha, '#79c0ff');
               }
             }
@@ -9738,6 +9991,7 @@
           }
 
           // Compute Q * K^T, exp, sum, softmax, output
+          const mul = [];
           const sim = [];
           const simNums = [];
           const exp = [];
@@ -9750,6 +10004,7 @@
           const out = [];
 
           for (let i = 0; i < T; i++) {
+            mul.push([]);
             sim.push([]);
             simNums.push([]);
             exp.push([]);
@@ -9758,9 +10013,13 @@
 
             for (let j = 0; j < T; j++) {
               let dot = 0;
+              const pairMul = [];
               for (let m = 0; m < 4; m++) {
-                dot += q[i][m] * k[j][m];
+                const prod = q[i][m] * k[j][m];
+                pairMul.push(Math.round(prod * 10) / 10);
+                dot += prod;
               }
+              mul[i].push(pairMul);
               let score;
               if (j === tgt) {
                 score = Math.round((3.6 + ((i * 3 + cycleIdx) % 4) * 0.1) * 10) / 10;
@@ -9820,6 +10079,7 @@
             enrichedArcs,
             rowTargets,
             q, k, v,
+            mul,
             sim, simNums,
             exp, expNums,
             sum, sumNums,
@@ -9851,11 +10111,12 @@
           if (!strs) {
             let full = String(text);
             if (typeof text === 'number') {
-              full = text.toFixed(1);
+              full = Math.abs(text) < 0.05 ? '0' : text.toFixed(1);
               if (full.endsWith('.0')) full = full.slice(0, -2);
             }
+            if (full === '-0' || full === '-0.0') full = '0';
             let trimmed = full;
-            if (trimmed.startsWith('0.')) trimmed = trimmed.slice(1);
+            if (trimmed.startsWith('0.') && trimmed !== '0.0') trimmed = trimmed.slice(1);
             else if (trimmed.startsWith('-0.')) trimmed = '-' + trimmed.slice(2);
             strs = [full, trimmed];
             NUM_STR_CACHE.set(text, strs);
@@ -10107,7 +10368,17 @@
         // Modality Plaque
         function drawModalityPlaque(line, colorHex, rgb, alpha = 1.0) {
           if (alpha <= 0.01) return;
-          const boxW = Math.min(width * 0.94, 460 * s);
+          let fontSize = Math.round(10.5 * s);
+          ctx.font = `600 ${fontSize}px ${SANS_FONT}`;
+          const padX = 24 * s;
+          const maxBoxW = width * 0.94;
+          let textW = ctx.measureText(line).width;
+          if (textW + padX * 2 > maxBoxW) {
+            fontSize = Math.max(8, Math.floor(fontSize * ((maxBoxW - padX * 2) / textW)));
+            ctx.font = `600 ${fontSize}px ${SANS_FONT}`;
+            textW = ctx.measureText(line).width;
+          }
+          const boxW = Math.min(maxBoxW, Math.max(300 * s, textW + padX * 2));
           const boxH = 32 * s;
           const boxX = centerX - boxW / 2;
           const boxY = centerY - 142 * s;
@@ -10124,7 +10395,6 @@
 
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.font = `600 ${Math.round(11 * s)}px ${SANS_FONT}`;
           ctx.fillStyle = '#ffffff';
           ctx.fillText(line, centerX, boxY + boxH / 2 + 1);
         }
@@ -10391,7 +10661,7 @@
             ctx.lineTo(cx + w / 2, centerY + barY);
             ctx.stroke();
 
-            const pillW = Math.min(76 * s, Math.max(50 * s, w * 0.94));
+            const pillW = Math.min(78 * s, Math.max(50 * s, w * 0.96));
             const pillH = 15 * s;
             const pillY = centerY + barY + 6 * s;
 
@@ -10404,7 +10674,7 @@
             ctx.lineWidth = 0.8;
             ctx.stroke();
 
-            const fontSize = Math.round(8.5 * s);
+            const fontSize = Math.round((mod.name.length > 12 ? 7.5 : 8.5) * s);
             ctx.font = `600 ${fontSize}px ${SANS_FONT}`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
@@ -10936,10 +11206,10 @@
             for (let j = 0; j < T; j++) {
               const cx = geom.colX[j];
               const simVal = data.sim[i][j];
-              const bLabels = (data.broadcast && data.broadcast[i] && data.broadcast[i][j]) ? data.broadcast[i][j] : null;
+              const mLabels = (data.mul && data.mul[i] && data.mul[i][j]) ? data.mul[i][j] : null;
 
               if (pSum < 0.85) {
-                drawDepthVector(cx + (0.82 * geom.depthLen) / 2, cy + (0.57 * geom.depthLen) / 2, d, geom.depthLen, '#f0883e', 'rgba(240, 136, 62, 0.22)', bLabels, 1 - pSum, pSum, 1, 'vector');
+                drawDepthVector(cx + (0.82 * geom.depthLen) / 2, cy + (0.57 * geom.depthLen) / 2, d, geom.depthLen, '#f0883e', 'rgba(240, 136, 62, 0.22)', mLabels, 1 - pSum, pSum, 1, 'vector');
               }
               drawCircle(cx, cy, geom.cellR, '#3fb950', 'rgba(63, 185, 80, 0.22)', simVal, 0, null, pSum, '#ffffff', 'sim');
             }
@@ -11287,6 +11557,8 @@
           });
         }
 
+        const setGraphicalOpActive = createOpDotUpdater('full-attn-graphical-op-dots');
+
         function animate(now) {
           if (isLocked && window.__freezeGraphicalAttnMs === null) {
             return;
@@ -11302,6 +11574,20 @@
           if (window.__freezeGraphicalAttnMs !== null && window.__freezeGraphicalAttnMs !== undefined) {
             totalElapsed = window.__freezeGraphicalAttnMs;
             currentTotalElapsed = totalElapsed;
+          }
+
+          if (totalElapsed < PART1_DURATION) {
+            setGraphicalOpActive(-1);
+          } else {
+            const p2_op_time = (totalElapsed - PART1_DURATION) % PART2_DURATION;
+            if (p2_op_time >= 4200 && p2_op_time < 6400) setGraphicalOpActive(0);
+            else if (p2_op_time >= 6400 && p2_op_time < 8600) setGraphicalOpActive(1);
+            else if (p2_op_time >= 8600 && p2_op_time < 10800) setGraphicalOpActive(2);
+            else if (p2_op_time >= 10800 && p2_op_time < 12600) setGraphicalOpActive(3);
+            else if (p2_op_time >= 12600 && p2_op_time < 14400) setGraphicalOpActive(4);
+            else if (p2_op_time >= 24400 && p2_op_time < 27600) setGraphicalOpActive(5);
+            else if (p2_op_time >= 27600 && p2_op_time < 31200) setGraphicalOpActive(6);
+            else setGraphicalOpActive(-1);
           }
 
           ctx.clearRect(0, 0, width, height);
@@ -11491,7 +11777,7 @@
                 ctx.lineTo(cx + w / 2, centerY + geom.vecY + 23 * s);
                 ctx.stroke();
 
-                const pillW = Math.max(52 * s, w * 0.88);
+                const pillW = Math.min(78 * s, Math.max(50 * s, w * 0.96));
                 const pillH = 15 * s;
                 const pillY = centerY + geom.vecY + 29 * s;
                 ctx.fillStyle = 'rgba(227, 179, 65, 0.14)';
@@ -11502,7 +11788,7 @@
                 ctx.lineWidth = 0.8;
                 ctx.stroke();
 
-                ctx.font = `600 ${Math.round(9.5 * s)}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+                ctx.font = `600 ${Math.round(8.5 * s)}px ${SANS_FONT}`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillStyle = '#e3b341';
@@ -11684,7 +11970,7 @@
                 ctx.lineTo(cx + w / 2, centerY + geom.vecY + 23 * s);
                 ctx.stroke();
 
-                const pillW = Math.max(52 * s, w * 0.88);
+                const pillW = Math.min(78 * s, Math.max(50 * s, w * 0.96));
                 const pillH = 15 * s;
                 const pillY = centerY + geom.vecY + 29 * s;
                 ctx.fillStyle = 'rgba(63, 185, 80, 0.14)';
@@ -11695,7 +11981,7 @@
                 ctx.lineWidth = 0.8;
                 ctx.stroke();
 
-                ctx.font = `600 ${Math.round(9.5 * s)}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+                ctx.font = `600 ${Math.round(8.5 * s)}px ${SANS_FONT}`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillStyle = '#3fb950';
@@ -11897,7 +12183,7 @@
                 ctx.lineTo(cx + w / 2, centerY + geom.vecY + 23 * s);
                 ctx.stroke();
 
-                const pillW = Math.max(52 * s, w * 0.88);
+                const pillW = Math.min(78 * s, Math.max(50 * s, w * 0.96));
                 const pillH = 15 * s;
                 const pillY = centerY + geom.vecY + 29 * s;
                 ctx.fillStyle = 'rgba(163, 113, 247, 0.14)';
@@ -11908,7 +12194,7 @@
                 ctx.lineWidth = 0.8;
                 ctx.stroke();
 
-                ctx.font = `600 ${Math.round(9.5 * s)}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+                ctx.font = `600 ${Math.round(8.5 * s)}px ${SANS_FONT}`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillStyle = '#a371f7';
@@ -12113,7 +12399,7 @@
                 ctx.lineTo(cx + w / 2, centerY + geom.vecY + 23 * s);
                 ctx.stroke();
 
-                const pillW = Math.max(52 * s, w * 0.88);
+                const pillW = Math.min(78 * s, Math.max(50 * s, w * 0.96));
                 const pillH = 15 * s;
                 const pillY = centerY + geom.vecY + 29 * s;
                 ctx.fillStyle = 'rgba(88, 166, 255, 0.14)';
@@ -12124,7 +12410,7 @@
                 ctx.lineWidth = 0.8;
                 ctx.stroke();
 
-                ctx.font = `600 ${Math.round(9.5 * s)}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+                ctx.font = `600 ${Math.round(8.5 * s)}px ${SANS_FONT}`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillStyle = '#58a6ff';
@@ -12172,63 +12458,63 @@
                 return;
               }
 
-              function drawActionChunkPanel(alpha, splitProgress = 0, isTracer = false, glideP = 0) {
+              function drawActionChunkPanel(alpha) {
                 if (alpha <= 0.01) return;
-                const cardW = Math.min(width * 0.94, 520 * s);
-                const cardH = 175 * s;
-                const spacing = Math.min(115 * s, cardW * 0.23);
-                const armScale = Math.min(0.82 * s, (cardW / 520) * 0.82 * s);
-                const panelY = -22 * s;
+                const cardW = Math.min(width * 0.88, 340 * s);
+                const cardH = 104 * s;
+                const spacing = cardW * 0.22;
+                const armScale = 0.68 * s;
+                const panelY = itemRowY;
 
                 ctx.save();
                 ctx.translate(centerX, centerY + panelY);
                 ctx.globalAlpha = alpha;
 
-                ctx.fillStyle = 'rgba(13, 17, 23, 0.75)';
-                ctx.strokeStyle = 'rgba(247, 120, 186, 0.28)';
+                ctx.fillStyle = 'rgba(13, 17, 23, 0.85)';
+                ctx.strokeStyle = 'rgba(247, 120, 186, 0.45)';
                 ctx.lineWidth = 1.2;
                 ctx.beginPath();
-                ctx.roundRect(-cardW / 2, -cardH / 2, cardW, cardH, 8 * s);
+                ctx.roundRect(-cardW / 2, -cardH / 2, cardW, cardH, 6 * s);
                 ctx.fill();
                 ctx.stroke();
 
-                ctx.font = `600 ${Math.round(9.5 * s)}px ${SANS_FONT}`;
+                ctx.font = `600 ${Math.round(8.5 * s)}px ${SANS_FONT}`;
                 ctx.fillStyle = '#f778ba';
                 ctx.textAlign = 'left';
-                ctx.fillText('robot arm trajectory: [t₁, t₂, t₃, t₄]', -cardW / 2 + 14 * s, -cardH / 2 + 16 * s);
+                ctx.fillText('action chunk', -cardW / 2 + 12 * s, -cardH / 2 + 14 * s);
+                ctx.restore();
 
                 const poses = [
-                  { label: "t₁: reach", a1: -0.95, a2: 1.45, a3: 0.15, grip: 0.8, payload: false },
-                  { label: "t₂: grasp", a1: -0.42, a2: 1.15, a3: -0.15, grip: 0.1, payload: true },
-                  { label: "t₃: lift", a1: -1.25, a2: 1.55, a3: 0.35, grip: 0.05, payload: true },
-                  { label: "t₄: place", a1: -0.65, a2: 0.85, a3: -0.45, grip: 0.7, payload: false }
+                  { label: "t₁", a1: -0.95, a2: 1.45, a3: 0.15, grip: 0.8, payload: false },
+                  { label: "t₂", a1: -0.42, a2: 1.15, a3: -0.15, grip: 0.1, payload: true },
+                  { label: "t₃", a1: -1.25, a2: 1.55, a3: 0.35, grip: 0.05, payload: true },
+                  { label: "t₄", a1: -0.65, a2: 0.85, a3: -0.45, grip: 0.7, payload: false }
                 ];
 
                 const tips = [];
                 for (let k = 0; k < 4; k++) {
                   const poseX = (k - 1.5) * spacing;
-                  const poseY = 48 * s;
+                  const poseY = 20 * s;
                   const pose = poses[k];
 
                   const tip = drawRobotArm(poseX, panelY + poseY, armScale, pose.a1, pose.a2, pose.a3, pose.grip, pose.payload, '#f778ba', alpha);
                   tips.push(tip);
 
-                  ctx.font = `600 ${Math.round(9.0 * s)}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+                  ctx.save();
+                  ctx.translate(centerX, centerY + panelY);
+                  ctx.globalAlpha = alpha;
+                  ctx.font = `600 ${Math.round(8.5 * s)}px ui-monospace, SFMono-Regular, Menlo, monospace`;
                   ctx.textAlign = 'center';
                   ctx.fillStyle = '#f778ba';
-                  ctx.fillText(pose.label, poseX, poseY + 16 * s);
-
-                  const targetPos = [
-                    (k === 1 ? 'z: 0.04m' : (k === 2 ? 'z: 0.18m' : 'x: 0.35m')),
-                    (k === 1 ? 'grip: 0.0' : (k === 0 ? 'grip: 1.0' : 'dy: 0.02m'))
-                  ];
-                  ctx.font = `400 ${Math.round(7.5 * s)}px ui-monospace, SFMono-Regular, Menlo, monospace`;
-                  ctx.fillStyle = '#8b949e';
-                  ctx.fillText(targetPos[0], poseX, poseY + 28 * s);
+                  ctx.fillText(pose.label, poseX, poseY + 14 * s);
+                  ctx.restore();
                 }
 
-                ctx.strokeStyle = 'rgba(247, 120, 186, 0.45)';
-                ctx.lineWidth = 1.4;
+                ctx.save();
+                ctx.translate(centerX, centerY + panelY);
+                ctx.globalAlpha = alpha;
+                ctx.strokeStyle = 'rgba(247, 120, 186, 0.40)';
+                ctx.lineWidth = 1.2;
                 ctx.setLineDash([3, 3]);
                 ctx.beginPath();
                 for (let k = 0; k < tips.length; k++) {
@@ -12243,7 +12529,7 @@
                 for (let k = 0; k < tips.length; k++) {
                   ctx.fillStyle = '#f778ba';
                   ctx.beginPath();
-                  ctx.arc(tips[k].tipX, tips[k].tipY - panelY, 3.2 * s, 0, Math.PI * 2);
+                  ctx.arc(tips[k].tipX, tips[k].tipY - panelY, 2.6 * s, 0, Math.PI * 2);
                   ctx.fill();
                 }
 
@@ -12253,14 +12539,29 @@
               if (phaseT >= 800 && phaseT < 1700) {
                 const p = (phaseT - 800) / 900;
                 const inAlpha = easeInOut(Math.min(1, p * 2.0));
-                drawActionChunkPanel(inAlpha, 0, false, 0);
+                drawActionChunkPanel(inAlpha);
                 return;
               }
 
               if (phaseT >= 1700 && phaseT < 2800) {
                 const p = (phaseT - 1700) / 1100;
                 const splitEase = easeInOut(p);
-                drawActionChunkPanel(1.0, splitEase, false, 0);
+                const boxFade = Math.max(0, 1 - splitEase * 2.5);
+                if (boxFade > 0.01) {
+                  const cardW = Math.min(width * 0.88, 340 * s);
+                  const cardH = 104 * s;
+                  ctx.save();
+                  ctx.translate(centerX, centerY + itemRowY);
+                  ctx.globalAlpha = boxFade;
+                  ctx.fillStyle = 'rgba(13, 17, 23, 0.85)';
+                  ctx.strokeStyle = 'rgba(247, 120, 186, 0.45)';
+                  ctx.lineWidth = 1.2;
+                  ctx.beginPath();
+                  ctx.roundRect(-cardW / 2, -cardH / 2, cardW, cardH, 6 * s);
+                  ctx.fill();
+                  ctx.stroke();
+                  ctx.restore();
+                }
 
                 const poses = [
                   { label: "action t₁", a1: -0.95, a2: 1.45, a3: 0.15, grip: 0.8, payload: false },
@@ -12268,23 +12569,23 @@
                   { label: "action t₃", a1: -1.25, a2: 1.55, a3: 0.35, grip: 0.05, payload: true },
                   { label: "action t₄", a1: -0.65, a2: 0.85, a3: -0.45, grip: 0.7, payload: false }
                 ];
-                const cardW = Math.min(width * 0.94, 520 * s);
-                const spacing = Math.min(115 * s, cardW * 0.23);
-                const armScale = Math.min(0.72 * s, (cardW / 520) * 0.72 * s);
+                const cardW = Math.min(width * 0.88, 340 * s);
+                const spacing = cardW * 0.22;
+                const armScale = lerp(0.68 * s, 0.72 * s, splitEase);
 
                 for (let k = 0; k < 4; k++) {
                   const startX = (k - 1.5) * spacing;
-                  const startY = 26 * s;
+                  const startY = itemRowY + 22 * s;
                   const targetX = activeTargetsX[k];
-                  const targetY = itemRowY;
+                  const targetY = itemRowY + 12 * s;
 
                   const curX = lerp(startX, targetX, splitEase);
                   const curY = lerp(startY, targetY, splitEase);
 
-                  ctx.save();
-                  ctx.globalAlpha = splitEase;
-                  drawRobotArm(curX, curY + 12 * s, armScale, poses[k].a1, poses[k].a2, poses[k].a3, poses[k].grip, poses[k].payload, '#f778ba', splitEase);
-                  ctx.restore();
+                  drawRobotArm(curX, curY, armScale, poses[k].a1, poses[k].a2, poses[k].a3, poses[k].grip, poses[k].payload, '#f778ba', 1.0);
+                  if (splitEase > 0.35) {
+                    drawLabel(poses[k].label, curX, itemRowY - 20 * s, '#f778ba', 'center', `600 ${Math.round(8.5 * s)}px ui-monospace`, (splitEase - 0.35) / 0.65);
+                  }
                 }
                 return;
               }
@@ -12336,7 +12637,7 @@
               if (glideP >= 0.85) {
                 const bAlpha = (glideP - 0.85) / 0.15;
                 const xStart = geom.tokX[16];
-                const xEnd = geom.tokX[T - 1];
+                const xEnd = geom.tokX[19];
                 const cx = centerX + (xStart + xEnd) / 2;
                 const w = (xEnd - xStart) + 12 * s;
 
@@ -12349,7 +12650,7 @@
                 ctx.lineTo(cx + w / 2, centerY + geom.vecY + 23 * s);
                 ctx.stroke();
 
-                const pillW = Math.max(52 * s, w * 0.88);
+                const pillW = Math.min(78 * s, Math.max(50 * s, w * 0.96));
                 const pillH = 15 * s;
                 const pillY = centerY + geom.vecY + 29 * s;
                 ctx.fillStyle = 'rgba(247, 120, 186, 0.14)';
@@ -12360,7 +12661,7 @@
                 ctx.lineWidth = 0.8;
                 ctx.stroke();
 
-                ctx.font = `600 ${Math.round(9.5 * s)}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+                ctx.font = `600 ${Math.round(7.5 * s)}px ${SANS_FONT}`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillStyle = '#f778ba';
@@ -12371,7 +12672,7 @@
 
             // phase 6 - dna
             if (totalElapsed >= 25000 && totalElapsed < 29400) {
-              setCaption(caption, '<span style="color:#2dd4bf; font-weight:600;">DNA</span> &rarr; double helix &rarr; base pairs (A, C, T, G) &rarr; projection &rarr; <span style="color:#2dd4bf; font-weight:600;">4 token vectors</span>');
+              setCaption(caption, '<span style="color:#2dd4bf; font-weight:600;">DNA</span> &rarr; dna sequence &rarr; base pairs (A, C, T, G) &rarr; projection &rarr; <span style="color:#2dd4bf; font-weight:600;">4 token vectors</span>');
 
               drawDockedModalityVectors(5, 1.0);
 
@@ -12381,7 +12682,7 @@
               drawEarth(0, -95 * s, earthR, earthRot, 0.20, totalElapsed, 5);
 
               const plaqueAlpha = easeInOut(Math.min(1, phaseT / 500));
-              drawModalityPlaque('DNA ──> double helix ──> base pairs (A, C, T, G) ──> projection', '#2dd4bf', [45, 212, 191], plaqueAlpha);
+              drawModalityPlaque('DNA ──> dna sequence ──> base pairs (A, C, T, G) ──> projection', '#2dd4bf', [45, 212, 191], plaqueAlpha);
 
               const podStart = getPodOrbitPos(5, 25000, earthR);
 
@@ -12475,7 +12776,7 @@
                 ctx.lineTo(cx + w / 2, centerY + geom.vecY + 23 * s);
                 ctx.stroke();
 
-                const pillW = Math.max(52 * s, w * 0.88);
+                const pillW = Math.min(78 * s, Math.max(50 * s, w * 0.96));
                 const pillH = 15 * s;
                 const pillY = centerY + geom.vecY + 29 * s;
                 ctx.fillStyle = 'rgba(45, 212, 191, 0.14)';
@@ -12486,7 +12787,7 @@
                 ctx.lineWidth = 0.8;
                 ctx.stroke();
 
-                ctx.font = `600 ${Math.round(9.5 * s)}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+                ctx.font = `600 ${Math.round(8.5 * s)}px ${SANS_FONT}`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillStyle = '#2dd4bf';
@@ -12638,7 +12939,7 @@
                 const kLabels = data.k[j];
                 const kColor = getModalityColor(j);
                 const kFill = getModalityFill(j);
-                const bLabels = (data.broadcast && data.broadcast[i] && data.broadcast[i][j]) ? data.broadcast[i][j] : null;
+                const mLabels = (data.mul && data.mul[i] && data.mul[i][j]) ? data.mul[i][j] : null;
 
                 if (isApproach) {
                   // Query duplicates across columns, gliding in horizontally to (cx, cy)
@@ -12657,9 +12958,9 @@
                 } else if (isContact) {
                   const strokeColor = '#f0883e';
                   const flashBg = `rgba(240, 136, 62, ${(0.28 + 0.45 * flash).toFixed(3)})`;
-                  drawDepthVector(cx + (0.82 * geom.depthLen) / 2, cy + (0.57 * geom.depthLen) / 2, d, geom.depthLen, strokeColor, flashBg, bLabels, 1, 0, scale, 'flash');
+                  drawDepthVector(cx + (0.82 * geom.depthLen) / 2, cy + (0.57 * geom.depthLen) / 2, d, geom.depthLen, strokeColor, flashBg, mLabels, 1, 0, scale, 'flash');
                 } else {
-                  drawDepthVector(cx + (0.82 * geom.depthLen) / 2, cy + (0.57 * geom.depthLen) / 2, d, geom.depthLen, '#f0883e', 'rgba(240, 136, 62, 0.22)', bLabels, 1, 0, 1, 'flash');
+                  drawDepthVector(cx + (0.82 * geom.depthLen) / 2, cy + (0.57 * geom.depthLen) / 2, d, geom.depthLen, '#f0883e', 'rgba(240, 136, 62, 0.22)', mLabels, 1, 0, 1, 'flash');
                 }
               }
             }

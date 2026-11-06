@@ -2585,14 +2585,39 @@
       return Math.max(2, Math.floor(T_len * 0.35));
     }
 
+    // fresh ragged mask per animation -> stable within a cycle, random on replay
+    let activeVarlenPads = null;
+
+    function makeVarlenPads(T_len) {
+      const maxPad = getNumPaddedKeys(T_len);
+      const pads = new Array(T_len).fill(0);
+      for (let i = 0; i < T_len; i++) {
+        // 1..maxPad -> every row has at least one masked slot
+        pads[i] = maxPad > 0 ? 1 + Math.floor(Math.random() * maxPad) : 0;
+      }
+      return pads;
+    }
+
+    function setActiveVarlenPads(pads) {
+      activeVarlenPads = pads;
+    }
+
+    function getActiveVarlenPads(T_len) {
+      if (!activeVarlenPads) {
+        setActiveVarlenPads(makeVarlenPads(T_len));
+      }
+      return activeVarlenPads;
+    }
+
     function isMaskedCell(i, j, T_len, maskMode) {
       if (!maskMode || maskMode === 'none' || T_len <= 1) return false;
       if (maskMode === 'causal' || maskMode === 'autoregressive') {
         return j > i;
       }
       if (maskMode === 'varlen' || maskMode === 'padding') {
-        const numPad = getNumPaddedKeys(T_len);
-        return j >= T_len - numPad;
+        const pads = getActiveVarlenPads(T_len);
+        const pad = Math.min(pads[i % pads.length], getNumPaddedKeys(T_len));
+        return j >= T_len - pad;
       }
       return false;
     }
@@ -6825,11 +6850,19 @@
           return { q, k, mul, sim, maskedSim, exp, sum, prob };
         }
 
+        let varlenPads = makeVarlenPads(Math.min(T, 128));
+        setActiveVarlenPads(varlenPads);
         let current_attn_data = generate_random_attn_data(T, d);
         let last_attn_elapsed = 0;
 
-        function refresh_attn_data() {
+        function regenerate_attn_data() {
+          varlenPads = makeVarlenPads(Math.min(T, 128));
+          setActiveVarlenPads(varlenPads);
           current_attn_data = generate_random_attn_data(T, d);
+        }
+
+        function refresh_attn_data() {
+          regenerate_attn_data();
           last_attn_elapsed = 0;
           startTime = performance.now();
         }
@@ -6862,7 +6895,7 @@
             maskOpDot.classList.toggle('mask-off', !isActive);
           }
           renderAttnKatex();
-          current_attn_data = generate_random_attn_data(T, d);
+          regenerate_attn_data();
           if (isActive) {
             startTime = performance.now() - 8000;
             last_attn_elapsed = 8000;
@@ -6891,6 +6924,7 @@
             if (maskMode === 'none') {
               setAttnMaskMode(lastMaskType);
             } else {
+              regenerate_attn_data();
               startTime = performance.now() - 8400;
               last_attn_elapsed = 8400;
             }
@@ -6997,6 +7031,7 @@
 
         function render(ms) {
           ctx.clearRect(0, 0, width, height);
+          setActiveVarlenPads(varlenPads);
           const isMaskActive = maskMode !== 'none';
           const maskDur = isMaskActive ? 2400 : 0;
           const isMaskPhase = isMaskActive && ms >= 8400 && ms < 10800;
@@ -8077,7 +8112,7 @@
           const totalDur = getTotalDuration();
           const elapsed = typeof window.__freezeAttnMs === 'number' ? window.__freezeAttnMs : ((now - startTime) % totalDur);
           if (elapsed < last_attn_elapsed) {
-            current_attn_data = generate_random_attn_data(T, d);
+            regenerate_attn_data();
           }
           last_attn_elapsed = elapsed;
           render(elapsed);
@@ -8229,7 +8264,7 @@
             maskOpDot.classList.toggle('mask-off', !isActive);
           }
           renderFullAttnKatex();
-          current_full_attn_data = generate_random_full_attn_data(T, d);
+          regenerate_full_attn_data();
           if (jumpToMask && isActive) {
             last_full_attn_elapsed = 8000;
             startTime = performance.now() - 8000;
@@ -8262,6 +8297,7 @@
             if (maskMode === 'none') {
               setFullAttnMaskMode(lastMaskType || 'causal', true);
             } else {
+              regenerate_full_attn_data();
               last_full_attn_elapsed = 8400;
               startTime = performance.now() - 8400;
             }
@@ -8762,11 +8798,19 @@
           return { q, k, v, mul, sim, maskedSim, exp, sum, prob, probNums, broadcast, broadcastNums, out, outNums };
         }
 
+        let fullVarlenPads = makeVarlenPads(Math.min(T, 128));
+        setActiveVarlenPads(fullVarlenPads);
         let current_full_attn_data = generate_random_full_attn_data(T, d);
         let last_full_attn_elapsed = 0;
 
-        function refresh_full_attn_data() {
+        function regenerate_full_attn_data() {
+          fullVarlenPads = makeVarlenPads(Math.min(T, 128));
+          setActiveVarlenPads(fullVarlenPads);
           current_full_attn_data = generate_random_full_attn_data(T, d);
+        }
+
+        function refresh_full_attn_data() {
+          regenerate_full_attn_data();
           last_full_attn_elapsed = 0;
           startTime = performance.now();
         }
@@ -8893,6 +8937,7 @@
 
         function render(ms) {
           ctx.clearRect(0, 0, width, height);
+          setActiveVarlenPads(fullVarlenPads);
           const isMaskActive = (maskMode !== 'none');
           const maskDur = isMaskActive ? MASK_PHASE_DURATION : 0;
           const isMaskPhase = isMaskActive && (ms >= 8400 && ms < 8400 + MASK_PHASE_DURATION);
@@ -10355,7 +10400,7 @@
           const totalDur = getTotalDuration();
           const elapsed = typeof window.__freezeFullAttnMs === 'number' ? window.__freezeFullAttnMs : ((now - startTime) % totalDur);
           if (elapsed < last_full_attn_elapsed) {
-            current_full_attn_data = generate_random_full_attn_data(T, d);
+            regenerate_full_attn_data();
           }
           last_full_attn_elapsed = elapsed;
           render(elapsed);

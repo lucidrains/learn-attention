@@ -77,3 +77,5 @@ The feeling I will attempt to evoke is, "Is that all?" and the answer should be 
     url     = {https://arxiv.org/abs/2607.18363},
 }
 ```
+
+*scientia est potentia*

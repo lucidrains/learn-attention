@@ -9226,7 +9226,7 @@
               { step: 'sim',     text: 'sim = queries @ keys.T' },
               ...CodePanels.buildMaskApplyLines('pytorch', mMode),
               { step: 'softmax', text: 'attn = sim.softmax(dim = -1)' },
-              { step: 'out',     text: 'attended_values = attn @ values' }
+              { step: 'out',     text: 'attended = attn @ values' }
             ];
           }
           const keySetupLines = mMode === 'varlen'
@@ -9252,7 +9252,7 @@
             { step: 'sim',     text: 'sim = queries @ keys.T' },
             ...CodePanels.buildMaskApplyLines('jax', mMode),
             { step: 'softmax', text: 'attn = jax.nn.softmax(sim, axis = -1)' },
-            { step: 'out',     text: 'attended_values = attn @ values' }
+            { step: 'out',     text: 'attended = attn @ values' }
           ];
         }, null, null, (step) => {
           const mOff = maskMode !== 'none' ? 2400 : 0;

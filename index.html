@@ -932,7 +932,303 @@
       100% { opacity: 0; transform: translateX(-50%) translateY(-4px); }
     }
 
-    /* Quizzes */
+    /* Quizzes & Code Panels */
+    .code-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.28rem;
+    }
+
+    .op-badge.code-sync-add {
+      border-color: var(--accent-green);
+      background: rgba(63, 185, 80, 0.10);
+      box-shadow: 0 0 10px rgba(63, 185, 80, 0.22);
+    }
+
+    .op-badge.code-sync-mul {
+      border-color: var(--accent-orange);
+      background: rgba(240, 136, 62, 0.10);
+      box-shadow: 0 0 10px rgba(240, 136, 62, 0.22);
+    }
+
+    .op-badge.code-sync-exp {
+      border-color: var(--accent-red);
+      background: rgba(248, 81, 73, 0.10);
+      box-shadow: 0 0 10px rgba(248, 81, 73, 0.22);
+    }
+
+    .op-badge.code-sync-div {
+      border-color: var(--accent-purple);
+      background: rgba(163, 113, 247, 0.10);
+      box-shadow: 0 0 10px rgba(163, 113, 247, 0.22);
+    }
+
+    .code-panel {
+      width: 100%;
+      background: linear-gradient(180deg, rgba(13, 17, 23, 0.96) 0%, rgba(9, 12, 17, 0.99) 100%);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 4px 16px rgba(0, 0, 0, 0.30);
+      overflow: hidden;
+      box-sizing: border-box;
+      margin-top: 0.15rem;
+      animation: fadeInMinimal 0.16s ease-out;
+    }
+
+    .code-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.32rem 0.55rem;
+      background: rgba(22, 27, 34, 0.72);
+      border-bottom: 1px solid rgba(48, 54, 61, 0.55);
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .code-lang-tabs {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      background: rgba(11, 14, 20, 0.85);
+      padding: 2px;
+      border-radius: 5px;
+      border: 1px solid rgba(48, 54, 61, 0.75);
+    }
+
+    .code-lang-tab {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #8b949e;
+      padding: 0.13rem 0.5rem;
+      border-radius: 3.5px;
+      font-size: 0.69rem;
+      font-family: var(--font-mono);
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      transition: var(--transition-fast);
+      line-height: 1.25;
+      white-space: nowrap;
+    }
+
+    .code-lang-tab:hover {
+      color: #e6edf3;
+    }
+
+    .code-lang-tab.active {
+      background: rgba(88, 166, 255, 0.15);
+      color: #f0f6fc;
+      border-color: rgba(88, 166, 255, 0.42);
+      font-weight: 600;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    }
+
+    .code-toolbar-right {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      min-width: 0;
+    }
+
+    .code-step-pill {
+      --step-color: #9ea7b3;
+      --step-rgb: 139, 148, 158;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.32rem;
+      padding: 0.11rem 0.46rem;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      line-height: 1.25;
+      letter-spacing: 0.01em;
+      color: var(--step-color);
+      background: rgba(var(--step-rgb), 0.12);
+      border: 1px solid rgba(var(--step-rgb), 0.34);
+      opacity: 0;
+      transform: translateY(1px);
+      transition: opacity 0.18s ease, transform 0.18s ease, color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      pointer-events: none;
+    }
+
+    .code-step-pill.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .code-step-pill.hl-orange { --step-color: #f0883e; --step-rgb: 240, 136, 62; }
+    .code-step-pill.hl-green  { --step-color: #3fb950; --step-rgb: 63, 185, 80; }
+    .code-step-pill.hl-red    { --step-color: #f85149; --step-rgb: 248, 81, 73; }
+    .code-step-pill.hl-purple { --step-color: #a371f7; --step-rgb: 163, 113, 247; }
+    .code-step-pill.hl-blue   { --step-color: #58a6ff; --step-rgb: 88, 166, 255; }
+    .code-step-pill.hl-cyan   { --step-color: #79c0ff; --step-rgb: 121, 192, 255; }
+    .code-step-pill.hl-mask   { --step-color: #c9d1d9; --step-rgb: 139, 148, 158; }
+
+    .code-step-dot {
+      width: 5.5px;
+      height: 5.5px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 6px currentColor;
+      flex-shrink: 0;
+    }
+
+    .code-copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.28rem;
+      background: rgba(22, 27, 34, 0.85);
+      border: 1px solid var(--border-default);
+      color: var(--text-muted);
+      border-radius: var(--radius-sm);
+      padding: 0.13rem 0.45rem;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      line-height: 1.25;
+      cursor: pointer;
+      transition: var(--transition-fast);
+      flex-shrink: 0;
+    }
+
+    .code-copy-btn:hover {
+      color: var(--text-primary);
+      border-color: var(--border-hover);
+      background: #21262d;
+    }
+
+    .code-copy-btn.copied {
+      color: var(--accent-green);
+      border-color: rgba(63, 185, 80, 0.55);
+      background: rgba(63, 185, 80, 0.12);
+    }
+
+    .code-copy-btn svg {
+      width: 11px;
+      height: 11px;
+      flex-shrink: 0;
+      pointer-events: none;
+    }
+
+    .code-pre {
+      margin: 0;
+      padding: 0.48rem 0;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      line-height: 1.54;
+      color: var(--text-secondary);
+      user-select: text;
+      -webkit-user-select: text;
+      cursor: text;
+      tab-size: 4;
+      scrollbar-width: thin;
+      scrollbar-color: #30363d transparent;
+    }
+
+    .code-pre::-webkit-scrollbar {
+      height: 5px;
+    }
+
+    .code-pre::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .code-pre::-webkit-scrollbar-thumb {
+      background: #30363d;
+      border-radius: 3px;
+    }
+
+    .code-pre ::selection,
+    .code-pre::selection {
+      background: rgba(88, 166, 255, 0.30);
+      color: #ffffff;
+    }
+
+    .code-block {
+      display: block;
+      min-width: 100%;
+      width: max-content;
+      font-family: inherit;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    .code-line {
+      --hl-color: transparent;
+      --hl-rgb: 88, 166, 255;
+      display: block;
+      padding: 0.03rem 0.85rem 0.03rem 0.72rem;
+      border-left: 2.5px solid transparent;
+      white-space: pre;
+      transition: opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    .code-line.is-empty {
+      height: 0.52rem;
+      line-height: 0.52rem;
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+
+    .code-block.has-focus .code-line:not(.is-active) {
+      opacity: 0.46;
+    }
+
+    .code-block.has-focus .code-line[data-step]:not(.is-active):hover {
+      opacity: 0.86;
+      background: rgba(139, 148, 158, 0.06);
+    }
+
+    .code-line.is-active {
+      opacity: 1;
+      color: #f0f6fc;
+      border-left-color: var(--hl-color);
+      background: linear-gradient(90deg, rgba(var(--hl-rgb), 0.20) 0%, rgba(var(--hl-rgb), 0.07) 62%, rgba(var(--hl-rgb), 0.015) 100%);
+      box-shadow: inset 3px 0 8px -3px rgba(var(--hl-rgb), 0.55);
+      animation: code-line-pulse 0.36s ease-out;
+    }
+
+    .code-line.hl-orange { --hl-color: #f0883e; --hl-rgb: 240, 136, 62; }
+    .code-line.hl-green  { --hl-color: #3fb950; --hl-rgb: 63, 185, 80; }
+    .code-line.hl-red    { --hl-color: #f85149; --hl-rgb: 248, 81, 73; }
+    .code-line.hl-purple { --hl-color: #a371f7; --hl-rgb: 163, 113, 247; }
+    .code-line.hl-blue   { --hl-color: #58a6ff; --hl-rgb: 88, 166, 255; }
+    .code-line.hl-cyan   { --hl-color: #79c0ff; --hl-rgb: 121, 192, 255; }
+    .code-line.hl-mask   { --hl-color: #c9d1d9; --hl-rgb: 139, 148, 158; }
+
+    @keyframes code-line-pulse {
+      0% { background-color: rgba(var(--hl-rgb), 0.22); }
+      100% { background-color: transparent; }
+    }
+
+    /* Subtle syntax tokens */
+    .tok-kw  { color: #ff7b72; }
+    .tok-mod { color: #ffa657; }
+    .tok-fn  { color: #d2a8ff; }
+    .tok-num { color: #79c0ff; }
+    .tok-op  { color: #c9d1d9; }
+    .tok-cmt { color: #6e7681; font-style: italic; transition: color 0.2s ease; }
+
+    .code-line.is-section-cmt .tok-cmt {
+      color: #8b949e;
+    }
+
+    .code-block.has-focus .code-line.is-section-cmt:not(.is-active) {
+      opacity: 0.82;
+    }
+
+    .code-line.is-active .tok-cmt {
+      color: var(--hl-color);
+      font-style: normal;
+      font-weight: 500;
+    }
+
     .quiz-panel {
       width: 100%;
       background: var(--bg-surface);
@@ -2069,7 +2365,7 @@
         line-height: 0;
       }
 
-      .quiz-toggle-btn::before {
+      .quiz-toggle-btn:not(.mask-toggle-btn):not(.code-toggle-btn)::before {
         content: "?";
         font-family: var(--font-mono);
         font-size: 0.82rem;
@@ -2078,9 +2374,31 @@
         letter-spacing: 0;
       }
 
-      .quiz-toggle-btn.active:not(.mask-toggle-btn)::before {
+      .quiz-toggle-btn.active:not(.mask-toggle-btn):not(.code-toggle-btn)::before {
         content: "\00d7";
         font-size: 0.95rem;
+      }
+
+      .code-toggle-btn::before {
+        content: "<>";
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: -0.05em;
+      }
+
+      .code-pre {
+        font-size: 0.65rem;
+      }
+
+      .code-line {
+        padding: 0.03rem 0.56rem 0.03rem 0.52rem;
+      }
+
+      .code-step-pill {
+        font-size: 0.62rem;
+        padding: 0.1rem 0.38rem;
       }
 
       .mask-toggle-btn::before {
@@ -2161,6 +2479,7 @@
         <div class="header-left">
           <div class="prereqs-label">Prerequisites</div>
           <button class="quiz-toggle-btn" id="prereq-quiz-toggle" aria-expanded="false" title="show quiz">quiz &#9662;</button>
+          <button class="quiz-toggle-btn code-toggle-btn" id="prereq-code-toggle" aria-expanded="false" title="show PyTorch &amp; JAX code">code &#9662;</button>
         </div>
       </div>
       <div class="prereqs-list">
@@ -2196,6 +2515,8 @@
         </div>
       </div>
 
+      <div class="code-panel" id="prereq-code-panel" style="display: none;"></div>
+
       <div class="quiz-panel" id="prereq-quiz-panel" style="display: none;">
         <div class="filters">
           <button class="filter-btn active" data-op="all">all</button>
@@ -2227,6 +2548,7 @@
         <div class="header-left">
           <span>Dot Product</span>
           <button class="quiz-toggle-btn" id="dot-quiz-toggle" aria-expanded="false" title="show quiz">quiz &#9662;</button>
+          <button class="quiz-toggle-btn code-toggle-btn" id="dot-code-toggle" aria-expanded="false" title="show PyTorch &amp; JAX code">code &#9662;</button>
         </div>
         <span id="header-dim">Vector of 4</span>
       </div>
@@ -2250,6 +2572,8 @@
           <span class="op-dot add" title="add (+)"></span>
         </div>
       </div>
+
+      <div class="code-panel" id="dot-code-panel" style="display: none;"></div>
 
       <div class="quiz-panel" id="dot-quiz-panel" style="display: none;">
         <div class="filters">
@@ -2279,6 +2603,7 @@
         <div class="header-left">
           <span>Softmax</span>
           <button class="quiz-toggle-btn" id="softmax-quiz-toggle" aria-expanded="false" title="show quiz">quiz &#9662;</button>
+          <button class="quiz-toggle-btn code-toggle-btn" id="softmax-code-toggle" aria-expanded="false" title="show PyTorch &amp; JAX code">code &#9662;</button>
         </div>
         <span id="softmax-header-dim">Vector of 4</span>
       </div>
@@ -2303,6 +2628,8 @@
           <span class="op-dot div" title="divide (÷)"></span>
         </div>
       </div>
+
+      <div class="code-panel" id="softmax-code-panel" style="display: none;"></div>
 
       <div class="quiz-panel" id="softmax-quiz-panel" style="display: none;">
         <div class="filters">
@@ -2332,6 +2659,7 @@
         <div class="header-left">
           <span>Attention Matrix</span>
           <button class="quiz-toggle-btn" id="attn-quiz-toggle" aria-expanded="false" title="show quiz">quiz &#9662;</button>
+          <button class="quiz-toggle-btn code-toggle-btn" id="attn-code-toggle" aria-expanded="false" title="show PyTorch &amp; JAX code">code &#9662;</button>
           <button class="quiz-toggle-btn mask-toggle-btn" id="attn-mask-toggle" aria-expanded="false" aria-pressed="false" aria-label="toggle masking step" title="Include masking step in attention matrix"><span class="mask-btn-dot"></span>mask &#9662;</button>
         </div>
         <span id="attn-header-dim">Queries &middot; Keys</span>
@@ -2388,6 +2716,8 @@
         </div>
       </div>
 
+      <div class="code-panel" id="attn-code-panel" style="display: none;"></div>
+
       <div class="quiz-panel" id="attn-quiz-panel" style="display: none;">
         <div class="filters">
           <button class="filter-btn active" data-size="1">1&times;1</button>
@@ -2419,6 +2749,7 @@
         <div class="header-left">
           <span>Attention</span>
           <button class="quiz-toggle-btn" id="full-attn-quiz-toggle" aria-expanded="false" title="show quiz">quiz &#9662;</button>
+          <button class="quiz-toggle-btn code-toggle-btn" id="full-attn-code-toggle" aria-expanded="false" title="show PyTorch &amp; JAX code">code &#9662;</button>
           <button class="quiz-toggle-btn mask-toggle-btn" id="full-attn-mask-toggle" aria-expanded="false" aria-pressed="false" aria-label="toggle masking step" title="Include masking step in attention"><span class="mask-btn-dot"></span>mask &#9662;</button>
         </div>
         <span id="full-attn-header-dim">Q, K, V &middot; 2 vec &middot; dim 2</span>
@@ -2477,6 +2808,8 @@
           <span class="op-dot add" title="sum weighted values: add (+)"></span>
         </div>
       </div>
+
+      <div class="code-panel" id="full-attn-code-panel" style="display: none;"></div>
 
       <div class="quiz-panel" id="full-attn-quiz-panel" style="display: none;">
         <div class="quiz-controls-toolbar">
@@ -3303,6 +3636,7 @@
         const op = current_op === 'all' ? rand_choice(ops) : current_op;
         current_problem = generators[op]();
         problem_el.innerHTML = current_problem.html;
+        if (window.__setPrereqQuizOp) window.__setPrereqQuizOp(op);
       }
 
       function check_answer() {
@@ -5289,6 +5623,429 @@
         };
       }
 
+      // interactive PyTorch & JAX code panels synced to each animation stage
+      const CodePanels = (() => {
+        let currentLang = 'pytorch';
+        const langListeners = [];
+        const HL_ALL = ['hl-orange', 'hl-green', 'hl-red', 'hl-purple', 'hl-blue', 'hl-cyan', 'hl-mask'];
+
+        const COPY_ICON_SVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5.5" y="5.5" width="8" height="8.5" rx="1.5"></rect><path d="M10.5 5.5V3.5A1.5 1.5 0 0 0 9 2H3.5A1.5 1.5 0 0 0 2 3.5V10a1.5 1.5 0 0 0 1.5 1.5h2"></path></svg>';
+        const CHECK_ICON_SVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8.5 6.5 12 13 4.5"></polyline></svg>';
+
+        function escHtml(s) {
+          return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        const PY_TOK_RE = /\b(import|from|as|True|False|None)\b|\b(torch|jax|jnp|nn)\b|\b(tensor|array|randn|normal|randint|split|chunk|key|exp|sum|softmax|triu|ones|arange|masked_fill|where|finfo|max|bool|inf)\b|\b(\d+(?:\.\d*)?)\b|(@|>=|\*\*|[+\-*/])/g;
+
+        function highlightPythonLine(rawLine) {
+          const cmtIdx = rawLine.indexOf('#');
+          const codePart = cmtIdx >= 0 ? rawLine.slice(0, cmtIdx) : rawLine;
+          const cmtPart = cmtIdx >= 0 ? rawLine.slice(cmtIdx) : '';
+
+          let out = '';
+          let lastIdx = 0;
+          PY_TOK_RE.lastIndex = 0;
+          let m;
+          while ((m = PY_TOK_RE.exec(codePart)) !== null) {
+            if (m.index > lastIdx) {
+              out += escHtml(codePart.slice(lastIdx, m.index));
+            }
+            const tok = escHtml(m[0]);
+            if (m[1]) out += `<span class="tok-kw">${tok}</span>`;
+            else if (m[2]) out += `<span class="tok-mod">${tok}</span>`;
+            else if (m[3]) out += `<span class="tok-fn">${tok}</span>`;
+            else if (m[4]) out += `<span class="tok-num">${tok}</span>`;
+            else out += `<span class="tok-op">${tok}</span>`;
+            lastIdx = m.index + m[0].length;
+          }
+          if (lastIdx < codePart.length) {
+            out += escHtml(codePart.slice(lastIdx));
+          }
+          if (cmtPart) {
+            out += `<span class="tok-cmt">${escHtml(cmtPart)}</span>`;
+          }
+          return out;
+        }
+
+        function setLang(lang) {
+          if (lang !== 'pytorch' && lang !== 'jax') return;
+          if (currentLang === lang) return;
+          currentLang = lang;
+          for (let i = 0; i < langListeners.length; i++) {
+            langListeners[i](currentLang);
+          }
+        }
+
+        async function copyTextToClipboard(text) {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            try {
+              await navigator.clipboard.writeText(text);
+              return true;
+            } catch (_) {}
+          }
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.setAttribute('readonly', '');
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          ta.style.pointerEvents = 'none';
+          document.body.appendChild(ta);
+          ta.select();
+          let ok = false;
+          try {
+            ok = document.execCommand('copy');
+          } catch (_) {}
+          document.body.removeChild(ta);
+          return ok;
+        }
+
+        function mount(prefix, buildLinesFn, onLineHoverFn, onOpenChangeFn, onLineClickFn) {
+          const toggleBtn = document.getElementById(`${prefix}-code-toggle`);
+          const panelEl = document.getElementById(`${prefix}-code-panel`);
+          if (!toggleBtn || !panelEl) {
+            return { updateParams() {}, setStep() {}, isOpen: () => false };
+          }
+
+          panelEl.innerHTML = `
+            <div class="code-toolbar">
+              <div class="code-lang-tabs" role="tablist" aria-label="Framework">
+                <button type="button" class="code-lang-tab active" role="tab" aria-selected="true" data-lang="pytorch">pytorch</button>
+                <button type="button" class="code-lang-tab" role="tab" aria-selected="false" data-lang="jax">jax</button>
+              </div>
+              <div class="code-toolbar-right">
+                <span class="code-step-pill" aria-live="off">
+                  <span class="code-step-dot"></span>
+                  <span class="code-step-text"></span>
+                </span>
+                <button type="button" class="code-copy-btn" title="Copy code to clipboard">
+                  ${COPY_ICON_SVG}<span>copy</span>
+                </button>
+              </div>
+            </div>
+            <pre class="code-pre"><code class="code-block"></code></pre>
+          `;
+
+          const tabBtns = Array.from(panelEl.querySelectorAll('.code-lang-tab'));
+          const stepPill = panelEl.querySelector('.code-step-pill');
+          const stepTextEl = panelEl.querySelector('.code-step-text');
+          const copyBtn = panelEl.querySelector('.code-copy-btn');
+          const codeBlock = panelEl.querySelector('.code-block');
+
+          let isOpen = false;
+          let params = {};
+          let renderedSig = '';
+          let rawCode = '';
+          let lineEls = [];
+          let activeStepId = null;
+          let activeColor = null;
+          let activeLabel = null;
+          let lastStepSig = '';
+          let copyTimer = null;
+
+          function applyStepHighlight(force) {
+            const sig = `${activeStepId || ''}|${activeColor || ''}|${activeLabel || ''}`;
+            if (!force && sig === lastStepSig) return;
+            lastStepSig = sig;
+
+            const hlClass = activeColor ? `hl-${activeColor}` : '';
+            let anyActive = false;
+
+            for (let i = 0; i < lineEls.length; i++) {
+              const item = lineEls[i];
+              const match = !!(activeStepId && item.step === activeStepId);
+              if (match) {
+                anyActive = true;
+                item.el.classList.remove(...HL_ALL);
+                if (hlClass) item.el.classList.add(hlClass);
+                if (force || !item.el.classList.contains('is-active')) {
+                  item.el.classList.add('is-active');
+                } else {
+                  // re-trigger subtle pulse when same line changes semantic color (e.g. multiply -> sum)
+                  item.el.style.animation = 'none';
+                  void item.el.offsetWidth;
+                  item.el.style.animation = '';
+                }
+              } else {
+                item.el.classList.remove('is-active', ...HL_ALL);
+                item.el.style.animation = '';
+              }
+            }
+
+            codeBlock.classList.toggle('has-focus', anyActive);
+
+            stepPill.classList.remove(...HL_ALL);
+            if (activeLabel && hlClass) {
+              stepPill.classList.add('visible', hlClass);
+              stepTextEl.textContent = activeLabel;
+            } else {
+              stepPill.classList.remove('visible');
+            }
+          }
+
+          function renderCode() {
+            const lines = buildLinesFn(currentLang, params);
+            const sig = currentLang + '::' + lines.map(l => `${l.step || ''}:${l.text}`).join('\n');
+            if (sig === renderedSig) return;
+            renderedSig = sig;
+            rawCode = lines.map(l => l.text).join('\n');
+
+            codeBlock.innerHTML = '';
+            lineEls = [];
+
+            for (let i = 0; i < lines.length; i++) {
+              const item = lines[i];
+              const span = document.createElement('span');
+              if (item.text === '') {
+                span.className = 'code-line is-empty';
+                span.innerHTML = '<br>';
+              } else {
+                span.className = (!item.step && item.text.startsWith('#'))
+                  ? 'code-line is-section-cmt'
+                  : 'code-line';
+                if (item.step) span.dataset.step = item.step;
+                span.innerHTML = highlightPythonLine(item.text);
+                if (onLineHoverFn && item.step) {
+                  span.addEventListener('pointerenter', () => onLineHoverFn(item.step));
+                  span.addEventListener('pointerleave', () => onLineHoverFn(null));
+                }
+                if (onLineClickFn && item.step) {
+                  span.addEventListener('click', () => {
+                    const sel = window.getSelection && window.getSelection();
+                    if (sel && !sel.isCollapsed) return;
+                    onLineClickFn(item.step);
+                  });
+                }
+              }
+              codeBlock.appendChild(span);
+              lineEls.push({ el: span, step: item.step || null });
+            }
+
+            applyStepHighlight(true);
+          }
+
+          function syncTabs(lang) {
+            tabBtns.forEach(btn => {
+              const isAct = btn.dataset.lang === lang;
+              btn.classList.toggle('active', isAct);
+              btn.setAttribute('aria-selected', isAct ? 'true' : 'false');
+            });
+            renderCode();
+          }
+
+          tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+              setLang(btn.dataset.lang);
+            });
+          });
+
+          langListeners.push(syncTabs);
+
+          copyBtn.addEventListener('click', async () => {
+            await copyTextToClipboard(rawCode);
+            copyBtn.classList.add('copied');
+            copyBtn.innerHTML = `${CHECK_ICON_SVG}<span>copied</span>`;
+            if (copyTimer) clearTimeout(copyTimer);
+            copyTimer = setTimeout(() => {
+              copyBtn.classList.remove('copied');
+              copyBtn.innerHTML = `${COPY_ICON_SVG}<span>copy</span>`;
+            }, 1500);
+          });
+
+          toggleBtn.addEventListener('click', () => {
+            isOpen = !isOpen;
+            panelEl.style.display = isOpen ? 'block' : 'none';
+            toggleBtn.classList.toggle('active', isOpen);
+            toggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            toggleBtn.innerHTML = isOpen ? 'code &#9652;' : 'code &#9662;';
+            if (isOpen) renderCode();
+            if (onOpenChangeFn) onOpenChangeFn(isOpen);
+          });
+
+          renderCode();
+
+          return {
+            updateParams(nextParams) {
+              params = Object.assign({}, params, nextParams);
+              renderCode();
+            },
+            setStep(stepId, color, label) {
+              activeStepId = stepId || null;
+              activeColor = color || null;
+              activeLabel = label || null;
+              applyStepHighlight(false);
+            },
+            isOpen: () => isOpen
+          };
+        }
+
+        function buildMaskSetupLines(lang, maskMode) {
+          if (!maskMode || maskMode === 'none') return [];
+          const isCausal = maskMode === 'causal' || maskMode === 'autoregressive';
+          if (lang === 'pytorch') {
+            if (isCausal) {
+              return [
+                { step: 'mask', text: 'causal_mask = torch.ones((seq_len, seq_len), dtype = bool).triu(1)' }
+              ];
+            }
+            return [
+              { step: 'mask', text: 'seq_lens = torch.randint(1, seq_len + 1, (seq_len,))' },
+              { step: 'mask', text: 'varlen_mask = torch.arange(seq_len) >= seq_lens[:, None]' }
+            ];
+          }
+          if (isCausal) {
+            return [
+              { step: 'mask', text: 'causal_mask = jnp.triu(jnp.ones((seq_len, seq_len), bool), k = 1)' }
+            ];
+          }
+          return [
+            { step: 'mask', text: 'seq_lens = jax.random.randint(mask_key, (seq_len,), 1, seq_len + 1)' },
+            { step: 'mask', text: 'varlen_mask = jnp.arange(seq_len) >= seq_lens[:, None]' }
+          ];
+        }
+
+        function buildMaskApplyLines(lang, maskMode) {
+          if (!maskMode || maskMode === 'none') return [];
+          const maskVar = (maskMode === 'causal' || maskMode === 'autoregressive') ? 'causal_mask' : 'varlen_mask';
+          if (lang === 'pytorch') {
+            return [
+              { step: 'mask', text: `sim = sim.masked_fill(${maskVar}, -torch.finfo(sim.dtype).max)` }
+            ];
+          }
+          return [
+            { step: 'mask', text: `sim = jnp.where(${maskVar}, -jnp.finfo(sim.dtype).max, sim)` }
+          ];
+        }
+
+        return { mount, buildMaskSetupLines, buildMaskApplyLines };
+      })();
+
+      // stage 0: prerequisites code panel
+      (function initPrereqCodePanel() {
+        const OP_META = {
+          add: { color: 'green', label: '+ add', syncCls: 'code-sync-add' },
+          mul: { color: 'orange', label: '× multiply', syncCls: 'code-sync-mul' },
+          exp: { color: 'red', label: 'exp (eˣ)', syncCls: 'code-sync-exp' },
+          div: { color: 'purple', label: '÷ divide', syncCls: 'code-sync-div' }
+        };
+        const CYCLE_OPS = ['add', 'mul', 'exp', 'div'];
+        const SYNC_CLASSES = ['code-sync-add', 'code-sync-mul', 'code-sync-exp', 'code-sync-div'];
+
+        const badges = {
+          add: document.querySelector('#prereq-card .op-badge.add'),
+          mul: document.querySelector('#prereq-card .op-badge.mul'),
+          exp: document.querySelector('#prereq-card .op-badge.exp'),
+          div: document.querySelector('#prereq-card .op-badge.div')
+        };
+        const quizPanel = document.getElementById('prereq-quiz-panel');
+
+        let hoveredOp = null;
+        let quizOp = null;
+        let cycleIdx = 0;
+        let cycleTimer = null;
+
+        function setBadgeGlow(op) {
+          CYCLE_OPS.forEach(k => {
+            const b = badges[k];
+            if (!b) return;
+            b.classList.remove(...SYNC_CLASSES);
+            if (op === k && OP_META[k]) {
+              b.classList.add(OP_META[k].syncCls);
+            }
+          });
+        }
+
+        function refreshHighlight() {
+          if (!prereqCode.isOpen()) {
+            setBadgeGlow(null);
+            return;
+          }
+          const isQuizOpen = quizPanel && quizPanel.style.display !== 'none';
+          const targetOp = hoveredOp || (isQuizOpen && quizOp ? quizOp : CYCLE_OPS[cycleIdx]);
+          const meta = OP_META[targetOp];
+          if (meta) {
+            prereqCode.setStep(targetOp, meta.color, meta.label);
+            setBadgeGlow(targetOp);
+          }
+        }
+
+        function startCycle() {
+          stopCycle();
+          cycleIdx = 0;
+          refreshHighlight();
+          cycleTimer = setInterval(() => {
+            if (!hoveredOp) {
+              cycleIdx = (cycleIdx + 1) % CYCLE_OPS.length;
+              refreshHighlight();
+            }
+          }, 1800);
+        }
+
+        function stopCycle() {
+          if (cycleTimer) {
+            clearInterval(cycleTimer);
+            cycleTimer = null;
+          }
+          setBadgeGlow(null);
+        }
+
+        const prereqCode = CodePanels.mount(
+          'prereq',
+          (lang) => {
+            if (lang === 'pytorch') {
+              return [
+                { text: 'import torch' },
+                { text: '' },
+                { step: 'init', text: 'first_num, second_num = torch.tensor(2.), torch.tensor(0.5)' },
+                { text: '' },
+                { text: '# basic operations' },
+                { step: 'add',  text: 'added = first_num + second_num' },
+                { step: 'mul',  text: 'multiplied = first_num * second_num' },
+                { step: 'exp',  text: 'exponentiated = first_num.exp()' },
+                { step: 'div',  text: 'divided = first_num / second_num' }
+              ];
+            }
+            return [
+              { text: 'import jax.numpy as jnp' },
+              { text: '' },
+              { step: 'init', text: 'first_num, second_num = jnp.array(2.), jnp.array(0.5)' },
+              { text: '' },
+              { text: '# basic operations' },
+              { step: 'add',  text: 'added = first_num + second_num' },
+              { step: 'mul',  text: 'multiplied = first_num * second_num' },
+              { step: 'exp',  text: 'exponentiated = jnp.exp(first_num)' },
+              { step: 'div',  text: 'divided = first_num / second_num' }
+            ];
+          },
+          (hoverStep) => {
+            hoveredOp = OP_META[hoverStep] ? hoverStep : null;
+            refreshHighlight();
+          },
+          (open) => {
+            if (open) startCycle();
+            else stopCycle();
+          }
+        );
+
+        CYCLE_OPS.forEach(op => {
+          const b = badges[op];
+          if (!b) return;
+          b.addEventListener('pointerenter', () => {
+            hoveredOp = op;
+            refreshHighlight();
+          });
+          b.addEventListener('pointerleave', () => {
+            if (hoveredOp === op) hoveredOp = null;
+            refreshHighlight();
+          });
+        });
+
+        window.__setPrereqQuizOp = (op) => {
+          quizOp = op;
+          refreshHighlight();
+        };
+      })();
+
       // stage 1: dot product
       (function initDotCanvasAnimation() {
         const POWERS = [2, 4, 8, 16, 32, 64, 128, 256];
@@ -5349,6 +6106,41 @@
         let current_dot_data = generate_random_dot_data(N);
         let last_dot_elapsed = 0;
 
+        const dotCode = CodePanels.mount('dot', (lang, { N: dimN = 4 }) => {
+          if (lang === 'pytorch') {
+            return [
+              { text: 'import torch' },
+              { text: '' },
+              { step: 'init', text: `first_vec, second_vec = torch.randn(2, ${dimN})` },
+              { text: '' },
+              { text: '# dot product - 2 loc' },
+              { step: 'mul',  text: 'pairwise_products = first_vec * second_vec' },
+              { step: 'add',  text: 'dot_product = pairwise_products.sum()' },
+              { step: 'out',  text: '# shorthand: dot_product = first_vec @ second_vec' }
+            ];
+          }
+          return [
+            { text: 'import jax' },
+            { text: 'import jax.numpy as jnp' },
+            { text: '' },
+            { step: 'init', text: 'rng_key = jax.random.key(0)' },
+            { step: 'init', text: `first_vec, second_vec = jax.random.normal(rng_key, (2, ${dimN}))` },
+            { text: '' },
+            { text: '# dot product - 2 loc' },
+            { step: 'mul',  text: 'pairwise_products = first_vec * second_vec' },
+            { step: 'add',  text: 'dot_product = jnp.sum(pairwise_products)' },
+            { step: 'out',  text: '# shorthand: dot_product = first_vec @ second_vec' }
+          ];
+        }, null, null, (step) => {
+          const STEP_MS = { init: 0, mul: 1200, add: 2700, out: 5400 };
+          if (STEP_MS[step] !== undefined) {
+            const t = STEP_MS[step];
+            startTime = performance.now() - t;
+            last_dot_elapsed = t;
+          }
+        });
+        dotCode.updateParams({ N });
+
         function refresh_dot_data() {
           current_dot_data = generate_random_dot_data(N);
           last_dot_elapsed = 0;
@@ -5361,6 +6153,7 @@
           N = POWERS[currentPowerIdx];
           sliderLabel.textContent = N.toLocaleString();
           headerDim.textContent = "Vector of " + N.toLocaleString();
+          dotCode.updateParams({ N });
           refresh_dot_data();
         }
 
@@ -5424,6 +6217,12 @@
           if (ms >= 1200 && ms < 2700) setDotOpActive(0);
           else if (ms >= 2700 && ms < 5400) setDotOpActive(1);
           else setDotOpActive(-1);
+
+          if (ms < 1200) dotCode.setStep('init', 'blue', 'vectors');
+          else if (ms < 2700) dotCode.setStep('mul', 'orange', '× multiply');
+          else if (ms < 5400) dotCode.setStep('add', 'green', '+ add');
+          else if (ms < 6800) dotCode.setStep('out', 'blue', '= scalar');
+          else dotCode.setStep(null, null, null);
 
           const centerX = width / 2;
           const centerY = height / 2;
@@ -5809,6 +6608,43 @@
         let current_softmax_data = generate_random_softmax_data(N);
         let last_softmax_elapsed = 0;
 
+        const softmaxCode = CodePanels.mount('softmax', (lang, { N: dimN = 4 }) => {
+          if (lang === 'pytorch') {
+            return [
+              { text: 'import torch' },
+              { text: '' },
+              { step: 'init', text: `logits = torch.randn(${dimN})` },
+              { text: '' },
+              { text: '# softmax - 3 loc' },
+              { step: 'exp',  text: 'exp_logits = logits.exp()' },
+              { step: 'add',  text: 'sum_exp = exp_logits.sum()' },
+              { step: 'div',  text: 'probs = exp_logits / sum_exp' },
+              { step: 'out',  text: '# shorthand: probs = logits.softmax(dim = -1)' }
+            ];
+          }
+          return [
+            { text: 'import jax' },
+            { text: 'import jax.numpy as jnp' },
+            { text: '' },
+            { step: 'init', text: 'rng_key = jax.random.key(0)' },
+            { step: 'init', text: `logits = jax.random.normal(rng_key, (${dimN},))` },
+            { text: '' },
+            { text: '# softmax - 3 loc' },
+            { step: 'exp',  text: 'exp_logits = jnp.exp(logits)' },
+            { step: 'add',  text: 'sum_exp = jnp.sum(exp_logits)' },
+            { step: 'div',  text: 'probs = exp_logits / sum_exp' },
+            { step: 'out',  text: '# shorthand: probs = jax.nn.softmax(logits, axis = -1)' }
+          ];
+        }, null, null, (step) => {
+          const STEP_MS = { init: 0, exp: 1200, add: 2600, div: 5200, out: 6600 };
+          if (STEP_MS[step] !== undefined) {
+            const t = STEP_MS[step];
+            startTime = performance.now() - t;
+            last_softmax_elapsed = t;
+          }
+        });
+        softmaxCode.updateParams({ N });
+
         function refresh_softmax_data() {
           current_softmax_data = generate_random_softmax_data(N);
           last_softmax_elapsed = 0;
@@ -5821,6 +6657,7 @@
           N = POWERS[currentPowerIdx];
           sliderLabel.textContent = N.toLocaleString();
           headerDim.textContent = "Vector of " + N.toLocaleString();
+          softmaxCode.updateParams({ N });
           refresh_softmax_data();
         }
 
@@ -5886,6 +6723,13 @@
           else if (ms >= 2600 && ms < 5200) setSoftmaxOpActive(1);
           else if (ms >= 5200 && ms < 6600) setSoftmaxOpActive(2);
           else setSoftmaxOpActive(-1);
+
+          if (ms < 1200) softmaxCode.setStep('init', 'blue', 'vector');
+          else if (ms < 2600) softmaxCode.setStep('exp', 'red', 'exp');
+          else if (ms < 5200) softmaxCode.setStep('add', 'green', '+ sum');
+          else if (ms < 6600) softmaxCode.setStep('div', 'purple', '÷ divide');
+          else if (ms < 10400) softmaxCode.setStep('out', 'blue', 'sum = 1.0');
+          else softmaxCode.setStep(null, null, null);
 
           const centerX = width / 2;
           const centerY = height / 2;
@@ -6771,12 +7615,69 @@
         window.addEventListener('resize', resize);
         resize();
 
+        const attnCode = CodePanels.mount('attn', (lang, { T: tLen = 2, d: dDim = 2, maskMode: mMode = 'none' }) => {
+          const isMasked = mMode && mMode !== 'none';
+          const coreComment = isMasked
+            ? '# attention similarities / logits (masked) - 3 loc'
+            : '# attention similarities / logits - 2 loc';
+          if (lang === 'pytorch') {
+            return [
+              { text: 'import torch' },
+              { text: '' },
+              { step: 'vec',     text: `seq_len, dim = ${tLen}, ${dDim}` },
+              { step: 'vec',     text: 'tokens = torch.randn(seq_len, dim)' },
+              { step: 'qk',      text: 'to_qk = torch.randn(dim, dim * 2)' },
+              { step: 'qk',      text: 'queries, keys = (tokens @ to_qk).chunk(2, dim = -1)' },
+              ...CodePanels.buildMaskSetupLines('pytorch', mMode),
+              { text: '' },
+              { text: coreComment },
+              { step: 'sim',     text: 'sim = queries @ keys.T' },
+              ...CodePanels.buildMaskApplyLines('pytorch', mMode),
+              { step: 'softmax', text: 'attn = sim.softmax(dim = -1)' }
+            ];
+          }
+          const keySetupLines = mMode === 'varlen'
+            ? [
+                { step: 'vec', text: 'rng_keys = jax.random.split(jax.random.key(0), 3)' },
+                { step: 'vec', text: 'token_key, proj_key, mask_key = rng_keys' }
+              ]
+            : [
+                { step: 'vec', text: 'token_key, proj_key = jax.random.split(jax.random.key(0), 2)' }
+              ];
+          return [
+            { text: 'import jax' },
+            { text: 'import jax.numpy as jnp' },
+            { text: '' },
+            { step: 'vec',     text: `seq_len, dim = ${tLen}, ${dDim}` },
+            ...keySetupLines,
+            { step: 'vec',     text: 'tokens = jax.random.normal(token_key, (seq_len, dim))' },
+            { step: 'qk',      text: 'to_qk = jax.random.normal(proj_key, (dim, dim * 2))' },
+            { step: 'qk',      text: 'queries, keys = jnp.split(tokens @ to_qk, 2, axis = -1)' },
+            ...CodePanels.buildMaskSetupLines('jax', mMode),
+            { text: '' },
+            { text: coreComment },
+            { step: 'sim',     text: 'sim = queries @ keys.T' },
+            ...CodePanels.buildMaskApplyLines('jax', mMode),
+            { step: 'softmax', text: 'attn = jax.nn.softmax(sim, axis = -1)' }
+          ];
+        }, null, null, (step) => {
+          const mOff = maskMode !== 'none' ? 2400 : 0;
+          const STEP_MS = { vec: 0, qk: 1200, sim: 3600, mask: 8400, softmax: 8400 + mOff };
+          if (STEP_MS[step] !== undefined) {
+            const t = STEP_MS[step];
+            startTime = performance.now() - t;
+            last_attn_elapsed = t;
+          }
+        });
+        attnCode.updateParams({ T, d, maskMode });
+
         function updateLen(idx) {
           currentLenIdx = Math.max(0, Math.min(LEN_POWERS.length - 1, idx));
           lenSlider.value = currentLenIdx;
           T = LEN_POWERS[currentLenIdx];
           lenSliderLabel.textContent = T.toLocaleString();
           headerDim.innerHTML = "Queries &middot; Keys";
+          attnCode.updateParams({ T, d, maskMode });
           refresh_attn_data();
           if (webglCanvas) {
             const isThree = (T >= 64 && threeAttn !== null);
@@ -6793,6 +7694,7 @@
           d = DIM_POWERS[currentDimIdx];
           dimSliderLabel.textContent = d.toLocaleString();
           headerDim.innerHTML = "Queries &middot; Keys";
+          attnCode.updateParams({ T, d, maskMode });
           refresh_attn_data();
         }
 
@@ -6976,6 +7878,7 @@
             maskOpDot.classList.toggle('mask-off', !isActive);
           }
           renderAttnKatex();
+          attnCode.updateParams({ T, d, maskMode });
           // keep q/k, recompute only the mask-dependent derivations
           current_attn_data = generate_random_attn_data(T, d, current_attn_data);
 
@@ -7131,6 +8034,14 @@
           else if (adjMs >= 9800 && adjMs < 11400) setAttnOpActive(4);
           else if (adjMs >= 11400 && adjMs < 13000) setAttnOpActive(5);
           else setAttnOpActive(-1);
+
+          if (ms < 1200) attnCode.setStep('vec', 'blue', 'tokens');
+          else if (ms < 3600) attnCode.setStep('qk', 'blue', 'queries & keys');
+          else if (ms < 5600) attnCode.setStep('sim', 'orange', '× multiply');
+          else if (ms < 8400) attnCode.setStep('sim', 'green', '+ sum');
+          else if (isMaskPhase) attnCode.setStep('mask', 'mask', (maskMode === 'causal' || maskMode === 'autoregressive') ? '+ causal mask' : '+ varlen mask');
+          else if (adjMs < 16400) attnCode.setStep('softmax', 'red', 'softmax');
+          else attnCode.setStep(null, null, null);
 
           const s = Math.min(1.0, Math.max(0.70, (width - 24) / 460));
           const centerX = width / 2;
@@ -8296,12 +9207,71 @@
           }
         }
 
+        const fullAttnCode = CodePanels.mount('full-attn', (lang, { T: tLen = 2, d: dDim = 2, maskMode: mMode = 'none' }) => {
+          const isMasked = mMode && mMode !== 'none';
+          const coreComment = isMasked
+            ? '# attention (masked) - 4 loc'
+            : '# attention - 3 loc';
+          if (lang === 'pytorch') {
+            return [
+              { text: 'import torch' },
+              { text: '' },
+              { step: 'vec',     text: `seq_len, dim = ${tLen}, ${dDim}` },
+              { step: 'vec',     text: 'tokens = torch.randn(seq_len, dim)' },
+              { step: 'qkv',     text: 'to_qkv = torch.randn(dim, dim * 3)' },
+              { step: 'qkv',     text: 'queries, keys, values = (tokens @ to_qkv).chunk(3, dim = -1)' },
+              ...CodePanels.buildMaskSetupLines('pytorch', mMode),
+              { text: '' },
+              { text: coreComment },
+              { step: 'sim',     text: 'sim = queries @ keys.T' },
+              ...CodePanels.buildMaskApplyLines('pytorch', mMode),
+              { step: 'softmax', text: 'attn = sim.softmax(dim = -1)' },
+              { step: 'out',     text: 'attended_values = attn @ values' }
+            ];
+          }
+          const keySetupLines = mMode === 'varlen'
+            ? [
+                { step: 'vec', text: 'rng_keys = jax.random.split(jax.random.key(0), 3)' },
+                { step: 'vec', text: 'token_key, proj_key, mask_key = rng_keys' }
+              ]
+            : [
+                { step: 'vec', text: 'token_key, proj_key = jax.random.split(jax.random.key(0), 2)' }
+              ];
+          return [
+            { text: 'import jax' },
+            { text: 'import jax.numpy as jnp' },
+            { text: '' },
+            { step: 'vec',     text: `seq_len, dim = ${tLen}, ${dDim}` },
+            ...keySetupLines,
+            { step: 'vec',     text: 'tokens = jax.random.normal(token_key, (seq_len, dim))' },
+            { step: 'qkv',     text: 'to_qkv = jax.random.normal(proj_key, (dim, dim * 3))' },
+            { step: 'qkv',     text: 'queries, keys, values = jnp.split(tokens @ to_qkv, 3, axis = -1)' },
+            ...CodePanels.buildMaskSetupLines('jax', mMode),
+            { text: '' },
+            { text: coreComment },
+            { step: 'sim',     text: 'sim = queries @ keys.T' },
+            ...CodePanels.buildMaskApplyLines('jax', mMode),
+            { step: 'softmax', text: 'attn = jax.nn.softmax(sim, axis = -1)' },
+            { step: 'out',     text: 'attended_values = attn @ values' }
+          ];
+        }, null, null, (step) => {
+          const mOff = maskMode !== 'none' ? 2400 : 0;
+          const STEP_MS = { vec: 0, qkv: 1200, sim: 3600, mask: 8400, softmax: 8400 + mOff, out: 14800 + mOff };
+          if (STEP_MS[step] !== undefined) {
+            const t = STEP_MS[step];
+            startTime = performance.now() - t;
+            last_full_attn_elapsed = t;
+          }
+        });
+        fullAttnCode.updateParams({ T, d, maskMode });
+
         function updateDim(idx) {
           currentDimIdx = clamp(idx, 0, DIM_POWERS.length - 1);
           d = DIM_POWERS[currentDimIdx];
           dimSlider.value = currentDimIdx;
           dimLabel.textContent = d.toLocaleString();
           updateHeader();
+          fullAttnCode.updateParams({ T, d, maskMode });
           refresh_full_attn_data();
           syncWebglDisplay();
         }
@@ -8312,6 +9282,7 @@
           lenSlider.value = currentLenIdx;
           lenLabel.textContent = T.toLocaleString();
           updateHeader();
+          fullAttnCode.updateParams({ T, d, maskMode });
           refresh_full_attn_data();
           syncWebglDisplay();
         }
@@ -8353,6 +9324,7 @@
             maskOpDot.classList.toggle('mask-off', !isActive);
           }
           renderFullAttnKatex();
+          fullAttnCode.updateParams({ T, d, maskMode });
           // keep q/k/v, recompute only the mask-dependent derivations
           current_full_attn_data = generate_random_full_attn_data(T, d, current_full_attn_data);
 
@@ -9066,6 +10038,16 @@
           else if (adjMs >= 14800 && adjMs < 18000) setFullAttnOpActive(6);
           else if (adjMs >= 18000 && adjMs < 21000) setFullAttnOpActive(7);
           else setFullAttnOpActive(-1);
+
+          if (ms < 1200) fullAttnCode.setStep('vec', 'blue', 'tokens');
+          else if (ms < 3600) fullAttnCode.setStep('qkv', 'blue', 'queries, keys, values');
+          else if (ms < 5600) fullAttnCode.setStep('sim', 'orange', '× multiply');
+          else if (ms < 8400) fullAttnCode.setStep('sim', 'green', '+ sum');
+          else if (isMaskPhase) fullAttnCode.setStep('mask', 'mask', (maskMode === 'causal' || maskMode === 'autoregressive') ? '+ causal mask' : '+ varlen mask');
+          else if (adjMs < 14800) fullAttnCode.setStep('softmax', 'red', 'softmax');
+          else if (adjMs < 18000) fullAttnCode.setStep('out', 'orange', '× weight values');
+          else if (adjMs < 21000) fullAttnCode.setStep('out', 'green', '+ sum → output');
+          else fullAttnCode.setStep(null, null, null);
           const s = clamp((width - 24) / 460, 0.70, 1.0);
           const centerX = width / 2;
           const centerY = height / 2 + 10 * s;

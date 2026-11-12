@@ -2320,6 +2320,24 @@
       grid-column: span 2;
     }
 
+    /* Desktop: per-card controls reveal on hover without changing card size */
+    @media (hover: hover) and (pointer: fine) {
+      .dot-card .quiz-toggle-btn,
+      .dot-card .slider-row {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.18s ease;
+      }
+
+      .dot-card:hover .quiz-toggle-btn,
+      .dot-card:hover .slider-row,
+      .dot-card .quiz-toggle-btn:focus-visible,
+      .dot-card .slider-row:has(input:focus-visible) {
+        opacity: 1;
+        pointer-events: auto;
+      }
+    }
+
     /* Consolidated Responsive Media Queries */
     @media (max-width: 520px) {
       body {

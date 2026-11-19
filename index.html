@@ -5927,11 +5927,11 @@
           const maskVar = (maskMode === 'causal' || maskMode === 'autoregressive') ? 'causal_mask' : 'varlen_mask';
           if (lang === 'pytorch') {
             return [
-              { step: 'mask', text: `sim = sim.masked_fill(${maskVar}, -torch.finfo(sim.dtype).max)` }
+              { step: 'mask', text: `scores = scores.masked_fill(${maskVar}, -torch.finfo(scores.dtype).max)` }
             ];
           }
           return [
-            { step: 'mask', text: `sim = jnp.where(${maskVar}, -jnp.finfo(sim.dtype).max, sim)` }
+            { step: 'mask', text: `scores = jnp.where(${maskVar}, -jnp.finfo(scores.dtype).max, scores)` }
           ];
         }
 
@@ -6016,7 +6016,7 @@
                 { text: '' },
                 { step: 'init', text: 'first_num, second_num = torch.tensor(2.), torch.tensor(0.5)' },
                 { text: '' },
-                { text: '# basic operations' },
+                { text: '# basic operations - 4 loc' },
                 { step: 'add',  text: 'added = first_num + second_num' },
                 { step: 'mul',  text: 'multiplied = first_num * second_num' },
                 { step: 'exp',  text: 'exponentiated = first_num.exp()' },
@@ -6028,7 +6028,7 @@
               { text: '' },
               { step: 'init', text: 'first_num, second_num = jnp.array(2.), jnp.array(0.5)' },
               { text: '' },
-              { text: '# basic operations' },
+              { text: '# basic operations - 4 loc' },
               { step: 'add',  text: 'added = first_num + second_num' },
               { step: 'mul',  text: 'multiplied = first_num * second_num' },
               { step: 'exp',  text: 'exponentiated = jnp.exp(first_num)' },
@@ -7636,8 +7636,8 @@
         const attnCode = CodePanels.mount('attn', (lang, { T: tLen = 2, d: dDim = 2, maskMode: mMode = 'none' }) => {
           const isMasked = mMode && mMode !== 'none';
           const coreComment = isMasked
-            ? '# attention similarities / logits (masked) - 3 loc'
-            : '# attention similarities / logits - 2 loc';
+            ? '# attention similarity -> mask -> matrix - 3 loc'
+            : '# attention similarity -> matrix - 2 loc';
           if (lang === 'pytorch') {
             return [
               { text: 'import torch' },
@@ -7649,9 +7649,9 @@
               ...CodePanels.buildMaskSetupLines('pytorch', mMode),
               { text: '' },
               { text: coreComment },
-              { step: 'sim',     text: 'sim = queries @ keys.T' },
+              { step: 'sim',     text: 'scores = queries @ keys.T' },
               ...CodePanels.buildMaskApplyLines('pytorch', mMode),
-              { step: 'softmax', text: 'attn = sim.softmax(dim = -1)' }
+              { step: 'softmax', text: 'weights = scores.softmax(dim = -1)' }
             ];
           }
           const keySetupLines = mMode === 'varlen'
@@ -7674,9 +7674,9 @@
             ...CodePanels.buildMaskSetupLines('jax', mMode),
             { text: '' },
             { text: coreComment },
-            { step: 'sim',     text: 'sim = queries @ keys.T' },
+            { step: 'sim',     text: 'scores = queries @ keys.T' },
             ...CodePanels.buildMaskApplyLines('jax', mMode),
-            { step: 'softmax', text: 'attn = jax.nn.softmax(sim, axis = -1)' }
+            { step: 'softmax', text: 'weights = jax.nn.softmax(scores, axis = -1)' }
           ];
         }, null, null, (step) => {
           const mOff = maskMode !== 'none' ? 2400 : 0;
@@ -9228,8 +9228,8 @@
         const fullAttnCode = CodePanels.mount('full-attn', (lang, { T: tLen = 2, d: dDim = 2, maskMode: mMode = 'none' }) => {
           const isMasked = mMode && mMode !== 'none';
           const coreComment = isMasked
-            ? '# attention (masked) - 4 loc'
-            : '# attention - 3 loc';
+            ? '# attention similarity -> mask -> matrix -> output - 4 loc'
+            : '# attention similarity -> matrix -> output - 3 loc';
           if (lang === 'pytorch') {
             return [
               { text: 'import torch' },
@@ -9241,10 +9241,10 @@
               ...CodePanels.buildMaskSetupLines('pytorch', mMode),
               { text: '' },
               { text: coreComment },
-              { step: 'sim',     text: 'sim = queries @ keys.T' },
+              { step: 'sim',     text: 'scores = queries @ keys.T' },
               ...CodePanels.buildMaskApplyLines('pytorch', mMode),
-              { step: 'softmax', text: 'attn = sim.softmax(dim = -1)' },
-              { step: 'out',     text: 'attended = attn @ values' }
+              { step: 'softmax', text: 'weights = scores.softmax(dim = -1)' },
+              { step: 'out',     text: 'output = weights @ values' }
             ];
           }
           const keySetupLines = mMode === 'varlen'
@@ -9267,10 +9267,10 @@
             ...CodePanels.buildMaskSetupLines('jax', mMode),
             { text: '' },
             { text: coreComment },
-            { step: 'sim',     text: 'sim = queries @ keys.T' },
+            { step: 'sim',     text: 'scores = queries @ keys.T' },
             ...CodePanels.buildMaskApplyLines('jax', mMode),
-            { step: 'softmax', text: 'attn = jax.nn.softmax(sim, axis = -1)' },
-            { step: 'out',     text: 'attended = attn @ values' }
+            { step: 'softmax', text: 'weights = jax.nn.softmax(scores, axis = -1)' },
+            { step: 'out',     text: 'output = weights @ values' }
           ];
         }, null, null, (step) => {
           const mOff = maskMode !== 'none' ? 2400 : 0;
